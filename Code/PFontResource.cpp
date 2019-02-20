@@ -59,7 +59,7 @@ PFontResource::~PFontResource () {
 
 
 
-PFontResource::PFontResource (const PString& resource)
+PFontResource::PFontResource (const GString& resource)
 :	height(0)
 ,	base(0)
 ,	charCount(0)
@@ -74,7 +74,7 @@ PFontResource::PFontResource (const PString& resource)
 
 
 
-bool PFontResource::New (const PString& resource) {
+bool PFontResource::New (const GString& resource) {
 	if(NewFromPackage(resource))
 		return true;
 	return NewFromFile(resource);
@@ -82,7 +82,7 @@ bool PFontResource::New (const PString& resource) {
 
 
 
-bool PFontResource::NewFromPackage (const PString& resource) {
+bool PFontResource::NewFromPackage (const GString& resource) {
 	
 	uint64 archiveSize = PPackage::GetSize(resource + ".font");
 	uint8* archiveBuffer = new uint8[archiveSize];
@@ -152,7 +152,7 @@ static uint32 _ConvertUnicodeToHash (uint32 c) {
 
 
 
-bool PFontResource::NewFromFile (const PString& resource) {
+bool PFontResource::NewFromFile (const GString& resource) {
 	
 	PFile file;
 	if(file.OpenForRead(resource) == false) {
@@ -176,29 +176,29 @@ bool PFontResource::NewFromFile (const PString& resource) {
 	while(line != NULL && *line != 0) {
 		
 		
-		if(PString::strnicmp("info", (const char*)line, 4) == 0) {
+		if(GString::strnicmp("info", (const char*)line, 4) == 0) {
 			
-		} else if(PString::strnicmp("common", (const char*)line, 6) == 0) {
+		} else if(GString::strnicmp("common", (const char*)line, 6) == 0) {
 			
-			line = (uint8*)PString::strinext((const char*)line, "lineHeight=");
+			line = (uint8*)GString::strinext((const char*)line, "lineHeight=");
 			if(line)
-				height = PString::strtoi((const char*)line, (char**)&line, 10);
+				height = GString::strtoi((const char*)line, (char**)&line, 10);
 			
-			line = (uint8*)PString::strinext((const char*)line, "base=");
+			line = (uint8*)GString::strinext((const char*)line, "base=");
 			if(line)
-				base = PString::strtoi((const char*)line, (char**)&line, 10);
+				base = GString::strtoi((const char*)line, (char**)&line, 10);
 			
-		} else if(PString::strnicmp("page", (const char*)line, 4) == 0) {
+		} else if(GString::strnicmp("page", (const char*)line, 4) == 0) {
 			
-			line = (uint8*)PString::strinext((const char*)line, "file=\"");
+			line = (uint8*)GString::strinext((const char*)line, "file=\"");
 			if(line) {
 				
-				uint8* end = (uint8*)PString::strstr((const char*)line, "\"");
+				uint8* end = (uint8*)GString::strstr((const char*)line, "\"");
 				if(end) {
 					*end = 0;
 					
 					
-					if(image.NewFromFile(PString(resource).TrimToDirectory() + (const char*)line) == false) {
+					if(image.NewFromFile(GString(resource).TrimToDirectory() + (const char*)line) == false) {
 						PSystem::Debug("ERROR: Failed to get src image for font \"%s\"!\n", (const char*)resource);
 						return false;
 					}
@@ -209,11 +209,11 @@ bool PFontResource::NewFromFile (const PString& resource) {
 				
 			}
 			
-		} else if(PString::strnicmp("chars", (const char*)line, 5) == 0) {
+		} else if(GString::strnicmp("chars", (const char*)line, 5) == 0) {
 			
-			line = (uint8*)PString::strinext((const char*)line, "count=");
+			line = (uint8*)GString::strinext((const char*)line, "count=");
 			if(line) {
-				charMax = (uint32)PString::strtoi((const char*)line, (char**)&line, 10);
+				charMax = (uint32)GString::strtoi((const char*)line, (char**)&line, 10);
 				chars = new Char[charMax + 127];
 				memset(chars, 0, sizeof(Char) * 127); // Only need to zero the first 127, since more might not be used
 				hashMax = charMax;
@@ -221,27 +221,27 @@ bool PFontResource::NewFromFile (const PString& resource) {
 					hash = new uint32[hashMax];
 			}
 			
-		} else if(PString::strnicmp("char ", (const char*)line, 5) == 0) {
+		} else if(GString::strnicmp("char ", (const char*)line, 5) == 0) {
 			
 			uint32 id = 0;
 			Char glyph;
 			memset(&glyph, 0, sizeof(Char));
-			line = (uint8*)PString::strinext((const char*)line, "id=");
-			if(line) id = (uint32)PString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8*)PString::strinext((const char*)line, "x=");
-			if(line) glyph.x = PString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8*)PString::strinext((const char*)line, "y=");
-			if(line) glyph.y = PString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8*)PString::strinext((const char*)line, "width=");
-			if(line) glyph.width = PString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8*)PString::strinext((const char*)line, "height=");
-			if(line) glyph.height = PString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8*)PString::strinext((const char*)line, "xoffset=");
-			if(line) glyph.xoffset = PString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8*)PString::strinext((const char*)line, "yoffset=");
-			if(line) glyph.yoffset = PString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8*)PString::strinext((const char*)line, "xadvance=");
-			if(line) glyph.xadvance = PString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "id=");
+			if(line) id = (uint32)GString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "x=");
+			if(line) glyph.x = GString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "y=");
+			if(line) glyph.y = GString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "width=");
+			if(line) glyph.width = GString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "height=");
+			if(line) glyph.height = GString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "xoffset=");
+			if(line) glyph.xoffset = GString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "yoffset=");
+			if(line) glyph.yoffset = GString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "xadvance=");
+			if(line) glyph.xadvance = GString::strtoi((const char*)line, (char**)&line, 10);
 			
 			if((glyph.width != 0 && glyph.height != 0) || glyph.xadvance != 0) {
 				if(id < (1 << 7)) { // ASCII characters
@@ -256,28 +256,28 @@ bool PFontResource::NewFromFile (const PString& resource) {
 				}
 			}
 			
-		} else if(PString::strnicmp("kernings", (const char*)line, 8) == 0) {
+		} else if(GString::strnicmp("kernings", (const char*)line, 8) == 0) {
 			
-			line = (uint8*)PString::strinext((const char*)line, "count=");
+			line = (uint8*)GString::strinext((const char*)line, "count=");
 			if(line) {
-				kernMax = (uint32)PString::strtoi((const char*)line, (char**)&line, 10);
+				kernMax = (uint32)GString::strtoi((const char*)line, (char**)&line, 10);
 				if(kernMax > 0) {
 					kernings = new uint64[kernMax];
 					memset(kernings, 0, sizeof(uint64) * kernMax);
 				}
 			}
 			
-		} else if(PString::strnicmp("kerning ", (const char*)line, 8) == 0) {
+		} else if(GString::strnicmp("kerning ", (const char*)line, 8) == 0) {
 			
 			uint32 first = 0;
 			uint32 second = 0;
 			int16 amount = 0;
-			line = (uint8*)PString::strinext((const char*)line, "first=");
-			if(line) first = (uint32)PString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8*)PString::strinext((const char*)line, "second=");
-			if(line) second = (uint32)PString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8*)PString::strinext((const char*)line, "amount=");
-			if(line) amount = (uint16)PString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "first=");
+			if(line) first = (uint32)GString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "second=");
+			if(line) second = (uint32)GString::strtoi((const char*)line, (char**)&line, 10);
+			line = (uint8*)GString::strinext((const char*)line, "amount=");
+			if(line) amount = (uint16)GString::strtoi((const char*)line, (char**)&line, 10);
 			
 			if(first != 0 && second != 0 && amount != 0) {
 				// "first" and "second" are converted into an index values, indexing into the "chars" themselves
@@ -313,13 +313,13 @@ bool PFontResource::NewFromFile (const PString& resource) {
 				}
 			}
 			
-		} else if(PString::isprint(*line)) {
+		} else if(GString::isprint(*line)) {
 			PSystem::Debug("ERROR: Unknown line found in font file \"%s\"!\n", (const char*)resource);
 		}
 		
 		
 		if(line != NULL) {
-			while(PString::isprint(*line))
+			while(GString::isprint(*line))
 				line++;
 			line++;
 		}
@@ -371,7 +371,7 @@ void PFontResource::Delete () {
 
 
 
-bool PFontResource::WriteToPackage (PPackage& package, const PString& name) {
+bool PFontResource::WriteToPackage (PPackage& package, const GString& name) {
 	
 	uint64 headerSize = sizeof(height) + sizeof(base) + sizeof(charCount) + sizeof(hashCount) + sizeof(kernCount);
 	uint64 archiveSize = headerSize + sizeof(Char) * charCount + sizeof(uint32) * hashCount + sizeof(uint64) * kernCount;

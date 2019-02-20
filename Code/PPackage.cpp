@@ -3,7 +3,7 @@
 static const uint8				_VERSION = 5;
 static const uint8				_IDENTIFIER[] = "PACKAGE";
 static std::list<PPackage*>*	_packages = NULL;
-static PString					_lastResource;
+static GString					_lastResource;
 static PPackage*				_lastPackage = NULL;
 static uint64					_lastSize = 0;
 
@@ -16,13 +16,13 @@ PPackage::~PPackage () {
 	Close();
 }
 
-PPackage::PPackage (const PString& path)
+PPackage::PPackage (const GString& path)
 :	_footer(0)
 {
 	OpenForRead(path);
 }
 
-PPackage::PPackage (const PString& path, bool setDefaultWD)
+PPackage::PPackage (const GString& path, bool setDefaultWD)
 :	_footer(0)
 {
 	if(setDefaultWD)
@@ -30,7 +30,7 @@ PPackage::PPackage (const PString& path, bool setDefaultWD)
 	OpenForRead(path);
 }
 
-bool PPackage::OpenForRead (const PString& path) {
+bool PPackage::OpenForRead (const GString& path) {
 	
 	Close();
 	
@@ -101,7 +101,7 @@ bool PPackage::OpenForRead (const PString& path) {
 	uint64 offset = 0;
 	for(uint64 i = 0; i < count; i++) {
 		char* resourceName = (char*)(buffer + offset);
-		offset += PString::strlen(resourceName) + 1;
+		offset += GString::strlen(resourceName) + 1;
 		uint64 resourceOffset = *((uint64*)(buffer + offset));
 		offset += sizeof(uint64);
 		_resources.insert(std::make_pair(resourceName, resourceOffset));
@@ -113,10 +113,12 @@ bool PPackage::OpenForRead (const PString& path) {
 		_packages = new std::list<PPackage*>;
 	_packages->push_back(this);
 	
+    PSystem::Debug("%s ready for reading...\n", (const char*)path);
+    
 	return true;
 }
 
-bool PPackage::OpenForWrite (const PString& path) {
+bool PPackage::OpenForWrite (const GString& path) {
 	Close();
 	
 	if(_file.OpenForWrite(path) == false) {
@@ -163,7 +165,7 @@ bool PPackage::Close () {
 	return true;
 }
 
-uint64 PPackage::GetSize (const PString& resource) {
+uint64 PPackage::GetSize (const GString& resource) {
 	_lastResource = resource;
 	_lastPackage = NULL;
 	_lastSize = 0;
@@ -172,7 +174,7 @@ uint64 PPackage::GetSize (const PString& resource) {
 		return 0;
 	
 	for(std::list<PPackage*>::iterator p = _packages->begin(); p != _packages->end(); p++) {
-		std::map<PString, uint64>::iterator r = (*p)->_resources.find(resource);
+		std::map<GString, uint64>::iterator r = (*p)->_resources.find(resource);
 		if(r != (*p)->_resources.end()) {
 			
 			if((*p)->_file.SetPosition(r->second) == false) {
@@ -196,7 +198,7 @@ uint64 PPackage::GetSize (const PString& resource) {
 	return 0;
 }
 
-bool PPackage::Read (const PString& resource, void* data, uint64 size) {
+bool PPackage::Read (const GString& resource, void* data, uint64 size) {
 	if(resource != _lastResource || _lastPackage == NULL)
 		GetSize(resource);
 	
@@ -213,7 +215,7 @@ bool PPackage::Read (const PString& resource, void* data, uint64 size) {
 	return true;
 }
 
-bool PPackage::Write (const PString& resource, const void* data, uint64 size) {
+bool PPackage::Write (const GString& resource, const void* data, uint64 size) {
 	if(_file.SetPosition(_footer) == false) {
 		PSystem::Debug("ERROR: Failed to set package position for resource \"%s\"!\n", (const char*)resource);
 		return false;
@@ -267,7 +269,7 @@ bool PPackage::Write (const PString& resource, const void* data, uint64 size) {
 		return true;
 	
 	uint64 bufferSize = 0;
-	for(std::map<PString, uint64>::iterator i = _resources.begin(); i != _resources.end(); i++)
+	for(std::map<GString, uint64>::iterator i = _resources.begin(); i != _resources.end(); i++)
 		bufferSize += i->first.GetLength() + 1 + sizeof(uint64);
 	
 	if(_file.Write(&bufferSize, sizeof(bufferSize)) == false) {
@@ -277,10 +279,10 @@ bool PPackage::Write (const PString& resource, const void* data, uint64 size) {
 	
 	uint8* buffer = new uint8[bufferSize];
 	uint64 offset = 0;
-	for(std::map<PString, uint64>::iterator i = _resources.begin(); i != _resources.end(); i++) {
+	for(std::map<GString, uint64>::iterator i = _resources.begin(); i != _resources.end(); i++) {
 		
 		// Copy the resource name
-		PString::strcpy((char*)(buffer + offset), i->first);
+		GString::strcpy((char*)(buffer + offset), i->first);
 		offset += i->first.GetLength() + 1;
 		
 		// Copy the resource offset

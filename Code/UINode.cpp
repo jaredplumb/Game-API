@@ -6,7 +6,7 @@
 
 
 
-PNode::PNode ()
+UINode::UINode ()
 :	_ref(PSystem::GetUniqueRef())
 ,	_delete(false)
 ,	_rect(0, 0, PSystem::GetWidth(), PSystem::GetHeight())
@@ -18,7 +18,7 @@ PNode::PNode ()
 {
 }
 
-PNode::~PNode () {
+UINode::~UINode () {
 	
 	if(_parent)
 		_parent->Remove(*this);
@@ -34,29 +34,29 @@ PNode::~PNode () {
 
 
 
-int_t PNode::GetWidth () const {
+int_t UINode::GetWidth () const {
 	return _rect.width;
 }
 
-int_t PNode::GetHeight () const {
+int_t UINode::GetHeight () const {
 	return _rect.height;
 }
 
-PRect PNode::GetRect() const {
+GRect UINode::GetRect() const {
 	return _rect;
 }
 
-void PNode::SetRect (const PRect& rect) {
+void UINode::SetRect (const GRect& rect) {
 	_rect = rect;
 }
 
 
 
-uint64 PNode::GetMilliseconds () {
+uint64 UINode::GetMilliseconds () {
 	return _MILLISECONDS;
 }
 
-uint64 PNode::GetElapse () {
+uint64 UINode::GetElapse () {
 	return _ELAPSE;
 }
 
@@ -65,7 +65,7 @@ uint64 PNode::GetElapse () {
 
 
 
-void PNode::Run (const PString& name) {
+void UINode::Run (const GString& name) {
 	
 	// Using the _FACTORY_LIST, add a new instance of name to the roots node list
 	
@@ -80,23 +80,23 @@ void PNode::Run (const PString& name) {
 	
 }
 
-//void PNode::RunAsChild (const PString& name) {
+//void UINode::RunAsChild (const GString& name) {
 	
 	// Uses a different default transition (none)
 	
 //}
 
-//void PNode::RunLast () {
+//void UINode::RunLast () {
 	
 //}
 
-void PNode::Exit () {
+void UINode::Exit () {
 	_exit = true;
 }
 
 
 
-void PNode::Add (PNode& node) {
+void UINode::Add (UINode& node) {
 	
 	if(&node == this)
 		return;
@@ -113,23 +113,23 @@ void PNode::Add (PNode& node) {
 	
 }
 
-void PNode::Add (PNode* node) {
+void UINode::Add (UINode* node) {
 	node->_delete = true;
 	_alloc.push_back(node);
 	Add(*node);
 }
 
-void PNode::Add (const PString& name) {
-	std::map<PString, PNode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(name);
+void UINode::Add (const GString& name) {
+	std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(name);
 	if(factory != _FACTORY_LIST->end()) {
-		PNode* node = factory->second();
+		UINode* node = factory->second();
 		node->_delete = true;
 		_alloc.push_back(node);
 		Add(*node);
 	}
 }
 
-void PNode::Remove (PNode& node) {
+void UINode::Remove (UINode& node) {
 	_children.remove(&node);
 	if(node._delete)
 		_alloc.remove(&node);
@@ -141,7 +141,7 @@ void PNode::Remove (PNode& node) {
 
 
 
-void PNode::SendDraw () {
+void UINode::SendDraw () {
 	if(_visible) {
 		
 		PSystem::MatrixSetProjectionDefault();
@@ -149,7 +149,7 @@ void PNode::SendDraw () {
 		PSystem::MatrixUpdate();
 		
 		OnDraw();
-		for(std::list<PNode*>::reverse_iterator i = _children.rbegin(); i != _children.rend(); i++)
+		for(std::list<UINode*>::reverse_iterator i = _children.rbegin(); i != _children.rend(); i++)
 			if(!(*i)->_exit)
 				(*i)->SendDraw();
 			else
@@ -158,9 +158,9 @@ void PNode::SendDraw () {
 }
 
 // All of the focus based events check focus first, for in case the event deletes the node and is no longer valid
-void PNode::SendMouse (int_t x, int_t y, int_t button) {
+void UINode::SendMouse (int_t x, int_t y, int_t button) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendMouse(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
 			else
@@ -169,9 +169,9 @@ void PNode::SendMouse (int_t x, int_t y, int_t button) {
 	}
 }
 
-void PNode::SendMouseUp (int_t x, int_t y, int_t button) {
+void UINode::SendMouseUp (int_t x, int_t y, int_t button) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendMouseUp(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
 			else
@@ -180,9 +180,9 @@ void PNode::SendMouseUp (int_t x, int_t y, int_t button) {
 	}
 }
 
-void PNode::SendMouseMove (int_t x, int_t y) {
+void UINode::SendMouseMove (int_t x, int_t y) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendMouseMove(x - (*i)->_rect.x, y - (*i)->_rect.y);
 			else
@@ -191,9 +191,9 @@ void PNode::SendMouseMove (int_t x, int_t y) {
 	}
 }
 
-void PNode::SendMouseDrag (int_t x, int_t y, int_t button) {
+void UINode::SendMouseDrag (int_t x, int_t y, int_t button) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendMouseDrag(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
 			else
@@ -202,9 +202,9 @@ void PNode::SendMouseDrag (int_t x, int_t y, int_t button) {
 	}
 }
 
-void PNode::SendMouseWheel (float xdelta, float ydelta) {
+void UINode::SendMouseWheel (float xdelta, float ydelta) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendMouseWheel(xdelta, ydelta);
 			else
@@ -213,9 +213,9 @@ void PNode::SendMouseWheel (float xdelta, float ydelta) {
 	}
 }
 
-void PNode::SendKey (vkey_t key) {
+void UINode::SendKey (vkey_t key) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendKey(key);
 			else
@@ -224,9 +224,9 @@ void PNode::SendKey (vkey_t key) {
 	}
 }
 
-void PNode::SendKeyUp (vkey_t key) {
+void UINode::SendKeyUp (vkey_t key) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendKeyUp(key);
 			else
@@ -235,9 +235,9 @@ void PNode::SendKeyUp (vkey_t key) {
 	}
 }
 
-void PNode::SendASCII (char key) {
+void UINode::SendASCII (char key) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendASCII(key);
 			else
@@ -246,9 +246,9 @@ void PNode::SendASCII (char key) {
 	}
 }
 
-void PNode::SendTouch (int_t x, int_t y) {
+void UINode::SendTouch (int_t x, int_t y) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendTouch(x - (*i)->_rect.x, y - (*i)->_rect.y);
 			else
@@ -257,9 +257,9 @@ void PNode::SendTouch (int_t x, int_t y) {
 	}
 }
 
-void PNode::SendTouchUp (int_t x, int_t y) {
+void UINode::SendTouchUp (int_t x, int_t y) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendTouchUp(x - (*i)->_rect.x, y - (*i)->_rect.y);
 			else
@@ -268,9 +268,9 @@ void PNode::SendTouchUp (int_t x, int_t y) {
 	}
 }
 
-void PNode::SendTouchMove (int_t x, int_t y) {
+void UINode::SendTouchMove (int_t x, int_t y) {
 	if(_visible && _active) {
-		for(std::list<PNode*>::iterator i = _children.begin(); i != _children.end(); i++)
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
 				return (*i)->SendTouchMove(x - (*i)->_rect.x, y - (*i)->_rect.y);
 			else
@@ -287,7 +287,7 @@ void PNode::SendTouchMove (int_t x, int_t y) {
 
 
 
-PNode::_Root::_Root ()
+UINode::_Root::_Root ()
 :	transitionIn(0)
 ,	transitionOut(0)
 {
@@ -307,14 +307,14 @@ PNode::_Root::_Root ()
 	PSystem::NewTouchMoveCallback(TouchMoveCallback);
 }
 
-PNode::_Root::~_Root () {
+UINode::_Root::~_Root () {
 	while(!nodes.empty()) {
 		delete nodes.back();
 		nodes.pop_back();
 	}
 }
 
-void PNode::_Root::Run (const PString& name) {
+void UINode::_Root::Run (const GString& name) {
 	// This allows this function to be called from the draw callbacks without causing problems
 	if(transitionIn || transitionOut)
 		return;
@@ -323,10 +323,10 @@ void PNode::_Root::Run (const PString& name) {
 	transitionOut = FADE_TIME;
 }
 
-void PNode::_Root::StartupCallback () {
+void UINode::_Root::StartupCallback () {
 }
 
-void PNode::_Root::ShutdownCallback () {
+void UINode::_Root::ShutdownCallback () {
 	if(_AUTORUN_LIST) {
 		delete _AUTORUN_LIST;
 		_AUTORUN_LIST = NULL;
@@ -341,7 +341,7 @@ void PNode::_Root::ShutdownCallback () {
 	}
 }
 
-void PNode::_Root::DrawCallback () {
+void UINode::_Root::DrawCallback () {
 	
 	static uint64 FRAMES = 0;
 	FRAMES++;
@@ -357,7 +357,7 @@ void PNode::_Root::DrawCallback () {
 			PSystem::Debug("----------------------------------------------------------------\n");
 			PSystem::Debug("- %s\n", (const char*)_AUTORUN_LIST->begin()->first);
 #endif
-			std::map<PString, PNode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(_AUTORUN_LIST->begin()->first);
+			std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(_AUTORUN_LIST->begin()->first);
 			if(factory != _FACTORY_LIST->end() && _ROOT)
 				_ROOT->nodes.push_front(factory->second());
 #if DEBUG
@@ -370,7 +370,7 @@ void PNode::_Root::DrawCallback () {
 	}
 	
 	if(_ROOT) {
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++) {
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++) {
 			
 			if(!(*i)->_exit) {
 				(*i)->SendDraw();
@@ -407,7 +407,7 @@ void PNode::_Root::DrawCallback () {
 				PSystem::Debug("- %s\n", (const char*)_ROOT->to);
 #endif
 				
-				std::map<PString, PNode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(_ROOT->to);
+				std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(_ROOT->to);
 				if(factory != _FACTORY_LIST->end())
 					_ROOT->nodes.push_front(factory->second());
 				
@@ -448,69 +448,69 @@ void PNode::_Root::DrawCallback () {
 	
 }
 
-void PNode::_Root::MouseCallback (int_t x, int_t y, int_t button) {
+void UINode::_Root::MouseCallback (int_t x, int_t y, int_t button) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendMouse(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
 }
 
-void PNode::_Root::MouseUpCallback (int_t x, int_t y, int_t button) {
+void UINode::_Root::MouseUpCallback (int_t x, int_t y, int_t button) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendMouseUp(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
 }
 
-void PNode::_Root::MouseMoveCallback (int_t x, int_t y) {
+void UINode::_Root::MouseMoveCallback (int_t x, int_t y) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendMouseMove(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
 
-void PNode::_Root::MouseDragCallback (int_t x, int_t y, int_t button) {
+void UINode::_Root::MouseDragCallback (int_t x, int_t y, int_t button) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendMouseDrag(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
 }
 
-void PNode::_Root::MouseWheelCallback (float xdelta, float ydelta) {
+void UINode::_Root::MouseWheelCallback (float xdelta, float ydelta) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendMouseWheel(xdelta, ydelta);
 }
 
-void PNode::_Root::KeyCallback (vkey_t key) {
+void UINode::_Root::KeyCallback (vkey_t key) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendKey(key);
 }
 
-void PNode::_Root::KeyUpCallback (vkey_t key) {
+void UINode::_Root::KeyUpCallback (vkey_t key) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendKeyUp(key);
 }
 
-void PNode::_Root::ASCIICallback (char key) {
+void UINode::_Root::ASCIICallback (char key) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendASCII(key);
 }
 
-void PNode::_Root::TouchCallback (int_t x, int_t y) {
+void UINode::_Root::TouchCallback (int_t x, int_t y) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendTouch(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
 
-void PNode::_Root::TouchUpCallback (int_t x, int_t y) {
+void UINode::_Root::TouchUpCallback (int_t x, int_t y) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendTouchUp(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
 
-void PNode::_Root::TouchMoveCallback (int_t x, int_t y) {
+void UINode::_Root::TouchMoveCallback (int_t x, int_t y) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<PNode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendTouchMove(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
 
@@ -520,11 +520,11 @@ void PNode::_Root::TouchMoveCallback (int_t x, int_t y) {
 
 
 
-std::map<PString, PNode* (*) ()>*		PNode::_FACTORY_LIST = NULL;
-std::map<PString, bool>*				PNode::_AUTORUN_LIST = NULL;
-PNode::_Root*							PNode::_ROOT = NULL;
-uint64									PNode::_MILLISECONDS = 0;
-uint64									PNode::_ELAPSE = 0;
+std::map<GString, UINode* (*) ()>*		UINode::_FACTORY_LIST = NULL;
+std::map<GString, bool>*				UINode::_AUTORUN_LIST = NULL;
+UINode::_Root*							UINode::_ROOT = NULL;
+uint64									UINode::_MILLISECONDS = 0;
+uint64									UINode::_ELAPSE = 0;
 
 
 

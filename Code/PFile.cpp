@@ -9,25 +9,25 @@ PFile::~PFile () {
 	Close();
 }
 
-PFile::PFile (const PString& path)
+PFile::PFile (const GString& path)
 :	_file(NULL)
 {
 	OpenForRead(path);
 }
 
-bool PFile::OpenForRead (const PString& path) {
+bool PFile::OpenForRead (const GString& path) {
 	Close();
 	_file = fopen(path, "rb");
 	return _file != NULL;
 }
 
-bool PFile::OpenForWrite (const PString& path) {
+bool PFile::OpenForWrite (const GString& path) {
 	Close();
 	_file = fopen(path, "wb+");
 	return _file != NULL;
 }
 
-bool PFile::OpenForAppend (const PString& path) {
+bool PFile::OpenForAppend (const GString& path) {
 	Close();
 	_file = fopen(path, "ab+");
 	return _file != NULL;

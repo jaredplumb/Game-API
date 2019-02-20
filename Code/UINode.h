@@ -1,26 +1,24 @@
 #ifndef _UI_NODE_H_
 #define _UI_NODE_H_
 
-#include "PPlatform.h"
-#include "PRect.h"
-#include "PString.h"
+#include "GTypes.h"
 
-#define		P_NODE_NAME(c,n)			static PNode::Factory<c> _P_NODE_ ## c ## _NAME(n, false);
-#define		P_NODE_AUTORUN(c,n)			static PNode::Factory<c> _P_NODE_ ## c ## _NAME(n, true);
+#define		UINODE_NAME(c,n)			static UINode::Factory<c> _UI_NODE_ ## c ## _NAME(n, false);
+#define		UINODE_AUTORUN(c,n)			static UINode::Factory<c> _UI_NODE_ ## c ## _NAME(n, true);
 
-class PNode {
+class UINode {
 public:
 	
 	
 	
-	PNode ();
-	virtual ~PNode ();
+	UINode ();
+	virtual ~UINode ();
 	
 	int_t GetWidth () const;
 	int_t GetHeight () const;
-	PRect GetRect () const;
+	GRect GetRect () const;
 	
-	void SetRect (const PRect& rect);
+	void SetRect (const GRect& rect);
 	
 	static uint64 GetMilliseconds ();	// Returns frame locked milliseconds
 	static uint64 GetElapse ();		// Returns frame locked elapse time
@@ -30,15 +28,15 @@ public:
 	
 	
 	
-	void Run (const PString& name);				// Exits the current root PNode and runs the named PNode
-	//void RunAsChild (const PString& name);		// Run the named PNode as a child of this PNode
-	//void RunLast ();							// Runs the name of the previous PNode
-	void Exit ();								// Will delete this PNode as soon as possible
+	void Run (const GString& name);				// Exits the current root UINode and runs the named UINode
+	//void RunAsChild (const GString& name);		// Run the named UINode as a child of this UINode
+	//void RunLast ();							// Runs the name of the previous UINode
+	void Exit ();								// Will delete this UINode as soon as possible
 	
-	void Add (PNode& node);
-	void Add (PNode* node); // This function will delete the node after use
-	void Add (const PString& name);
-	void Remove (PNode& node);
+	void Add (UINode& node);
+	void Add (UINode* node); // This function will delete the node after use
+	void Add (const GString& name);
+	void Remove (UINode& node);
 	
 	
 	virtual void OnDraw () {} // OnDraw is special in that it will be called when a child has focus
@@ -78,23 +76,23 @@ private:
 	
 	int_t				_ref;
 	bool				_delete; // This node will be deleted when it's parent is deleted
-	PRect				_rect;
+	GRect				_rect;
 	bool				_visible;
 	bool				_active;
 	bool				_focus; // A node in focus will not pass events, more than one node could have focus, all node by default have no focus
 	bool				_exit;
-	PNode*				_parent;
-	std::list<PNode*>	_children;
-	std::list<PNode*> 	_alloc; // These are children created with the Add(PString) or Add(Node*) functions, they will be deleted when this node is deleted
+	UINode*				_parent;
+	std::list<UINode*>	_children;
+	std::list<UINode*> 	_alloc; // These are children created with the Add(GString) or Add(Node*) functions, they will be deleted when this node is deleted
 	
 	struct _Root {
-		std::list<PNode*> nodes;
+		std::list<UINode*> nodes;
 		
 		
-		PString current;
-		PString last;
-		PString from;
-		PString to;
+		GString current;
+		GString last;
+		GString from;
+		GString to;
 		uint64 transitionIn;
 		uint64 transitionOut;
 		//PImage fade;
@@ -103,7 +101,7 @@ private:
 		_Root ();
 		~_Root ();
 		
-		void Run (const PString& name);
+		void Run (const GString& name);
 		
 		static void StartupCallback ();
 		static void ShutdownCallback ();
@@ -122,8 +120,8 @@ private:
 		static const int FADE_TIME = 500; // Milliseconds;
 	};
 	
-	static std::map<PString, PNode* (*) ()>*	_FACTORY_LIST;
-	static std::map<PString, bool>*				_AUTORUN_LIST;
+	static std::map<GString, UINode* (*) ()>*	_FACTORY_LIST;
+	static std::map<GString, bool>*				_AUTORUN_LIST;
 	static _Root*								_ROOT;
 	static uint64								_MILLISECONDS;
 	static uint64								_ELAPSE;
@@ -132,13 +130,13 @@ public:
 	
 	template <class T>
 	struct Factory {
-		static PNode* New () { return new T; };
+		static UINode* New () { return new T; };
 		Factory (const char* name, bool autorun) {
 			if(_ROOT == NULL) _ROOT = new _Root;
-			if(_FACTORY_LIST == NULL) _FACTORY_LIST = new std::map<PString, PNode* (*) ()>;
+			if(_FACTORY_LIST == NULL) _FACTORY_LIST = new std::map<GString, UINode* (*) ()>;
 			(*_FACTORY_LIST)[name] = New;
 			if(!autorun) return;
-			if(_AUTORUN_LIST == NULL) _AUTORUN_LIST = new std::map<PString, bool>;
+			if(_AUTORUN_LIST == NULL) _AUTORUN_LIST = new std::map<GString, bool>;
 			(*_AUTORUN_LIST)[name] = true;
 		}
 	};

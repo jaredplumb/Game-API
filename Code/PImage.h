@@ -1,11 +1,8 @@
 #ifndef _P_IMAGE_H_
 #define _P_IMAGE_H_
 
-#include "PPlatform.h"
-#include "PString.h"
+#include "GTypes.h"
 #include "PSystem.h"
-#include "PColor.h"
-#include "PRect.h"
 #include "PPackage.h"
 
 class PImage {
@@ -15,13 +12,13 @@ public:
 	
 	PImage ();
 	PImage (const Resource& resource);
-	PImage (const PString& resource);
-	PImage (const PColor& color);
+	PImage (const GString& resource);
+	PImage (const GColor& color);
 	~PImage ();
 	
 	bool New (const Resource& resource);
-	bool New (const PString& resource);
-	bool New (const PColor& color = PColor::WHITE);
+	bool New (const GString& resource);
+	bool New (const GColor& color = GColor::WHITE);
 	void Delete ();
 	
 	int_t GetWidth () const;
@@ -29,14 +26,14 @@ public:
 	bool IsEmpty () const;
 	
 	void Draw ();
-	void Draw (const PRect& src, const PRect& dst, const PColor& color = PColor::WHITE);
+	void Draw (const GRect& src, const GRect& dst, const GColor& color = GColor::WHITE);
 	void Draw (int_t x, int_t y, float alpha = 1.0f);
-	void Draw (const PRect& dst, float alpha = 1.0f);
-	void Draw (const PRect& src, int_t x, int_t y, float alpha = 1.0f);
-	void DrawRect (const PRect& rect, const PColor& color = PColor::WHITE);
-	void DrawLine (const PPoint& a, const PPoint& b, int_t width, const PColor& color = PColor::WHITE);
-	void DrawEllipse (const PRect& rect, const PColor& color = PColor::WHITE, const int_t sides = 45);
-	void DrawQuad (const float vertices[8], const float coords[8], const PColor& color = PColor::WHITE);
+	void Draw (const GRect& dst, float alpha = 1.0f);
+	void Draw (const GRect& src, int_t x, int_t y, float alpha = 1.0f);
+	void DrawRect (const GRect& rect, const GColor& color = GColor::WHITE);
+	void DrawLine (const GPoint& a, const GPoint& b, int_t width, const GColor& color = GColor::WHITE);
+	void DrawEllipse (const GRect& rect, const GColor& color = GColor::WHITE, const int_t sides = 45);
+	void DrawQuad (const float vertices[8], const float coords[8], const GColor& color = GColor::WHITE);
 	void DrawVertices (const Vertex verticies[], int_t verticesCount, const uint16 indicies[], int_t indiciesCount);
 	
 	class Resource {
@@ -47,13 +44,13 @@ public:
 		uint8* buffer;
 		
 		Resource ();
-		Resource (const PString& resource);
+		Resource (const GString& resource);
 		~Resource ();
-		bool New (const PString& resource);
-		bool NewFromFile (const PString& resource);
-		bool NewFromPackage (const PString& resource);
+		bool New (const GString& resource);
+		bool NewFromFile (const GString& resource);
+		bool NewFromPackage (const GString& resource);
 		void Delete ();
-		bool WriteToPackage (PPackage& package, const PString& name);
+		bool WriteToPackage (PPackage& package, const GString& name);
 	};
 	
 	class Vertex {

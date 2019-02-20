@@ -1,7 +1,7 @@
 #ifndef _P_SYSTEM_H_
 #define _P_SYSTEM_H_
 
-#include "PPlatform.h"
+#include "GTypes.h"
 
 /// This class is used to access global data internally created to run a core game shell.  This
 /// class internally contains everything needed to automatically launches and create a game

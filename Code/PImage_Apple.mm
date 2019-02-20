@@ -20,7 +20,7 @@ struct PImage::_PrivateData {
 	
 	int_t width, height;
 	
-	PRect src, dst;
+	GRect src, dst;
 	
 	
 	id<MTLTexture> texture;
@@ -38,8 +38,8 @@ struct PImage::_PrivateData {
 PImage::PImage ()
 :	_data(NULL)
 {
-	if(New(PColor::WHITE) == false)
-		PSystem::Debug("ERROR: Could not create image with color 0x%ffffffff!\n");
+	if(New(GColor::WHITE) == false)
+		PSystem::Debug("ERROR: Could not create image with color 0xffffffff!\n");
 }
 
 PImage::PImage (const Resource& resource)
@@ -49,14 +49,14 @@ PImage::PImage (const Resource& resource)
 		PSystem::Debug("ERROR: Could not load image from resource!\n");
 }
 
-PImage::PImage (const PString& resource)
+PImage::PImage (const GString& resource)
 :	_data(NULL)
 {
 	if(New(resource) == false)
 		PSystem::Debug("ERROR: Could not load image \"%s\"!\n", (const char*)resource);
 }
 
-PImage::PImage (const PColor& color)
+PImage::PImage (const GColor& color)
 :	_data(NULL)
 {
 	if(New(color) == false)
@@ -153,11 +153,11 @@ bool PImage::New (const Resource& resource) {
 	return true;
 }
 
-bool PImage::New (const PString& resource) {
+bool PImage::New (const GString& resource) {
 	return New(Resource(resource));
 }
 
-bool PImage::New (const PColor& color) {
+bool PImage::New (const GColor& color) {
 	Resource resource;
 	resource.width = 4;
 	resource.height = 4;
@@ -205,7 +205,7 @@ void PImage::Draw () {
 	
 }
 
-void PImage::Draw (const PRect& src, const PRect& dst, const PColor& color) {
+void PImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 	if(_data == NULL)
 		return;
 	
@@ -283,21 +283,21 @@ void PImage::Draw (int_t x, int_t y, float alpha) {
 	Draw();
 }
 
-void PImage::Draw (const PRect& dst, float alpha) {
+void PImage::Draw (const GRect& dst, float alpha) {
 	if(_data)
-		Draw(_data->src, dst, PColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
+		Draw(_data->src, dst, GColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
 }
 
-void PImage::Draw (const PRect& src, int_t x, int_t y, float alpha) {
-	Draw(src, PRect(x, y, src.width, src.height), PColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
+void PImage::Draw (const GRect& src, int_t x, int_t y, float alpha) {
+	Draw(src, GRect(x, y, src.width, src.height), GColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
 }
 
-void PImage::DrawRect (const PRect& rect, const PColor& color) {
+void PImage::DrawRect (const GRect& rect, const GColor& color) {
 	if(_data)
-		Draw(PRect(0, 0, _data->width, _data->height), rect, color);
+		Draw(GRect(0, 0, _data->width, _data->height), rect, color);
 }
 
-void PImage::DrawLine (const PPoint& a, const PPoint& b, int_t width, const PColor& color) {
+void PImage::DrawLine (const GPoint& a, const GPoint& b, int_t width, const GColor& color) {
 	if(_data == NULL || _data->vertices == NULL || _data->verticesCount == 0)
 		return;
 	
@@ -343,7 +343,7 @@ void PImage::DrawLine (const PPoint& a, const PPoint& b, int_t width, const PCol
 	Draw();
 }
 
-void PImage::DrawEllipse (const PRect& rect, const PColor& color, const int_t sides) {
+void PImage::DrawEllipse (const GRect& rect, const GColor& color, const int_t sides) {
 	if(_data == NULL)
 		return;
 	
@@ -384,7 +384,7 @@ void PImage::DrawEllipse (const PRect& rect, const PColor& color, const int_t si
 	
 }
 
-void PImage::DrawQuad (const float vertices[8], const float coords[8], const PColor& color) {
+void PImage::DrawQuad (const float vertices[8], const float coords[8], const GColor& color) {
 	if(_data == NULL)
 		return;
 	
@@ -446,7 +446,7 @@ PImage::Resource::Resource ()
 {
 }
 
-PImage::Resource::Resource (const PString& resource)
+PImage::Resource::Resource (const GString& resource)
 :	width(0)
 ,	height(0)
 ,	bufferSize(0)
@@ -460,7 +460,7 @@ PImage::Resource::~Resource () {
 	Delete();
 }
 
-bool PImage::Resource::New (const PString& resource) {
+bool PImage::Resource::New (const GString& resource) {
 	if(NewFromPackage(resource))
 		return true;
 	if(NewFromFile(resource))
@@ -468,7 +468,7 @@ bool PImage::Resource::New (const PString& resource) {
 	return false;
 }
 
-bool PImage::Resource::NewFromFile (const PString& resource) {
+bool PImage::Resource::NewFromFile (const GString& resource) {
 	Delete();
 	
 	CFStringRef string = CFStringCreateWithCString(NULL, resource, kCFStringEncodingUTF8);
@@ -505,7 +505,7 @@ bool PImage::Resource::NewFromFile (const PString& resource) {
 	return true;
 }
 
-bool PImage::Resource::NewFromPackage (const PString& resource) {
+bool PImage::Resource::NewFromPackage (const GString& resource) {
 	Delete();
 	
 	uint64 archiveSize = PPackage::GetSize(resource + ".image");
@@ -551,7 +551,7 @@ void PImage::Resource::Delete () {
 	}
 }
 
-bool PImage::Resource::WriteToPackage (PPackage& package, const PString& name) {
+bool PImage::Resource::WriteToPackage (PPackage& package, const GString& name) {
 	
 	uint64 headerSize = sizeof(width) + sizeof(height) + sizeof(bufferSize);
 	uint64 archiveSize = PArchive::GetBufferBounds(headerSize + sizeof(uint8) * bufferSize);

@@ -1,7 +1,7 @@
 #ifndef _P_ARCHIVE_H_
 #define _P_ARCHIVE_H_
 
-#include "PPlatform.h"
+#include "GTypes.h"
 
 class PArchive {
 public:

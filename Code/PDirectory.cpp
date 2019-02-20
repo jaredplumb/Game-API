@@ -7,15 +7,15 @@ PDirectory::~PDirectory () {
 	Close();
 }
 
-PDirectory::PDirectory (const PString& path) {
+PDirectory::PDirectory (const GString& path) {
 	Open(path);
 }
 
-bool PDirectory::Open (const PString& path) {
+bool PDirectory::Open (const GString& path) {
 	
 #if PLATFORM_WINDOWS
 
-	PString directory = path;
+	GString directory = path;
 	if (directory == NULL || directory[(int_t)0] == '\0')
 		directory = "";
 
@@ -38,7 +38,7 @@ bool PDirectory::Open (const PString& path) {
 
 
 #else
-	PString directory = path;
+	GString directory = path;
 	if(directory == NULL || directory[(int_t)0] == '\0')
 		directory = "./";
 	
@@ -61,7 +61,7 @@ bool PDirectory::Open (const PString& path) {
 	
 	for(dirent* info = readdir(dir); info != NULL; info = readdir(dir)) {
 		if(info->d_type == DT_DIR) {
-			if(PString::strcmp(info->d_name, ".") != 0 && PString::strcmp(info->d_name, "..") != 0)
+			if(GString::strcmp(info->d_name, ".") != 0 && GString::strcmp(info->d_name, "..") != 0)
 				Open(directory + info->d_name);
 		} else {
 			_files.push_back(directory + info->d_name);
@@ -82,6 +82,6 @@ uint_t PDirectory::GetSize () const {
 	return _files.size();
 }
 
-PString PDirectory::GetFile (uint_t index) const {
+GString PDirectory::GetFile (uint_t index) const {
 	return index < _files.size() ? _files[index] : NULL;
 }

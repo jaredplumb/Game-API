@@ -1,9 +1,8 @@
 #ifndef _P_PACKAGE_H_
 #define _P_PACKAGE_H_
 
-#include "PPlatform.h"
+#include "GTypes.h"
 #include "PSystem.h"
-#include "PString.h"
 #include "PFile.h"
 #include "PArchive.h"
 
@@ -18,33 +17,33 @@ public:
 	~PPackage ();
 	
 	/// This constructor calls OpenForRead
-	PPackage (const PString& path);
+	PPackage (const GString& path);
 	
 	/// This constructor sets the default WD then calls OpenForRead
-	PPackage (const PString& path, bool setDefaultWD);
+	PPackage (const GString& path, bool setDefaultWD);
 	
 	/// Opens a package for reading and adds itself to the global list of packages
-	bool OpenForRead (const PString& path);
+	bool OpenForRead (const GString& path);
 	
 	/// Opens a package for writing
-	bool OpenForWrite (const PString& path);
+	bool OpenForWrite (const GString& path);
 	
 	/// Closes this package
 	bool Close ();
 	
 	/// Write a resoruce to this package
-	bool Write (const PString& resource, const void* data, uint64 size);
+	bool Write (const GString& resource, const void* data, uint64 size);
 	
 	/// Returns the size of a resourse found in the global list of packages
-	static uint64 GetSize (const PString& resource);
+	static uint64 GetSize (const GString& resource);
 	
 	/// Reads data from a resource found in the global list of packages
-	static bool Read (const PString& resource, void* data, uint64 size);
+	static bool Read (const GString& resource, void* data, uint64 size);
 	
 private:
 	PFile						_file;
 	uint64						_footer;
-	std::map<PString, uint64>	_resources;
+	std::map<GString, uint64>	_resources;
 };
 
 #endif // _P_PACKAGE_H_

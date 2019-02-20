@@ -1,6 +1,6 @@
-#include "PString.h"
+#include "GTypes.h"
 
-// These are hear to add static caching in the future
+// These are here to add static caching in the future
 static char* _CHAR_ALLOC (int_t size) {
 	return new char[size];
 }
@@ -9,13 +9,13 @@ static void _FREE (char* string) {
 	delete [] string;
 }
 
-PString::PString ()
+GString::GString ()
 :	_string(NULL)
 ,	_length(0)
 {
 }
 
-PString::PString (const PString& string)
+GString::GString (const GString& string)
 :	_string(NULL)
 ,	_length(string.GetLength())
 {
@@ -26,7 +26,7 @@ PString::PString (const PString& string)
 	}
 }
 
-PString::PString (const char* string)
+GString::GString (const char* string)
 :	_string(NULL)
 ,	_length(strlen(string))
 {
@@ -37,7 +37,7 @@ PString::PString (const char* string)
 	}
 }
 
-PString::~PString () {
+GString::~GString () {
 	if(_string) {
 		_FREE(_string);
 		_string = NULL;
@@ -45,7 +45,7 @@ PString::~PString () {
 	_length = 0;
 }
 
-PString& PString::New (const PString& string) {
+GString& GString::New (const GString& string) {
 	if(_string) {
 		_FREE(_string);
 		_string = NULL;
@@ -59,7 +59,7 @@ PString& PString::New (const PString& string) {
 	return *this;
 }
 
-PString& PString::New (const char* string) {
+GString& GString::New (const char* string) {
 	if(_string) {
 		_FREE(_string);
 		_string = NULL;
@@ -73,7 +73,7 @@ PString& PString::New (const char* string) {
 	return *this;
 }
 
-void PString::Delete () {
+void GString::Delete () {
 	if(_string) {
 		_FREE(_string);
 		_string = NULL;
@@ -81,7 +81,7 @@ void PString::Delete () {
 	_length = 0;
 }
 
-PString& PString::Format (const char* string, ...) {
+GString& GString::Format (const char* string, ...) {
 	if(_string) {
 		_FREE(_string);
 		_string = NULL;
@@ -113,17 +113,17 @@ PString& PString::Format (const char* string, ...) {
 	return *this;
 }
 
-int_t PString::GetLength () const {
+int_t GString::GetLength () const {
 	if(_length <= 0)
 		*(const_cast<int_t*>(&_length)) = strlen(_string);
 	return _length;
 }
 
-bool PString::IsEmpty () const {
+bool GString::IsEmpty () const {
 	return _string == NULL || _string[0] == '\0';
 }
 
-PString& PString::Add (const PString& string) {
+GString& GString::Add (const GString& string) {
 	if(string._string == NULL)
 		return *this;
 	
@@ -139,7 +139,7 @@ PString& PString::Add (const PString& string) {
 	return *this;
 }
 
-PString& PString::Add (const char* string) {
+GString& GString::Add (const char* string) {
 	if(string == NULL)
 		return *this;
 	
@@ -155,17 +155,17 @@ PString& PString::Add (const char* string) {
 	return *this;
 }
 
-PString& PString::ToLower () {
+GString& GString::ToLower () {
 	tolower(_string);
 	return *this;
 }
 
-PString& PString::ToUpper () {
+GString& GString::ToUpper () {
 	toupper(_string);
 	return *this;
 }
 
-PString& PString::TrimSpaces () {
+GString& GString::TrimSpaces () {
 	if(_string == NULL)
 		return *this;
 	
@@ -189,7 +189,7 @@ PString& PString::TrimSpaces () {
 	return *this;
 }
 
-PString& PString::TrimExtension () {
+GString& GString::TrimExtension () {
 	for(int_t i = GetLength() - 1; i >= 0; i--)
 		if(_string[i] == '.') {
 			_string[i] = '\0';
@@ -199,7 +199,7 @@ PString& PString::TrimExtension () {
 	return *this;
 }
 
-PString& PString::TrimToDirectory () {
+GString& GString::TrimToDirectory () {
 	for(int_t i = GetLength(); i > 0; i--)
 		if(_string[i - 1] == '/' || _string[i - 1] == '\\') {
 			_string[i] = '\0';
@@ -212,48 +212,48 @@ PString& PString::TrimToDirectory () {
 ////////////////////////////////////////////////////
 // Standard C string overrides with modifications //
 ////////////////////////////////////////////////////
-bool PString::isalnum (char c) {
+bool GString::isalnum (char c) {
 	return (isalpha(c) || isdigit(c));
 }
 
-bool PString::isalpha (char c) {
+bool GString::isalpha (char c) {
 	return (isupper(c) || islower(c));
 }
 
-bool PString::isdigit (char c) {
+bool GString::isdigit (char c) {
 	return (c >= '0' && c <= '9');
 }
 
-bool PString::isgraph (char c) {
+bool GString::isgraph (char c) {
 	return (isprint(c) && !isspace(c));
 }
 
-bool PString::islower (char c) {
+bool GString::islower (char c) {
 	return (c >= 'a' && c <= 'z');
 }
 
-bool PString::isprint (char c) {
+bool GString::isprint (char c) {
 	return (c >= ' ' && c <= '~');
 }
 
-bool PString::ispunct (char c) {
+bool GString::ispunct (char c) {
 	return (isprint(c) && !isspace(c) && !isalnum(c));
 }
 
-bool PString::isspace (char c) {
+bool GString::isspace (char c) {
 	// \t \n \v \f \r and space
 	return (c == ' ' || (c >= '\t' && c <= '\r'));
 }
 
-bool PString::isupper (char c) {
+bool GString::isupper (char c) {
 	return (c >= 'A' && c <= 'Z');
 }
 
-bool PString::isxdigit (char c) {
+bool GString::isxdigit (char c) {
 	return (isdigit(c) || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'));
 }
 
-char* PString::strcat (char* dst, const char* src) {
+char* GString::strcat (char* dst, const char* src) {
 	if(dst == NULL || src == NULL) return dst;
 	char* save = dst;
 	while(*save != 0)
@@ -263,7 +263,7 @@ char* PString::strcat (char* dst, const char* src) {
 	return dst;
 }
 
-int_t PString::strcmp (const char* s1, const char* s2) {
+int_t GString::strcmp (const char* s1, const char* s2) {
 	if(s1 == NULL)
 		return (s2 ? -s2[0] : 0);
 	if(s2 == NULL)
@@ -274,7 +274,7 @@ int_t PString::strcmp (const char* s1, const char* s2) {
 	return *s1 - *(s2 - 1);
 }
 
-char* PString::strcpy (char* dst, const char* src) {
+char* GString::strcpy (char* dst, const char* src) {
 	if(dst == NULL)
 		return NULL;
 	if(src == NULL) {
@@ -287,7 +287,7 @@ char* PString::strcpy (char* dst, const char* src) {
 	return dst;
 }
 
-int_t PString::stricmp (const char* s1, const char* s2) {
+int_t GString::stricmp (const char* s1, const char* s2) {
 	if(s1 == NULL)
 		return (s2 ? -tolower(s2[0]) : 0);
 	if(s2 == NULL)
@@ -298,14 +298,14 @@ int_t PString::stricmp (const char* s1, const char* s2) {
 	return tolower(*s1) - tolower(*(s2 - 1));
 }
 
-char* PString::stristr (const char* s, const char* find) {
+char* GString::stristr (const char* s, const char* find) {
 	for(int_t len = strlen(find); *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return (char*)s;
 	return NULL;
 }
 
-int_t PString::strlen (const char* s) {
+int_t GString::strlen (const char* s) {
 	if(s == NULL)
 		return 0;
 	const char* i = s;
@@ -314,7 +314,7 @@ int_t PString::strlen (const char* s) {
 	return (int_t)i - (int_t)s;
 }
 
-char* PString::strncat (char* dst, const char* src, int_t len) {
+char* GString::strncat (char* dst, const char* src, int_t len) {
 	if(dst == NULL)
 		return NULL;
 	char* save = dst;
@@ -328,7 +328,7 @@ char* PString::strncat (char* dst, const char* src, int_t len) {
 	return dst;
 }
 
-int_t PString::strncmp (const char* s1, const char* s2, int_t len) {
+int_t GString::strncmp (const char* s1, const char* s2, int_t len) {
 	if(len == 0)
 		return 0;
 	if(s1 == NULL)
@@ -344,7 +344,7 @@ int_t PString::strncmp (const char* s1, const char* s2, int_t len) {
 	return 0;
 }
 
-char* PString::strncpy (char* dst, const char* src, int_t len) {
+char* GString::strncpy (char* dst, const char* src, int_t len) {
 	if(dst == NULL)
 		return NULL;
 	char* save = dst;
@@ -356,7 +356,7 @@ char* PString::strncpy (char* dst, const char* src, int_t len) {
 	return dst;
 }
 
-int_t PString::strnicmp (const char* s1, const char* s2, int_t len) {
+int_t GString::strnicmp (const char* s1, const char* s2, int_t len) {
 	if(len == 0)
 		return 0;
 	if(s1 == NULL)
@@ -372,21 +372,21 @@ int_t PString::strnicmp (const char* s1, const char* s2, int_t len) {
 	return 0;
 }
 
-char* PString::strnistr (const char* s, const char* find, int_t len) {
+char* GString::strnistr (const char* s, const char* find, int_t len) {
 	for(; *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return (char*)s;
 	return NULL;
 }
 
-char* PString::strnstr (const char* s, const char* find, int_t len) {
+char* GString::strnstr (const char* s, const char* find, int_t len) {
 	for(; *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)s;
 	return NULL;
 }
 
-char* PString::strstr (const char* s, const char* find) {
+char* GString::strstr (const char* s, const char* find) {
 	for(int_t len = strlen(find); *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)s;
@@ -397,28 +397,28 @@ char* PString::strstr (const char* s, const char* find) {
 
 
 
-char* PString::strnnext (const char* s, const char* find, int_t len) {
+char* GString::strnnext (const char* s, const char* find, int_t len) {
 	for(; *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)(s + len);
 	return NULL;
 }
 
-char* PString::strnext (const char* s, const char* find) {
+char* GString::strnext (const char* s, const char* find) {
 	for(int_t len = strlen(find); *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)(s + len);
 	return NULL;
 }
 
-char* PString::strninext (const char* s, const char* find, int_t len) {
+char* GString::strninext (const char* s, const char* find, int_t len) {
 	for(; *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return (char*)(s + len);
 	return NULL;
 }
 
-char* PString::strinext (const char* s, const char* find) {
+char* GString::strinext (const char* s, const char* find) {
 	for(int_t len = strlen(find); *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return (char*)(s + len);
@@ -428,7 +428,7 @@ char* PString::strinext (const char* s, const char* find) {
 
 
 
-int_t PString::strtoi (const char* s, char** end, int_t base) {
+int_t GString::strtoi (const char* s, char** end, int_t base) {
 	if(s == NULL) {
 		if(end != NULL)
 			*end = NULL;
@@ -468,20 +468,20 @@ int_t PString::strtoi (const char* s, char** end, int_t base) {
 	return neg ? -i : i;
 }
 
-char PString::tolower (char c) {
+char GString::tolower (char c) {
 	return c + 0x20 * (c >= 'A' && c <= 'Z');
 }
 
-char * PString::tolower (char* s) {
+char * GString::tolower (char* s) {
 	for(char* i = s; i && *i; i++) *i = tolower(*i);
 	return s;
 }
 
-char PString::toupper (char c) {
+char GString::toupper (char c) {
 	return c - 0x20 * (c >= 'a' && c <= 'z');
 }
 
-char* PString::toupper (char* s) {
+char* GString::toupper (char* s) {
 	for(char* i = s; i && *i; i++) *i = toupper(*i);
 	return s;
 }

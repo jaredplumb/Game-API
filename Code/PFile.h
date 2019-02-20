@@ -1,8 +1,7 @@
 #ifndef _P_FILE_H_
 #define _P_FILE_H_
 
-#include "PPlatform.h"
-#include "PString.h"
+#include "GTypes.h"
 
 /// A PFile is a wrapper class around a C-File function calls.  This class uses the
 /// native width versions of the file functions allowing for very large files.
@@ -13,16 +12,16 @@ public:
 	~PFile ();
 	
 	/// This constructor calls OpenForRead
-	PFile (const PString& path);
+	PFile (const GString& path);
 	
 	/// Opens a file for reading only
-	bool OpenForRead (const PString& path);
+	bool OpenForRead (const GString& path);
 	
 	/// Opens a file for reading and writing
-	bool OpenForWrite (const PString& path);
+	bool OpenForWrite (const GString& path);
 	
 	/// Appends a file for reading and writing
-	bool OpenForAppend (const PString& path);
+	bool OpenForAppend (const GString& path);
 	
 	/// Closes this file
 	void Close ();

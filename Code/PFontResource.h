@@ -1,10 +1,8 @@
 #ifndef _P_FONT_RESOURCE_H_
 #define _P_FONT_RESOURCE_H_
 
-#include "PPlatform.h"
-#include "PString.h"
+#include "GTypes.h"
 #include "PPackage.h"
-#include "PRect.h"
 
 
 #include "PXML.h"
@@ -43,16 +41,16 @@ public:
 	PFontResource ();
 	~PFontResource ();
 	
-	PFontResource (const PString& resource);
+	PFontResource (const GString& resource);
 	
-	bool New (const PString& resource);
-	bool NewFromPackage (const PString& resource);
-	bool NewFromFile (const PString& resource);
+	bool New (const GString& resource);
+	bool NewFromPackage (const GString& resource);
+	bool NewFromFile (const GString& resource);
 	
 	
 	void Delete ();
 	
-	bool WriteToPackage (PPackage& package, const PString& name);
+	bool WriteToPackage (PPackage& package, const GString& name);
 	
 	
 };

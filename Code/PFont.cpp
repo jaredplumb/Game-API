@@ -3,14 +3,14 @@
 
 struct PFont::_PrivateData {
 	int_t refCount; // Used for the smart pointer code
-	PString refName; // Used for the smart pointer code
+	GString refName; // Used for the smart pointer code
 	
 	int_t						height;
 	int_t						base;
 	int_t						charCount;
 	int_t						hashCount;
-	PRect*						rects;
-	PPoint*						offsets;
+	GRect*						rects;
+	GPoint*						offsets;
 	int_t*						advances;
 	std::map<int_t, int_t>**	kernings;
 	uint32*						hash;
@@ -18,7 +18,7 @@ struct PFont::_PrivateData {
 };
 
 
-std::map<PString, PFont::_PrivateData*>* PFont::_FONTS = NULL;
+std::map<GString, PFont::_PrivateData*>* PFont::_FONTS = NULL;
 
 
 
@@ -58,18 +58,18 @@ PFont::~PFont () {
 }
 
 
-PFont::PFont (const PFontResource& resource, const PString& name)
+PFont::PFont (const PFontResource& resource, const GString& name)
 :	_data(NULL){
 	New(resource, name);
 }
 
-PFont::PFont (const PString& resource)
+PFont::PFont (const GString& resource)
 :	_data(NULL)
 {
 	New(resource);
 }
 
-bool PFont::New (const PFontResource& resource, const PString& name) {
+bool PFont::New (const PFontResource& resource, const GString& name) {
 	
 	_data = _FindData(name);
 	if(_data != NULL) {
@@ -89,8 +89,8 @@ bool PFont::New (const PFontResource& resource, const PString& name) {
 	_data->advances = NULL;
 	_data->kernings = NULL;
 	if(_data->charCount > 0) {
-		_data->rects = new PRect[_data->charCount];
-		_data->offsets = new PPoint[_data->charCount];
+		_data->rects = new GRect[_data->charCount];
+		_data->offsets = new GPoint[_data->charCount];
 		_data->advances = new int_t[_data->charCount];
 		_data->kernings = new std::map<int_t, int_t>*[_data->charCount];
 		for(int_t i = 0; i < _data->charCount; i++) {
@@ -139,7 +139,7 @@ bool PFont::New (const PFontResource& resource, const PString& name) {
 	return true;
 }
 
-bool PFont::New (const PString& resource) {
+bool PFont::New (const GString& resource) {
 	return New(PFontResource(resource), resource);
 }
 
@@ -193,10 +193,10 @@ int_t PFont::GetBaseHeight () const {
 	return (_data ? _data->base : 0);
 }
 
-PRect PFont::GetRect (const PString& text) const {
+GRect PFont::GetRect (const GString& text) const {
 	
 	if(_data == NULL || _data->charCount == 0 || text.IsEmpty())
-		return PRect();
+		return GRect();
 	
 	int_t x1 = 1073741824;
 	int_t y1 = 1073741824;
@@ -270,7 +270,7 @@ PRect PFont::GetRect (const PString& text) const {
 		}
 	}
 	
-	return PRect(x1, y1, x2 - x1, y2 - y1);
+	return GRect(x1, y1, x2 - x1, y2 - y1);
 }
 
 
@@ -279,7 +279,7 @@ bool PFont::IsEmpty () const {
 }
 
 
-void PFont::Draw (const PString& text, int_t x, int_t y, float alpha) {
+void PFont::Draw (const GString& text, int_t x, int_t y, float alpha) {
 	if(_data == NULL || _data->charCount == 0 || text.IsEmpty())
 		return;
 	
@@ -340,9 +340,9 @@ void PFont::Draw (const PString& text, int_t x, int_t y, float alpha) {
 	}
 }
 
-PFont::_PrivateData* PFont::_FindData (const PString& key) {
+PFont::_PrivateData* PFont::_FindData (const GString& key) {
 	if(_FONTS) {
-		std::map<PString, PFont::_PrivateData*>::iterator i = _FONTS->find(key);
+		std::map<GString, PFont::_PrivateData*>::iterator i = _FONTS->find(key);
 		if(i != _FONTS->end()) {
 			return i->second;
 		}
@@ -350,13 +350,13 @@ PFont::_PrivateData* PFont::_FindData (const PString& key) {
 	return NULL;
 }
 
-void PFont::_AddData (const PString& key, _PrivateData* data) {
+void PFont::_AddData (const GString& key, _PrivateData* data) {
 	if(_FONTS == NULL)
-		_FONTS = new std::map<PString, PFont::_PrivateData*>;
+		_FONTS = new std::map<GString, PFont::_PrivateData*>;
 	_FONTS->insert(std::make_pair(key, data));
 }
 
-void PFont::_RemoveData (const PString& key) {
+void PFont::_RemoveData (const GString& key) {
 	if(_FONTS != NULL) {
 		_FONTS->erase(_FONTS->find(key));
 		if(_FONTS->empty()) {

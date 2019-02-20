@@ -57,11 +57,11 @@ PXML::~PXML () {
 	Delete();
 }
 
-PXML::PXML (const PString& resource) {
+PXML::PXML (const GString& resource) {
 	NewFromFile(resource);
 }
 
-bool PXML::NewFromFile (const PString& path) {
+bool PXML::NewFromFile (const GString& path) {
 	Delete();
 	
 	_XMLParser* parser = [[_XMLParser alloc] initWithContentsOfURL:[NSURL fileURLWithPath:[NSString stringWithUTF8String:path] isDirectory:NO]];
@@ -82,7 +82,7 @@ bool PXML::NewFromFile (const PString& path) {
 }
 
 void PXML::Delete () {
-	for(std::multimap<PString, PXML*>::iterator i = elements.begin(); i != elements.end(); i++)
+	for(std::multimap<GString, PXML*>::iterator i = elements.begin(); i != elements.end(); i++)
 		if(i->second) {
 			delete i->second;
 			i->second = NULL;
@@ -94,24 +94,24 @@ void PXML::Delete () {
 	parent = NULL;
 }
 
-const PString& PXML::GetTag () const {
+const GString& PXML::GetTag () const {
 	return tag;
 }
 
-const PString& PXML::GetContent () const {
+const GString& PXML::GetContent () const {
 	return content;
 }
 
-const PString* PXML::GetAttribute (const PString& name) const {
-	std::map<PString, PString>::const_iterator find = attributes.find(PString(name).ToLower());
+const GString* PXML::GetAttribute (const GString& name) const {
+	std::map<GString, GString>::const_iterator find = attributes.find(GString(name).ToLower());
 	if(find != attributes.end())
 		return &find->second;
 	return NULL;
 }
 
-const PXML* PXML::GetElement (const PString& element, int_t index) const {
-	std::pair<std::multimap<PString, PXML*>::const_iterator, std::multimap<PString, PXML*>::const_iterator> find = elements.equal_range(PString(element).ToLower());
-	for(std::multimap<PString, PXML*>::const_iterator i = find.first; i != find.second; i++)
+const PXML* PXML::GetElement (const GString& element, int_t index) const {
+	std::pair<std::multimap<GString, PXML*>::const_iterator, std::multimap<GString, PXML*>::const_iterator> find = elements.equal_range(GString(element).ToLower());
+	for(std::multimap<GString, PXML*>::const_iterator i = find.first; i != find.second; i++)
 		if(index-- <= 0)
 			return i->second;
 	return NULL;
@@ -121,36 +121,36 @@ const PXML* PXML::GetParent () const {
 	return parent;
 }
 
-static PString _GetString (const PXML* xml, const PString& tab) {
+static GString _GetString (const PXML* xml, const GString& tab) {
 	
 	if(xml == NULL)
 		return NULL;
 	
 	// Add tag
-	PString string;
+	GString string;
 	string.Format("%s<%s", (const char*)tab, (const char*)xml->GetTag());
 	
 	// Add attributes
-	for(std::map<PString, PString>::const_iterator i = xml->attributes.begin(); i != xml->attributes.end(); i++)
-		string += PString().Format(" %s=\"%s\"", (const char*)i->first, (const char*)i->second);
+	for(std::map<GString, GString>::const_iterator i = xml->attributes.begin(); i != xml->attributes.end(); i++)
+		string += GString().Format(" %s=\"%s\"", (const char*)i->first, (const char*)i->second);
 	string += ">\n";
 	
 	// Add elements recursively
-	for(std::multimap<PString, PXML*>::const_iterator i = xml->elements.begin(); i != xml->elements.end(); i++)
+	for(std::multimap<GString, PXML*>::const_iterator i = xml->elements.begin(); i != xml->elements.end(); i++)
 		string += _GetString(i->second, tab + "\t");
 	
 	// Add content (if it exists)
 	if(!xml->content.IsEmpty())
-		string += PString(xml->GetContent()).TrimSpaces();
+		string += GString(xml->GetContent()).TrimSpaces();
 	
 	// End the tag
-	string += PString().Format("%s</%s>\n", (const char*)tab, (const char*)xml->GetTag());
+	string += GString().Format("%s</%s>\n", (const char*)tab, (const char*)xml->GetTag());
 	
 	return string;
 }
 
-PString PXML::GetString () const {
-	return PString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n") + _GetString(this, "");
+GString PXML::GetString () const {
+	return GString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n") + _GetString(this, "");
 }
 
 #endif // PLATFORM_MACOSX
