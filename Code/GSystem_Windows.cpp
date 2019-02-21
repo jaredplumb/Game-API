@@ -1,4 +1,4 @@
-#include "PSystem.h"
+#include "GSystem.h"
 #if PLATFORM_WINDOWS
 
 static int	_WIDTH					= 1024;
@@ -16,66 +16,66 @@ static LRESULT CALLBACK _WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		return 0;
 	case WM_KEYDOWN:
 		if ((lParam & (1 << 30)) == 0)
-			PSystem::RunKeyCallbacks((vkey_t)wParam);
+			GSystem::RunKeyCallbacks((vkey_t)wParam);
 		return 0;
 	case WM_KEYUP:
-		PSystem::RunKeyUpCallbacks((vkey_t)wParam);
+		GSystem::RunKeyUpCallbacks((vkey_t)wParam);
 		return 0;
 	case WM_CHAR:
 		if ((int)wParam <= 127 && isprint((int)wParam) && (lParam & (1 << 30)) == 0)
-			PSystem::RunASCIICallbacks((char)wParam);
+			GSystem::RunASCIICallbacks((char)wParam);
 		return 0;
 	case WM_SYSKEYDOWN:
 		if ((lParam & (1 << 30)) == 0)
-			PSystem::RunKeyCallbacks((vkey_t)wParam);
+			GSystem::RunKeyCallbacks((vkey_t)wParam);
 		return 0;
 	case WM_SYSKEYUP:
-		PSystem::RunKeyUpCallbacks((vkey_t)wParam);
+		GSystem::RunKeyUpCallbacks((vkey_t)wParam);
 		return 0;
 	case WM_MOUSEMOVE:
-		PSystem::RunMouseMoveCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam));
+		GSystem::RunMouseMoveCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam));
 		return 0;
 	case WM_LBUTTONDOWN:
-		PSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 0);
+		GSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 0);
 		return 0;
 	case WM_LBUTTONUP:
-		PSystem::RunMouseUpCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 0);
+		GSystem::RunMouseUpCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 0);
 		return 0;
 	case WM_LBUTTONDBLCLK:
-		PSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 0);
+		GSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 0);
 		return 0;
 	case WM_RBUTTONDOWN:
-		PSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 1);
+		GSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 1);
 		return 0;
 	case WM_RBUTTONUP:
-		PSystem::RunMouseUpCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 1);
+		GSystem::RunMouseUpCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 1);
 		return 0;
 	case WM_RBUTTONDBLCLK:
-		PSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 1);
+		GSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 1);
 		return 0;
 	case WM_MBUTTONDOWN:
-		PSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 2);
+		GSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 2);
 		return 0;
 	case WM_MBUTTONUP:
-		PSystem::RunMouseUpCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 2);
+		GSystem::RunMouseUpCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 2);
 		return 0;
 	case WM_MBUTTONDBLCLK:
-		PSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 2);
+		GSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), 2);
 		return 0;
 	case WM_MOUSEWHEEL:
-		PSystem::RunMouseWheelCallbacks((float)0, (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA);
+		GSystem::RunMouseWheelCallbacks((float)0, (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA);
 		return 0;
 	case WM_XBUTTONDOWN:
-		PSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), (int_t)GET_XBUTTON_WPARAM(wParam) - (int_t)XBUTTON1 + 3);
+		GSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), (int_t)GET_XBUTTON_WPARAM(wParam) - (int_t)XBUTTON1 + 3);
 		return 0;
 	case WM_XBUTTONUP:
-		PSystem::RunMouseUpCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), (int_t)GET_XBUTTON_WPARAM(wParam) - (int_t)XBUTTON1 + 3);
+		GSystem::RunMouseUpCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), (int_t)GET_XBUTTON_WPARAM(wParam) - (int_t)XBUTTON1 + 3);
 		return 0;
 	case WM_XBUTTONDBLCLK:
-		PSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), (int_t)GET_XBUTTON_WPARAM(wParam) - (int_t)XBUTTON1 + 3);
+		GSystem::RunMouseCallbacks((int_t)GET_X_LPARAM(lParam), (int_t)GET_Y_LPARAM(lParam), (int_t)GET_XBUTTON_WPARAM(wParam) - (int_t)XBUTTON1 + 3);
 		return 0;
 	case WM_MOUSEHWHEEL:
-		PSystem::RunMouseWheelCallbacks((float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, (float)0);
+		GSystem::RunMouseWheelCallbacks((float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, (float)0);
 		return 0;
 	}
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -109,7 +109,7 @@ static WCHAR* _GetTitle() {
 	return TITLE;
 }
 
-void PSystem::Print(const char* message, ...) {
+void GSystem::Print(const char* message, ...) {
 	if (message) {
 		va_list args;
 		va_start(args, message);
@@ -127,7 +127,7 @@ void PSystem::Print(const char* message, ...) {
 	}
 }
 
-void PSystem::Debug(const char* message, ...) {
+void GSystem::Debug(const char* message, ...) {
 #if DEBUG
 	if (message) {
 		va_list args;
@@ -148,28 +148,28 @@ void PSystem::Debug(const char* message, ...) {
 #endif
 }
 
-int_t PSystem::GetWidth() {
+int_t GSystem::GetWidth() {
 	return _WIDTH;
 }
 
-int_t PSystem::GetHeight() {
+int_t GSystem::GetHeight() {
 	return _HEIGHT;
 }
 
-int_t PSystem::GetFPS() {
+int_t GSystem::GetFPS() {
 	return _FPS;
 }
 
-int_t PSystem::GetUniqueRef() {
+int_t GSystem::GetUniqueRef() {
 	static int_t REF = 1;
 	return REF++;
 }
 
-uint64 PSystem::GetMilliseconds() {
+uint64 GSystem::GetMilliseconds() {
 	return (uint64)GetTickCount64();
 }
 
-uint64 PSystem::GetMicroseconds() {
+uint64 GSystem::GetMicroseconds() {
 	LARGE_INTEGER frequency;
 	LARGE_INTEGER counter;
 	QueryPerformanceFrequency(&frequency);
@@ -177,7 +177,7 @@ uint64 PSystem::GetMicroseconds() {
 	return (uint64)(counter.QuadPart * 1000000 / frequency.QuadPart);
 }
 
-uint64 PSystem::GetNanoseconds() {
+uint64 GSystem::GetNanoseconds() {
 	LARGE_INTEGER frequency;
 	LARGE_INTEGER counter;
 	QueryPerformanceFrequency(&frequency);
@@ -185,18 +185,18 @@ uint64 PSystem::GetNanoseconds() {
 	return (uint64)(counter.QuadPart * 1000000000 / frequency.QuadPart);
 }
 
-void PSystem::SetDefaultWD() {
+void GSystem::SetDefaultWD() {
 	SetCurrentDirectory(L"Resources");
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	
-	PSystem::SetDefaultWD();
+	GSystem::SetDefaultWD();
 
 #if DEBUG
 	char wd[MAX_PATH];
 	GetCurrentDirectoryA(MAX_PATH, wd);
-	PSystem::Print("WD: %s\n", wd);
+	GSystem::Print("WD: %s\n", wd);
 #endif
 	
 	// Create the window class
@@ -260,7 +260,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return (int)result;
 
 	// Our startup callback
-	PSystem::RunStartupCallbacks();
+	GSystem::RunStartupCallbacks();
 
 	// Show the window
 	ShowWindow(_WINDOW, SW_SHOWNORMAL);
@@ -284,7 +284,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			static const int RECORDS = 60;
 			static uint64 timeRecord[RECORDS];
 			static int_t timeIndex = 0;
-			uint64 time = PSystem::GetMicroseconds();
+			uint64 time = GSystem::GetMicroseconds();
 #endif
 
 			// Set render states
@@ -319,7 +319,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			_DEVICE->BeginScene();
 
 			// Our render callback
-			PSystem::RunDrawCallbacks();
+			GSystem::RunDrawCallbacks();
 
 			// End the current scene
 			_DEVICE->EndScene();
@@ -328,7 +328,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			_DEVICE->Present(NULL, NULL, NULL, NULL);
 
 #if DEBUG
-			time = PSystem::GetMicroseconds() - time;
+			time = GSystem::GetMicroseconds() - time;
 			timeRecord[timeIndex++] = time;
 			if (timeIndex >= RECORDS) timeIndex = 0;
 			uint64 average = 0;
@@ -336,7 +336,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				average += timeRecord[i];
 			average /= RECORDS;
 			if (timeIndex % RECORDS == 0)
-				PSystem::Print("%d FPS\n", (int)(1000000 / average));
+				GSystem::Print("%d FPS\n", (int)(1000000 / average));
 #endif
 
 		}
@@ -346,10 +346,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	ShowWindow(_WINDOW, SW_HIDE);
 
 	// Our shutdown callback
-	PSystem::RunShutdownCallbacks();
+	GSystem::RunShutdownCallbacks();
 
 	// Delete all the callbacks
-	PSystem::DeleteAllCallbacks();
+	GSystem::DeleteAllCallbacks();
 
 	// Shutdown Direct X
 	if (_DEVICE) {

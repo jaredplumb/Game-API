@@ -1,4 +1,4 @@
-#include "PImage.h"
+#include "GImage.h"
 #if PLATFORM_MACOSX
 
 
@@ -16,7 +16,7 @@ extern id<MTLRenderCommandEncoder>	_P_RENDER;
 
 
 
-struct PImage::_PrivateData {
+struct GImage::_PrivateData {
 	
 	int_t width, height;
 	
@@ -35,40 +35,40 @@ struct PImage::_PrivateData {
 
 
 
-PImage::PImage ()
+GImage::GImage ()
 :	_data(NULL)
 {
 	if(New(GColor::WHITE) == false)
-		PSystem::Debug("ERROR: Could not create image with color 0xffffffff!\n");
+		GSystem::Debug("ERROR: Could not create image with color 0xffffffff!\n");
 }
 
-PImage::PImage (const Resource& resource)
+GImage::GImage (const Resource& resource)
 :	_data(NULL)
 {
 	if(New(resource) == false)
-		PSystem::Debug("ERROR: Could not load image from resource!\n");
+		GSystem::Debug("ERROR: Could not load image from resource!\n");
 }
 
-PImage::PImage (const GString& resource)
+GImage::GImage (const GString& resource)
 :	_data(NULL)
 {
 	if(New(resource) == false)
-		PSystem::Debug("ERROR: Could not load image \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Could not load image \"%s\"!\n", (const char*)resource);
 }
 
-PImage::PImage (const GColor& color)
+GImage::GImage (const GColor& color)
 :	_data(NULL)
 {
 	if(New(color) == false)
-		PSystem::Debug("ERROR: Could not create image with color 0x%x!\n", color.color);
+		GSystem::Debug("ERROR: Could not create image with color 0x%x!\n", color.color);
 }
 
-PImage::~PImage () {
+GImage::~GImage () {
 	Delete();
 }
 
 
-bool PImage::New (const Resource& resource) {
+bool GImage::New (const Resource& resource) {
 	Delete();
 	
 	if(resource.width == 0 || resource.height == 0)
@@ -153,11 +153,11 @@ bool PImage::New (const Resource& resource) {
 	return true;
 }
 
-bool PImage::New (const GString& resource) {
+bool GImage::New (const GString& resource) {
 	return New(Resource(resource));
 }
 
-bool PImage::New (const GColor& color) {
+bool GImage::New (const GColor& color) {
 	Resource resource;
 	resource.width = 4;
 	resource.height = 4;
@@ -172,7 +172,7 @@ bool PImage::New (const GColor& color) {
 	return New(resource);
 }
 
-void PImage::Delete () {
+void GImage::Delete () {
 	if(_data) {
 		_data->texture = nil; // Autorelease ??? [_data->texture release]
 		if(_data->vertices)
@@ -183,19 +183,23 @@ void PImage::Delete () {
 	}
 }
 
-int_t PImage::GetWidth () const {
+int_t GImage::GetWidth () const {
 	return _data ? _data->width : 0;
 }
 
-int_t PImage::GetHeight () const {
+int_t GImage::GetHeight () const {
 	return _data ? _data->height : 0;
 }
 
-bool PImage::IsEmpty () const {
+GRect GImage::GetRect () const {
+	return _data ? GRect(0, 0, _data->width, _data->height) : GRect();
+}
+
+bool GImage::IsEmpty () const {
 	return _data == NULL;
 }
 
-void PImage::Draw () {
+void GImage::Draw () {
 	if(_P_RENDER == nil || _data == NULL || _data->vertices == NULL || _data->texture == nil || _data->indicies == nil)
 		return;
 	
@@ -205,7 +209,7 @@ void PImage::Draw () {
 	
 }
 
-void PImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
+void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 	if(_data == NULL)
 		return;
 	
@@ -258,7 +262,7 @@ void PImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 	Draw();
 }
 
-void PImage::Draw (int_t x, int_t y, float alpha) {
+void GImage::Draw (int_t x, int_t y, float alpha) {
 	if(_data == NULL)
 		return;
 	
@@ -283,21 +287,21 @@ void PImage::Draw (int_t x, int_t y, float alpha) {
 	Draw();
 }
 
-void PImage::Draw (const GRect& dst, float alpha) {
+void GImage::Draw (const GRect& dst, float alpha) {
 	if(_data)
 		Draw(_data->src, dst, GColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
 }
 
-void PImage::Draw (const GRect& src, int_t x, int_t y, float alpha) {
+void GImage::Draw (const GRect& src, int_t x, int_t y, float alpha) {
 	Draw(src, GRect(x, y, src.width, src.height), GColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
 }
 
-void PImage::DrawRect (const GRect& rect, const GColor& color) {
+void GImage::DrawRect (const GRect& rect, const GColor& color) {
 	if(_data)
 		Draw(GRect(0, 0, _data->width, _data->height), rect, color);
 }
 
-void PImage::DrawLine (const GPoint& a, const GPoint& b, int_t width, const GColor& color) {
+void GImage::DrawLine (const GPoint& a, const GPoint& b, int_t width, const GColor& color) {
 	if(_data == NULL || _data->vertices == NULL || _data->verticesCount == 0)
 		return;
 	
@@ -343,7 +347,7 @@ void PImage::DrawLine (const GPoint& a, const GPoint& b, int_t width, const GCol
 	Draw();
 }
 
-void PImage::DrawEllipse (const GRect& rect, const GColor& color, const int_t sides) {
+void GImage::DrawEllipse (const GRect& rect, const GColor& color, const int_t sides) {
 	if(_data == NULL)
 		return;
 	
@@ -384,7 +388,7 @@ void PImage::DrawEllipse (const GRect& rect, const GColor& color, const int_t si
 	
 }
 
-void PImage::DrawQuad (const float vertices[8], const float coords[8], const GColor& color) {
+void GImage::DrawQuad (const float vertices[8], const float coords[8], const GColor& color) {
 	if(_data == NULL)
 		return;
 	
@@ -422,7 +426,7 @@ void PImage::DrawQuad (const float vertices[8], const float coords[8], const GCo
 	
 }
 
-void PImage::DrawVertices (const Vertex verticies[], int_t verticesCount, const uint16 indicies[], int_t indiciesCount) {
+void GImage::DrawVertices (const Vertex verticies[], int_t verticesCount, const uint16 indicies[], int_t indiciesCount) {
 	if(_P_RENDER == nil || _data == NULL || _data->texture == nil)
 		return;
 	_data->indicies = [_P_DEVICE newBufferWithBytes:indicies length:(sizeof(uint16) * indiciesCount) options:MTLResourceStorageModeShared];
@@ -438,7 +442,7 @@ void PImage::DrawVertices (const Vertex verticies[], int_t verticesCount, const 
 
 
 
-PImage::Resource::Resource ()
+GImage::Resource::Resource ()
 :	width(0)
 ,	height(0)
 ,	bufferSize(0)
@@ -446,21 +450,21 @@ PImage::Resource::Resource ()
 {
 }
 
-PImage::Resource::Resource (const GString& resource)
+GImage::Resource::Resource (const GString& resource)
 :	width(0)
 ,	height(0)
 ,	bufferSize(0)
 ,	buffer(NULL)
 {
 	if(New(resource) == false)
-		PSystem::Debug("ERROR: Could not load image resource \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Could not load image resource \"%s\"!\n", (const char*)resource);
 }
 
-PImage::Resource::~Resource () {
+GImage::Resource::~Resource () {
 	Delete();
 }
 
-bool PImage::Resource::New (const GString& resource) {
+bool GImage::Resource::New (const GString& resource) {
 	if(NewFromPackage(resource))
 		return true;
 	if(NewFromFile(resource))
@@ -468,7 +472,7 @@ bool PImage::Resource::New (const GString& resource) {
 	return false;
 }
 
-bool PImage::Resource::NewFromFile (const GString& resource) {
+bool GImage::Resource::NewFromFile (const GString& resource) {
 	Delete();
 	
 	CFStringRef string = CFStringCreateWithCString(NULL, resource, kCFStringEncodingUTF8);
@@ -505,7 +509,7 @@ bool PImage::Resource::NewFromFile (const GString& resource) {
 	return true;
 }
 
-bool PImage::Resource::NewFromPackage (const GString& resource) {
+bool GImage::Resource::NewFromPackage (const GString& resource) {
 	Delete();
 	
 	uint64 archiveSize = PPackage::GetSize(resource + ".image");
@@ -541,7 +545,7 @@ bool PImage::Resource::NewFromPackage (const GString& resource) {
 	return true;
 }
 
-void PImage::Resource::Delete () {
+void GImage::Resource::Delete () {
 	width = 0;
 	height = 0;
 	bufferSize = 0;
@@ -551,7 +555,7 @@ void PImage::Resource::Delete () {
 	}
 }
 
-bool PImage::Resource::WriteToPackage (PPackage& package, const GString& name) {
+bool GImage::Resource::WriteToPackage (PPackage& package, const GString& name) {
 	
 	uint64 headerSize = sizeof(width) + sizeof(height) + sizeof(bufferSize);
 	uint64 archiveSize = PArchive::GetBufferBounds(headerSize + sizeof(uint8) * bufferSize);

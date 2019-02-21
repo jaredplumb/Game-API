@@ -1,4 +1,4 @@
-#include "PImage.h"
+#include "GImage.h"
 #if PLATFORM_WINDOWS
 
 extern LPDIRECT3DDEVICE9 _DEVICE;
@@ -11,7 +11,7 @@ struct _CustomVertex {
 
 static const DWORD _FVF = D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1;
 
-struct PImage::_PrivateData {
+struct GImage::_PrivateData {
 	int_t refCount; // Used for the smart pointer code
 	PString refName; // Used for the smart pointer code
 	
@@ -27,7 +27,7 @@ struct PImage::_PrivateData {
 
 static uint32 _MAX_TEXTURE_SIZE = 0;
 
-bool PImage::New(const PImageResource& resource, const PString& name) {
+bool GImage::New(const GImageResource& resource, const PString& name) {
 	
 	_data = _FindData(name);
 	if (_data != NULL) {
@@ -44,7 +44,7 @@ bool PImage::New(const PImageResource& resource, const PString& name) {
 	}
 
 	if (resource.bufferWidth > _MAX_TEXTURE_SIZE || resource.bufferHeight > _MAX_TEXTURE_SIZE)
-		return New(PImageResource(resource, _MAX_TEXTURE_SIZE, _MAX_TEXTURE_SIZE));
+		return New(GImageResource(resource, _MAX_TEXTURE_SIZE, _MAX_TEXTURE_SIZE));
 
 	Delete();
 
@@ -131,7 +131,7 @@ bool PImage::New(const PImageResource& resource, const PString& name) {
 	return true;
 }
 
-void PImage::Delete() {
+void GImage::Delete() {
 	if (_data) {
 		
 		_data->refCount--;
@@ -150,27 +150,27 @@ void PImage::Delete() {
 	}
 }
 
-int_t PImage::GetWidth() const {
+int_t GImage::GetWidth() const {
 	return _data ? _data->imageWidth : 0;
 }
 
-int_t PImage::GetHeight() const {
+int_t GImage::GetHeight() const {
 	return _data ? _data->imageHeight : 0;
 }
 
-int_t PImage::GetTextureWidth() const {
+int_t GImage::GetTextureWidth() const {
 	return _data ? _data->bufferWidth : 0;
 }
 
-int_t PImage::GetTextureHeight() const {
+int_t GImage::GetTextureHeight() const {
 	return _data ? _data->bufferHeight : 0;
 }
 
-bool PImage::IsEmpty() const {
+bool GImage::IsEmpty() const {
 	return _data == NULL || _data->vb == 0 || _data->tx == 0;
 }
 
-void PImage::Draw() {
+void GImage::Draw() {
 	if (_DEVICE == NULL || _data == NULL || _data->vb == NULL)
 		return;
 
@@ -181,7 +181,7 @@ void PImage::Draw() {
 	_DEVICE->SetTexture(0, NULL);
 }
 
-void PImage::Draw(int_t x, int_t y) {
+void GImage::Draw(int_t x, int_t y) {
 	if (_data == NULL || _data->vb == 0)
 		return;
 
@@ -206,7 +206,7 @@ void PImage::Draw(int_t x, int_t y) {
 	Draw();
 }
 
-void PImage::Draw(const PRect& src, int_t x, int_t y, float alpha) {
+void GImage::Draw(const PRect& src, int_t x, int_t y, float alpha) {
 	if (_data == NULL || _data->vb == 0 || _data->tx == 0)
 		return;
 

@@ -264,25 +264,27 @@ public:
 
 class GPoint {
 public:
-    int_t x, y;
-    
-    inline GPoint ()                                                        : x(0), y(0) {}
-    inline GPoint (const GPoint& p)                                            : x(p.x), y(p.y) {}
-    inline GPoint (int_t x_, int_t y_)                                        : x(x_), y(y_) {}
-    inline GPoint& Offset (const GPoint& p)                                    { x += p.x; y += p.y; return *this; }
-    inline GPoint& Offset (int_t x_, int_t y_)                                { x += x_; y += y_; return *this; }
-    inline bool operator== (const GPoint& p) const                            { return x == p.x && y == p.y; }
-    inline bool operator!= (const GPoint& p) const                            { return x != p.x || y != p.y; }
-    inline const GPoint operator+ (const GPoint& p) const                    { return GPoint(x + p.x, y + p.y); }
-    inline const GPoint operator- () const                                    { return GPoint(-x, -y); }
-    inline const GPoint operator- (const GPoint& p) const                    { return GPoint(x - p.x, y - p.y); }
-    inline const GPoint operator* (int_t t) const                            { return GPoint(x * t, y * t); }
-    inline const GPoint operator/ (int_t t) const                            { return GPoint(x / t, y / t); }
-    inline GPoint& operator= (const GPoint& p)                                { x = p.x; y = p.y; return *this; }
-    inline GPoint& operator+= (const GPoint& p)                                { x += p.x; y += p.y; return *this; }
-    inline GPoint& operator-= (const GPoint& p)                                { x -= p.x; y -= p.y; return *this; }
-    inline GPoint& operator*= (int_t t)                                        { x *= t; y *= t; return *this; }
-    inline GPoint& operator/= (int_t t)                                        { x /= t; y /= t; return *this; }
+	int_t x, y;
+	
+	inline GPoint ()                                                        : x(0), y(0) {}
+	inline GPoint (const GPoint& p)                                            : x(p.x), y(p.y) {}
+	inline GPoint (int_t x_, int_t y_)                                        : x(x_), y(y_) {}
+	inline GPoint& Set (const GPoint& p)								{ x = p.x; y = p.y; return *this; }
+	inline GPoint& Set (int_t x_, int_t y_)								{ x = x_; y = y_; return *this; }
+	inline GPoint& Offset (const GPoint& p)                                    { x += p.x; y += p.y; return *this; }
+	inline GPoint& Offset (int_t x_, int_t y_)                                { x += x_; y += y_; return *this; }
+	inline bool operator== (const GPoint& p) const                            { return x == p.x && y == p.y; }
+	inline bool operator!= (const GPoint& p) const                            { return x != p.x || y != p.y; }
+	inline const GPoint operator+ (const GPoint& p) const                    { return GPoint(x + p.x, y + p.y); }
+	inline const GPoint operator- () const                                    { return GPoint(-x, -y); }
+	inline const GPoint operator- (const GPoint& p) const                    { return GPoint(x - p.x, y - p.y); }
+	inline const GPoint operator* (int_t t) const                            { return GPoint(x * t, y * t); }
+	inline const GPoint operator/ (int_t t) const                            { return GPoint(x / t, y / t); }
+	inline GPoint& operator= (const GPoint& p)                                { x = p.x; y = p.y; return *this; }
+	inline GPoint& operator+= (const GPoint& p)                                { x += p.x; y += p.y; return *this; }
+	inline GPoint& operator-= (const GPoint& p)                                { x -= p.x; y -= p.y; return *this; }
+	inline GPoint& operator*= (int_t t)                                        { x *= t; y *= t; return *this; }
+	inline GPoint& operator/= (int_t t)                                        { x /= t; y /= t; return *this; }
 };
 
 

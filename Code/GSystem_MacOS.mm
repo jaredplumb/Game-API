@@ -1,5 +1,5 @@
-#import "PSystem.h"
-#if PLATFORM_IOS
+#import "GSystem.h"
+#if PLATFORM_MACOSX
 
 
 static int_t			_WIDTH		    = 1280;
@@ -16,8 +16,8 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
-@interface _MyAppDelegate : UIResponder <UIApplicationDelegate>
-@property (strong, nonatomic) UIWindow* window;
+@interface _MyAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate>
+@property (strong, nonatomic) NSWindow* window;
 @end
 
 @interface _MyMetalView : MTKView <MTKViewDelegate>
@@ -31,39 +31,47 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 @implementation _MyAppDelegate
 
-- (BOOL) application: (UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    self.window.backgroundColor = [UIColor blackColor];
-    //self.viewController = [[_MyViewController alloc] initWithNibName:nil bundle:nil];
-    //self.window.rootViewController = self.viewController;
-    [self.window.rootViewController setView:[[_MyMetalView alloc] initWithFrame:self.window.bounds]];
-    [self.window makeKeyAndVisible];
-    
-    // TODO: this and the shutdown version should be moved to be called after OpenGL is turned on and right before it is turned off
-    PSystem::RunStartupCallbacks();
-    
-    return YES;
+- (void) applicationDidFinishLaunching: (NSNotification*)aNotification {
+	[self setupMenu];
+	[self setupWindow];
+	
+	// Run the startup callbacks after everything is turned on
+	GSystem::RunStartupCallbacks();
 }
 
-- (void) applicationWillResignActive: (UIApplication*)application {
-    //PSystem::RunPauseCallbacks();
+- (void) applicationWillTerminate: (NSNotification*)notification {
+	
+	// Run the shutdown callbacks before everything is turned off
+	GSystem::RunShutdownCallbacks();
 }
 
-- (void) applicationDidEnterBackground: (UIApplication*)application {
-    //PSystem::RunDeactivateCallbacks();
+- (void) setupMenu {
+	NSString* appName = [[NSProcessInfo processInfo] processName];
+	
+	NSMenu* mainMenu = [NSMenu new];
+	NSMenuItem* appMenuItem = [NSMenuItem new];
+	[mainMenu addItem:appMenuItem];
+	
+	NSMenu* appMenu = [NSMenu new];
+	[appMenuItem setSubmenu:appMenu];
+	
+	NSMenuItem* quitMenuItem = [[NSMenuItem alloc] initWithTitle:[@"Quit " stringByAppendingString:appName] action:@selector(terminate:) keyEquivalent:@"q"];
+	[appMenu addItem:quitMenuItem];
+	
+	[NSApp setMainMenu:mainMenu];
 }
 
-- (void) applicationWillEnterForeground: (UIApplication*)application {
-    //PSystem::RunActivateCallbacks();
+- (void) setupWindow {
+	NSRect windowRect = NSMakeRect(0, 0, _WIDTH, _HEIGHT);
+	self.window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable) backing:NSBackingStoreBuffered defer:YES];
+	[self.window setTitle:[[NSProcessInfo processInfo] processName]];
+	[self.window center];
+	[self.window setContentView:[[_MyMetalView alloc] initWithFrame:windowRect]];
+	[self.window makeKeyAndOrderFront:self];
 }
 
-- (void) applicationDidBecomeActive: (UIApplication*)application {
-    //PSystem::RunResumeCallbacks();
-}
-
-- (void) applicationWillTerminate: (UIApplication*)application {
-    // Run the shutdown callbacks before everything is turned off
-    PSystem::RunShutdownCallbacks();
+- (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication *)sender {
+	return YES;
 }
 
 @end // _MyAppDelegate
@@ -89,10 +97,10 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	vector_uint2 _viewport;
 }
 
-- (id) initWithFrame: (CGRect)frameRect {
+- (id) initWithFrame: (NSRect)frameRect {
 	
 	// Convert the view to use the full pixel coordinates of the screen (retina)
-	//frameRect = [[UIScreen mainScreen] convertRectToBacking:frameRect];
+	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect];
 	
 	_P_DEVICE = MTLCreateSystemDefaultDevice();
 	self = [super initWithFrame:frameRect device:_P_DEVICE];
@@ -134,11 +142,11 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 		[_P_RENDER setViewport:(MTLViewport){(double)0, (double)0, (double)_viewport.x, (double)_viewport.y, (double)-1, (double)1}];
 		[_P_RENDER setRenderPipelineState:_pipelineState];
 		
-		PSystem::MatrixSetModelDefault();
-		PSystem::MatrixSetProjectionDefault();
-		PSystem::MatrixUpdate();
+		GSystem::MatrixSetModelDefault();
+		GSystem::MatrixSetProjectionDefault();
+		GSystem::MatrixUpdate();
 		
-		PSystem::RunDrawCallbacks();
+		GSystem::RunDrawCallbacks();
 		
 		[_P_RENDER endEncoding];
 		
@@ -170,32 +178,116 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	return YES;
 }
 
-- (void) touchesBegan: (NSSet*)touches withEvent:(UIEvent*)event {
-    for(UITouch* touch in touches) {
-        CGPoint touchLocation = [touch locationInView:self];
-        PSystem::RunTouchCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
-    }
+- (void) mouseDown: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 }
 
-- (void) touchesMoved: (NSSet*)touches withEvent:(UIEvent*)event {
-    for(UITouch* touch in touches) {
-        CGPoint touchLocation = [touch locationInView:self];
-        PSystem::RunTouchMoveCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
-    }
+- (void) rightMouseDown: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 }
 
-- (void) touchesEnded: (NSSet*)touches withEvent:(UIEvent*)event {
-    for(UITouch* touch in touches) {
-        CGPoint touchLocation = [touch locationInView:self];
-        PSystem::RunTouchUpCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
-    }
+- (void) otherMouseDown: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 }
 
-- (void) touchesCancelled: (NSSet*)touches withEvent:(UIEvent*)event {
-    for(UITouch* touch in touches) {
-        CGPoint touchLocation = [touch locationInView:self];
-        PSystem::RunTouchUpCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
-    }
+- (void) mouseUp: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+}
+
+- (void) rightMouseUp: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+}
+
+- (void) otherMouseUp: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+}
+
+- (void) mouseMoved: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	GSystem::RunMouseMoveCallbacks((int_t)location.x, (int_t)location.y);
+}
+
+- (void) mouseDragged: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+}
+
+- (void) rightMouseDragged: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+}
+
+- (void) otherMouseDragged: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+}
+
+- (void) scrollWheel: (NSEvent*)theEvent {
+	GSystem::RunMouseWheelCallbacks((float_t)[theEvent deltaX], (float_t)[theEvent deltaY]);
+}
+
+- (void) keyDown: (NSEvent*)theEvent {
+	if([theEvent isARepeat] == NO)
+		GSystem::RunKeyCallbacks((vkey_t)[theEvent keyCode]);
+	if([[theEvent characters] length] > 0 && isprint((int)[[theEvent characters] UTF8String][0]))
+		GSystem::RunASCIICallbacks((char)[[theEvent characters] UTF8String][0]);
+	
+	
+	//wchar_t key = [[theEvent characters] characterAtIndex:0];
+	
+	
+	
+}
+
+- (void) keyUp: (NSEvent*)theEvent {
+	if([theEvent isARepeat] == NO)
+		GSystem::RunKeyUpCallbacks((vkey_t)[theEvent keyCode]);
+}
+
+- (void) flagsChanged: (NSEvent*)theEvent {
+	
+	
+	
+	//unsigned long cmods = [theEvent modifierFlags];
+	//if ((cmods & 0xffff0000) != _Modifiers)
+	//{
+	//   uint32_t mods = MapModifiers(cmods);
+	//  for (int i = 1; i <= 4; i++)
+	// {
+	//    unsigned long m = (1 << (16+i));
+	//     if ((cmods & m) != (_Modifiers & m))
+	//     {
+	//         if (cmods & m)
+	//             _App->OnKey(ModifierKeys[i], 0, true, mods); // Key Down
+	//         else
+	//             _App->OnKey(ModifierKeys[i], 0, false, mods); // Key Up
+	//     }
+	// }
+	//    _Modifiers = cmods & 0xffff0000;
+	//}
+	
+	
+	//GetCurrentKeyModifiers
+	//GetCurrentEventKeyModifiers
+	//kVK_Shift
+	//kVK_RightShift
+	//printf("0x%x %d\n", [theEvent keyCode], (bool)([theEvent modifierFlags] & NSShiftKeyMask));
 }
 
 @end // _MyMetalView
@@ -220,17 +312,17 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
-void PSystem::Print (const char* message, ...) {
+void GSystem::Print (const char* message, ...) {
 	if (message) {
 		va_list args;
 		va_start(args, message);
 #if PLATFORM_WINDOWS && DEBUG
 		int size = vsnprintf(NULL, 0, message, args);
-		if (size > 0) {
+		if(size > 0) {
 			char* string = new char[size + 1];
 			vsnprintf(string, size + 1, message, args);
 			OutputDebugStringA(string);
-			delete[] string;
+			delete [] string;
 		}
 #endif
 		vprintf(message, args);
@@ -238,18 +330,18 @@ void PSystem::Print (const char* message, ...) {
 	}
 }
 
-void PSystem::Debug (const char* message, ...) {
+void GSystem::Debug (const char* message, ...) {
 #if DEBUG
 	if (message) {
 		va_list args;
 		va_start(args, message);
 #if PLATFORM_WINDOWS
 		int size = vsnprintf(NULL, 0, message, args);
-		if (size > 0) {
+		if(size > 0) {
 			char* string = new char[size + 1];
 			vsnprintf(string, size + 1, message, args);
 			OutputDebugStringA(string);
-			delete[] string;
+			delete [] string;
 		}
 #else
 		vprintf(message, args);
@@ -259,44 +351,44 @@ void PSystem::Debug (const char* message, ...) {
 #endif
 }
 
-int_t PSystem::GetWidth () {
+int_t GSystem::GetWidth () {
     return _WIDTH;
 }
 
-int_t PSystem::GetHeight () {
+int_t GSystem::GetHeight () {
     return _HEIGHT;
 }
 
-int_t PSystem::GetSafeWidth () {
+int_t GSystem::GetSafeWidth () {
     return _SAFE_WIDTH;
 }
 
-int_t PSystem::GetSafeHeight () {
+int_t GSystem::GetSafeHeight () {
     return _SAFE_HEIGHT;
 }
 
-int_t PSystem::GetFPS () {
+int_t GSystem::GetFPS () {
 	return _FPS;
 }
 
-int_t PSystem::GetUniqueRef () {
+int_t GSystem::GetUniqueRef () {
 	static int_t REF = 1;
 	return REF++;
 }
 
-uint64 PSystem::GetMilliseconds () {
+uint64 GSystem::GetMilliseconds () {
 	return (uint64)(CFAbsoluteTimeGetCurrent() * 1000.0);
 }
 
-uint64 PSystem::GetMicroseconds () {
+uint64 GSystem::GetMicroseconds () {
 	return (uint64)(CFAbsoluteTimeGetCurrent() * 1000000.0);
 }
 
-uint64 PSystem::GetNanoseconds () {
+uint64 GSystem::GetNanoseconds () {
 	return (uint64)(CFAbsoluteTimeGetCurrent() * 1000000000.0);
 }
 
-void PSystem::SetDefaultWD () {
+void GSystem::SetDefaultWD () {
 	CFURLRef directory = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
 	char resources[PATH_MAX];
 	CFURLGetFileSystemRepresentation(directory, true, (UInt8*)resources, PATH_MAX);
@@ -304,22 +396,25 @@ void PSystem::SetDefaultWD () {
 	chdir(resources);
 }
 
-void PSystem::SetDefaultScreenSize (int_t width, int_t height) {
+void GSystem::SetDefaultScreenSize (int_t width, int_t height) {
 	_WIDTH = width;
 	_HEIGHT = height;
     _SAFE_WIDTH = _WIDTH;
     _SAFE_HEIGHT = _HEIGHT;
 }
 
-int_t PSystem::Run (int_t argc, char* argv[]) {
-	PSystem::SetDefaultWD();
+int_t GSystem::Run (int_t argc, char* argv[]) {
+	GSystem::SetDefaultWD();
 	
 #if DEBUG
-	PSystem::Debug("WD: %s\n", getwd(NULL));
+	GSystem::Debug("WD: %s\n", getwd(NULL));
 #endif
 	
 	@autoreleasepool {
-        return UIApplicationMain((int)argc, argv, nil, NSStringFromClass([_MyAppDelegate class]));
+		[NSApplication sharedApplication];
+		_MyAppDelegate* delegate = [[_MyAppDelegate alloc] init];
+		[[NSApplication sharedApplication] setDelegate:delegate];
+		[[NSApplication sharedApplication] run];
 	}
 	
 	return EXIT_SUCCESS;
@@ -365,43 +460,43 @@ static inline matrix_float4x4 matrix4x4_translate (matrix_float4x4 matrix, float
 
 
 
-void PSystem::MatrixSetModelDefault () {
+void GSystem::MatrixSetModelDefault () {
 	//_EFFECT.transform.modelviewMatrix = GLKMatrix4Identity;
 	_MODEL_MATRIX = matrix_identity_float4x4;
 }
 
-void PSystem::MatrixSetProjectionDefault () {
+void GSystem::MatrixSetProjectionDefault () {
 	//_EFFECT.transform.projectionMatrix = GLKMatrix4MakeOrtho((float)0, (float)_WIDTH, (float)_HEIGHT, (float)0, (float)-1, (float)1);
 	_PROJECTION_MATRIX = matrix_ortho((float)0, (float)_WIDTH, (float)_HEIGHT, (float)0, (float)-1, (float)1);
 }
 
-void PSystem::MatrixTranslateModel (float x, float y) {
+void GSystem::MatrixTranslateModel (float x, float y) {
 	//_EFFECT.transform.modelviewMatrix = GLKMatrix4Translate(_EFFECT.transform.modelviewMatrix, x, y, (float)0);
 	_MODEL_MATRIX = matrix4x4_translate(_MODEL_MATRIX, x, y, (float)0);
 }
 
-void PSystem::MatrixTranslateProjection (float x, float y) {
+void GSystem::MatrixTranslateProjection (float x, float y) {
 	//_EFFECT.transform.projectionMatrix = GLKMatrix4Translate(_EFFECT.transform.projectionMatrix, x, y, (float)0);
 	_PROJECTION_MATRIX = matrix4x4_translate(_PROJECTION_MATRIX, x, y, (float)0);
 }
 
-void PSystem::MatrixScaleModel (float x, float y) {
+void GSystem::MatrixScaleModel (float x, float y) {
 	//_EFFECT.transform.modelviewMatrix = GLKMatrix4Scale(_EFFECT.transform.modelviewMatrix, x, y, (float)1);
 }
 
-void PSystem::MatrixScaleProjection (float x, float y) {
+void GSystem::MatrixScaleProjection (float x, float y) {
 	//_EFFECT.transform.projectionMatrix = GLKMatrix4Scale(_EFFECT.transform.projectionMatrix, x, y, (float)1);
 }
 
-void PSystem::MatrixRotateModel (float degrees) {
+void GSystem::MatrixRotateModel (float degrees) {
 	//_EFFECT.transform.modelviewMatrix = GLKMatrix4Rotate(_EFFECT.transform.modelviewMatrix, GLKMathDegreesToRadians(degrees), (float)0, (float)0, (float)1);
 }
 
-void PSystem::MatrixRotateProjection (float degrees) {
+void GSystem::MatrixRotateProjection (float degrees) {
 	//_EFFECT.transform.projectionMatrix = GLKMatrix4Rotate(_EFFECT.transform.projectionMatrix, GLKMathDegreesToRadians(degrees), (float)0, (float)0, (float)1);
 }
 
-void PSystem::MatrixUpdate () {
+void GSystem::MatrixUpdate () {
 	if(_P_RENDER != nil) {
 		static matrix_float4x4 MATRIX;
 		MATRIX = matrix_multiply(_PROJECTION_MATRIX, _MODEL_MATRIX);

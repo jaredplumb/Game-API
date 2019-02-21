@@ -1,20 +1,20 @@
-#ifndef _P_IMAGE_H_
-#define _P_IMAGE_H_
+#ifndef _GIMAGE_H_
+#define _GIMAGE_H_
 
 #include "GTypes.h"
-#include "PSystem.h"
+#include "GSystem.h"
 #include "PPackage.h"
 
-class PImage {
+class GImage {
 public:
 	class Resource;
 	class Vertex;
 	
-	PImage ();
-	PImage (const Resource& resource);
-	PImage (const GString& resource);
-	PImage (const GColor& color);
-	~PImage ();
+	GImage ();
+	GImage (const Resource& resource);
+	GImage (const GString& resource);
+	GImage (const GColor& color);
+	~GImage ();
 	
 	bool New (const Resource& resource);
 	bool New (const GString& resource);
@@ -23,6 +23,7 @@ public:
 	
 	int_t GetWidth () const;
 	int_t GetHeight () const;
+	GRect GetRect () const; // Returns a rect using a 0,0 location and GetWdith and GetHeight (utility)
 	bool IsEmpty () const;
 	
 	void Draw ();
@@ -65,4 +66,4 @@ private:
 	_PrivateData* _data;
 };
 
-#endif // _P_IMAGE_H_
+#endif // _GIMAGE_H_

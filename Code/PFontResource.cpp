@@ -87,7 +87,7 @@ bool PFontResource::NewFromPackage (const GString& resource) {
 	uint64 archiveSize = PPackage::GetSize(resource + ".font");
 	uint8* archiveBuffer = new uint8[archiveSize];
 	if(PPackage::Read(resource + ".font", archiveBuffer, archiveSize) == false) {
-		PSystem::Debug("ERROR: Failed to read \"%s\" from packages!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to read \"%s\" from packages!\n", (const char*)resource);
 		delete [] archiveBuffer;
 		return false;
 	}
@@ -113,7 +113,7 @@ bool PFontResource::NewFromPackage (const GString& resource) {
 	delete [] archiveBuffer;
 	
 	if(image.NewFromPackage(resource + ".font") == false) {
-		PSystem::Debug("ERROR: Failed to read \"%s\"'s image file from packages!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to read \"%s\"'s image file from packages!\n", (const char*)resource);
 		return false;
 	}
 	
@@ -156,7 +156,7 @@ bool PFontResource::NewFromFile (const GString& resource) {
 	
 	PFile file;
 	if(file.OpenForRead(resource) == false) {
-		PSystem::Debug("ERROR: Failed to open font file \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to open font file \"%s\"!\n", (const char*)resource);
 		return false;
 	}
 	
@@ -164,7 +164,7 @@ bool PFontResource::NewFromFile (const GString& resource) {
 	uint8 buffer[size + 1];
 	buffer[size] = 0;
 	if(file.Read(buffer, sizeof(uint8) * size) == false) {
-		PSystem::Debug("ERROR: Failed to read entire contents of font file \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to read entire contents of font file \"%s\"!\n", (const char*)resource);
 		return false;
 	}
 	
@@ -199,7 +199,7 @@ bool PFontResource::NewFromFile (const GString& resource) {
 					
 					
 					if(image.NewFromFile(GString(resource).TrimToDirectory() + (const char*)line) == false) {
-						PSystem::Debug("ERROR: Failed to get src image for font \"%s\"!\n", (const char*)resource);
+						GSystem::Debug("ERROR: Failed to get src image for font \"%s\"!\n", (const char*)resource);
 						return false;
 					}
 					
@@ -251,7 +251,7 @@ bool PFontResource::NewFromFile (const GString& resource) {
 						chars[128 + hashCount] = glyph;
 						hash[hashCount++] =  _ConvertUnicodeToHash(id);
 					} else {
-						PSystem::Debug("ERROR: Too many characters found in font file \"%s\"!\n", (const char*)resource);
+						GSystem::Debug("ERROR: Too many characters found in font file \"%s\"!\n", (const char*)resource);
 					}
 				}
 			}
@@ -306,15 +306,15 @@ bool PFontResource::NewFromFile (const GString& resource) {
 					if(firstIndex != 0 && secondIndex != 0)
 						kernings[kernCount++] = ((uint64)firstIndex | ((uint64)secondIndex << 24) | ((uint64)amount << 48));
 					else
-						PSystem::Debug("ERROR: Kernings \"first\" or \"second\" not found in font file \"%s\"!\n", (const char*)resource);
+						GSystem::Debug("ERROR: Kernings \"first\" or \"second\" not found in font file \"%s\"!\n", (const char*)resource);
 					
 				} else {
-					PSystem::Debug("ERROR: Too many kerning values in font file \"%s\"!\n", (const char*)resource);
+					GSystem::Debug("ERROR: Too many kerning values in font file \"%s\"!\n", (const char*)resource);
 				}
 			}
 			
 		} else if(GString::isprint(*line)) {
-			PSystem::Debug("ERROR: Unknown line found in font file \"%s\"!\n", (const char*)resource);
+			GSystem::Debug("ERROR: Unknown line found in font file \"%s\"!\n", (const char*)resource);
 		}
 		
 		
@@ -389,7 +389,7 @@ bool PFontResource::WriteToPackage (PPackage& package, const GString& name) {
 		memcpy(archiveBuffer + headerSize + sizeof(Char) * charCount + sizeof(uint32) * hashCount, kernings, sizeof(uint64) * kernCount);
 	
 	if(package.Write(name + ".font", archiveBuffer, archiveSize) == false) {
-		PSystem::Debug("Failed to write to package resource \"%s\"!\n", (const char*)name);
+		GSystem::Debug("Failed to write to package resource \"%s\"!\n", (const char*)name);
 		delete [] archiveBuffer;
 		return false;
 	}
@@ -397,7 +397,7 @@ bool PFontResource::WriteToPackage (PPackage& package, const GString& name) {
 	delete [] archiveBuffer;
 	
 	if(image.WriteToPackage(package, name + ".font") == false) {
-		PSystem::Debug("Failed to write to package resource \"%s\"'s image!\n", (const char*)name);
+		GSystem::Debug("Failed to write to package resource \"%s\"'s image!\n", (const char*)name);
 		return false;
 	}
 	

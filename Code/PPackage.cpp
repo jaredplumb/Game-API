@@ -26,7 +26,7 @@ PPackage::PPackage (const GString& path, bool setDefaultWD)
 :	_footer(0)
 {
 	if(setDefaultWD)
-		PSystem::SetDefaultWD();
+		GSystem::SetDefaultWD();
 	OpenForRead(path);
 }
 
@@ -35,35 +35,35 @@ bool PPackage::OpenForRead (const GString& path) {
 	Close();
 	
 	if(_file.OpenForRead(path) == false) {
-		PSystem::Debug("ERROR: Failed to open package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to open package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	uint8 version;
 	if(_file.Read(&version, sizeof(version)) == false) {
-		PSystem::Debug("ERROR: Failed to read version from package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to read version from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	uint8 identifier[sizeof(_IDENTIFIER)];
 	if(_file.Read(identifier, sizeof(_IDENTIFIER)) == false) {
-		PSystem::Debug("ERROR: Failed to read identifier from package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to read identifier from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	if(_file.Read(&_footer, sizeof(_footer)) == false) {
-		PSystem::Debug("ERROR: Failed to read footer offset from package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to read footer offset from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	if(_file.SetPosition((uint_t)_footer) == false) {
-		PSystem::Debug("ERROR: Failed to set offset for package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to set offset for package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	uint64 count;
 	if(_file.Read(&count, sizeof(count)) == false) {
-		PSystem::Debug("ERROR: Failed to read number of resources from package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to read number of resources from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
@@ -72,26 +72,26 @@ bool PPackage::OpenForRead (const GString& path) {
 	
 	uint64 bufferSize;
 	if(_file.Read(&bufferSize, sizeof(bufferSize)) == false) {
-		PSystem::Debug("ERROR: Failed to read buffer size from package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to read buffer size from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	uint64 archiveSize;
 	if(_file.Read(&archiveSize, sizeof(archiveSize)) == false) {
-		PSystem::Debug("ERROR: Failed to read archive size from package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to read archive size from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	uint8* archive = new uint8[archiveSize];
 	if(_file.Read(archive, sizeof(uint8) * archiveSize) == false) {
-		PSystem::Debug("ERROR: Failed to read archive from package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to read archive from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	uint8* buffer = new uint8[bufferSize];
 	archiveSize = PArchive::Decompress(archive, archiveSize, buffer, bufferSize);
 	if(archiveSize != bufferSize) {
-		PSystem::Debug("ERROR: Failed to decompress resource table for package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to decompress resource table for package \"%s\"!\n", (const char*)path);
 		delete[] archive;
 		return false;
 	}
@@ -113,7 +113,7 @@ bool PPackage::OpenForRead (const GString& path) {
 		_packages = new std::list<PPackage*>;
 	_packages->push_back(this);
 	
-    PSystem::Debug("%s ready for reading...\n", (const char*)path);
+    GSystem::Debug("%s ready for reading...\n", (const char*)path);
     
 	return true;
 }
@@ -122,22 +122,22 @@ bool PPackage::OpenForWrite (const GString& path) {
 	Close();
 	
 	if(_file.OpenForWrite(path) == false) {
-		PSystem::Debug("ERROR: Failed to open the package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to open the package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	if(_file.Write(&_VERSION, sizeof(_VERSION)) == false) {
-		PSystem::Debug("ERROR: Failed to write version for package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to write version for package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	if(_file.Write(_IDENTIFIER, sizeof(_IDENTIFIER)) == false) {
-		PSystem::Debug("ERROR: Failed to write identifier for package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to write identifier for package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
 	if(_file.Write(&_footer, sizeof(_footer)) == false) {
-		PSystem::Debug("ERROR: Failed to write footer offset for package \"%s\"!\n", (const char*)path);
+		GSystem::Debug("ERROR: Failed to write footer offset for package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
@@ -178,13 +178,13 @@ uint64 PPackage::GetSize (const GString& resource) {
 		if(r != (*p)->_resources.end()) {
 			
 			if((*p)->_file.SetPosition(r->second) == false) {
-				PSystem::Debug("ERROR: Failed to set package position for resource \"%s\"!\n", (const char*)resource);
+				GSystem::Debug("ERROR: Failed to set package position for resource \"%s\"!\n", (const char*)resource);
 				return 0;
 			}
 			
 			uint64 size;
 			if((*p)->_file.Read(&size, sizeof(size)) == false) {
-				PSystem::Debug("ERROR: Failed to read resource size for resource \"%s\"!\n", (const char*)resource);
+				GSystem::Debug("ERROR: Failed to read resource size for resource \"%s\"!\n", (const char*)resource);
 				return 0;
 			}
 			
@@ -194,7 +194,7 @@ uint64 PPackage::GetSize (const GString& resource) {
 		}
 	}
 	
-	//PSystem::Debug("ERROR: Failed to find resource \"%s\"!\n", (const char*)resource);
+	//GSystem::Debug("ERROR: Failed to find resource \"%s\"!\n", (const char*)resource);
 	return 0;
 }
 
@@ -206,7 +206,7 @@ bool PPackage::Read (const GString& resource, void* data, uint64 size) {
 		return false;
 	
 	if(_lastPackage->_file.Read(data, (uint_t)size) == false) {
-		PSystem::Debug("ERROR: Failed to read from package resource \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to read from package resource \"%s\"!\n", (const char*)resource);
 		_lastPackage = NULL;
 		return false;
 	}
@@ -217,17 +217,17 @@ bool PPackage::Read (const GString& resource, void* data, uint64 size) {
 
 bool PPackage::Write (const GString& resource, const void* data, uint64 size) {
 	if(_file.SetPosition(_footer) == false) {
-		PSystem::Debug("ERROR: Failed to set package position for resource \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to set package position for resource \"%s\"!\n", (const char*)resource);
 		return false;
 	}
 	
 	if(_file.Write(&size, sizeof(size)) == false) {
-		PSystem::Debug("ERROR: Failed to write resource size for resource \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to write resource size for resource \"%s\"!\n", (const char*)resource);
 		return false;
 	}
 	
 	if(_file.Write(data, size) == false) {
-		PSystem::Debug("ERROR: Failed to write resource \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to write resource \"%s\"!\n", (const char*)resource);
 		return false;
 	}
 	
@@ -235,33 +235,33 @@ bool PPackage::Write (const GString& resource, const void* data, uint64 size) {
 	_footer = _file.GetPosition();
 	
 	if(_file.SetPosition(0) == false) {
-		PSystem::Debug("ERROR: Failed to set package position to 0!\n");
+		GSystem::Debug("ERROR: Failed to set package position to 0!\n");
 		return false;
 	}
 	
 	if(_file.Write(&_VERSION, sizeof(_VERSION)) == false) {
-		PSystem::Debug("ERROR: Failed to write version to package!\n");
+		GSystem::Debug("ERROR: Failed to write version to package!\n");
 		return false;
 	}
 	
 	if(_file.Write(_IDENTIFIER, sizeof(_IDENTIFIER)) == false) {
-		PSystem::Debug("ERROR: Failed to write identifier to package!\n");
+		GSystem::Debug("ERROR: Failed to write identifier to package!\n");
 		return false;
 	}
 	
 	if(_file.Write(&_footer, sizeof(_footer)) == false) {
-		PSystem::Debug("ERROR: Failed to write footer offset to package!\n");
+		GSystem::Debug("ERROR: Failed to write footer offset to package!\n");
 		return false;
 	}
 	
 	if(_file.SetPosition(_footer) == false) {
-		PSystem::Debug("ERROR: Failed to set package position to footer!\n");
+		GSystem::Debug("ERROR: Failed to set package position to footer!\n");
 		return false;
 	}
 	
 	uint64 count = _resources.size();
 	if(_file.Write(&count, sizeof(count)) == false) {
-		PSystem::Debug("ERROR: Failed to write number of resources to package!\n");
+		GSystem::Debug("ERROR: Failed to write number of resources to package!\n");
 		return false;
 	}
 	
@@ -273,7 +273,7 @@ bool PPackage::Write (const GString& resource, const void* data, uint64 size) {
 		bufferSize += i->first.GetLength() + 1 + sizeof(uint64);
 	
 	if(_file.Write(&bufferSize, sizeof(bufferSize)) == false) {
-		PSystem::Debug("ERROR: Failed to write footer buffer size to package!\n");
+		GSystem::Debug("ERROR: Failed to write footer buffer size to package!\n");
 		return false;
 	}
 	
@@ -294,20 +294,20 @@ bool PPackage::Write (const GString& resource, const void* data, uint64 size) {
 	uint8* archive = new uint8[archiveSize];
 	archiveSize = PArchive::Compress(buffer, bufferSize, archive, archiveSize);
 	if(archive == 0) {
-		PSystem::Debug("ERROR: Failed to compress footer archive to package!\n");
+		GSystem::Debug("ERROR: Failed to compress footer archive to package!\n");
 		delete [] buffer;
 		return false;
 	}
 	
 	if(_file.Write(&archiveSize, sizeof(archiveSize)) == false) {
-		PSystem::Debug("ERROR: Failed to write footer archive size to package!\n");
+		GSystem::Debug("ERROR: Failed to write footer archive size to package!\n");
 		delete [] buffer;
 		delete [] archive;
 		return false;
 	}
 	
 	if(_file.Write(archive, sizeof(uint8) * archiveSize) == false) {
-		PSystem::Debug("ERROR: Failed to write footer archive to package!\n");
+		GSystem::Debug("ERROR: Failed to write footer archive to package!\n");
 		delete [] buffer;
 		delete [] archive;
 		return false;

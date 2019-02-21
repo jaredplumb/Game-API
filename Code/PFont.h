@@ -6,7 +6,7 @@
 #include "GTypes.h"
 
 #include "PFontResource.h"
-#include "PImage.h"
+#include "GImage.h"
 
 
 class PFont {

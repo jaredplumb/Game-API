@@ -3,7 +3,7 @@
 
 #include "GTypes.h"
 
-#include "PSystem.h"
+#include "GSystem.h"
 
 #include "PArchive.h"
 
@@ -13,7 +13,7 @@
 
 #include "PPackage.h"
 
-#include "PImage.h"
+#include "GImage.h"
 
 #include "PFontResource.h"
 #include "PFont.h"

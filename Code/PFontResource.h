@@ -8,10 +8,10 @@
 #include "PXML.h"
 //#include "PArchive.h"
 
-#include "PSystem.h"
+#include "GSystem.h"
 
 //#include "PImageResource.h"
-#include "PImage.h"
+#include "GImage.h"
 
 #include "PFile.h"
 
@@ -36,7 +36,7 @@ public:
 	Char*			chars;
 	uint32*			hash;
 	uint64*			kernings;
-	PImage::Resource	image;			// The image data for this font
+	GImage::Resource	image;			// The image data for this font
 	
 	PFontResource ();
 	~PFontResource ();

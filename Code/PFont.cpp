@@ -14,7 +14,7 @@ struct PFont::_PrivateData {
 	int_t*						advances;
 	std::map<int_t, int_t>**	kernings;
 	uint32*						hash;
-	PImage						image;
+	GImage						image;
 };
 
 
@@ -40,7 +40,7 @@ static int_t _FindIndexFromHash (uint32* hash, int_t hashCount, uint32 character
 				return 128 + mid; // The index from the hash starts at 128 because they are non-ASCII
 		}
 	}
-	PSystem::Debug("ERROR: Could not find font character (%u) in hash!\n", character);
+	GSystem::Debug("ERROR: Could not find font character (%u) in hash!\n", character);
 	return 0;
 }
 
@@ -130,7 +130,7 @@ bool PFont::New (const PFontResource& resource, const GString& name) {
 	
 	//if(_data->image.New(resource.image, name + ".font") == false) {
 	if(_data->image.New(resource.image) == false) {
-		PSystem::Debug("ERROR: Could not create image with name \"%s\"!\n", (const char*)(name + ".font"));
+		GSystem::Debug("ERROR: Could not create image with name \"%s\"!\n", (const char*)(name + ".font"));
 		return false;
 	}
 	
@@ -232,7 +232,7 @@ GRect PFont::GetRect (const GString& text) const {
 				index = _FindIndexFromHash(_data->hash, _data->hashCount, (((uint8)text[i + 3]) | ((uint8)text[i + 2] << 8) | ((uint8)text[i + 1] << 16) | ((uint8)text[i] << 24)));
 				i += 3;
 			} else {
-				PSystem::Debug("ERROR: Unknown character (%x) found while drawing font!\n", (uint8)text[i]);
+				GSystem::Debug("ERROR: Unknown character (%x) found while drawing font!\n", (uint8)text[i]);
 			}
 			
 			// Draw the character
@@ -263,7 +263,7 @@ GRect PFont::GetRect (const GString& text) const {
 				
 				
 			} else {
-				PSystem::Debug("ERROR: Index not found while drawing font!\n");
+				GSystem::Debug("ERROR: Index not found while drawing font!\n");
 			}
 			
 			last = index;
@@ -311,7 +311,7 @@ void PFont::Draw (const GString& text, int_t x, int_t y, float alpha) {
 				index = _FindIndexFromHash(_data->hash, _data->hashCount, (((uint8)text[i + 3]) | ((uint8)text[i + 2] << 8) | ((uint8)text[i + 1] << 16) | ((uint8)text[i] << 24)));
 				i += 3;
 			} else {
-				PSystem::Debug("ERROR: Unknown character (%x) found while drawing font!\n", (uint8)text[i]);
+				GSystem::Debug("ERROR: Unknown character (%x) found while drawing font!\n", (uint8)text[i]);
 			}
 			
 			// Draw the character
@@ -332,7 +332,7 @@ void PFont::Draw (const GString& text, int_t x, int_t y, float alpha) {
 				
 				
 			} else {
-				PSystem::Debug("ERROR: Index not found while drawing font!\n");
+				GSystem::Debug("ERROR: Index not found while drawing font!\n");
 			}
 			
 			last = index;

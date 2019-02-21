@@ -2,7 +2,7 @@
 #define _P_PACKAGE_H_
 
 #include "GTypes.h"
-#include "PSystem.h"
+#include "GSystem.h"
 #include "PFile.h"
 #include "PArchive.h"
 

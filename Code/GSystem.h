@@ -1,5 +1,5 @@
-#ifndef _P_SYSTEM_H_
-#define _P_SYSTEM_H_
+#ifndef _G_SYSTEM_H_
+#define _G_SYSTEM_H_
 
 #include "GTypes.h"
 
@@ -10,7 +10,7 @@
 /// Several functions and all the callbacks will only work after calling Run(), which can be
 /// ignored when working with tools.
 /// The design of this class should avoid including any other library headers except GPlatform.h.
-class PSystem {
+class GSystem {
 public:
 	
 	/// Prints a formatted string to the console.
@@ -125,4 +125,4 @@ public:
 	static void RunTouchMoveCallbacks (int_t x, int_t y);
 };
 
-#endif // _P_SYSTEM_H_
+#endif // _G_SYSTEM_H_

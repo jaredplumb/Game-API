@@ -1,5 +1,5 @@
 #include "UINode.h"
-#include "PSystem.h"
+#include "GSystem.h"
 
 
 
@@ -7,9 +7,9 @@
 
 
 UINode::UINode ()
-:	_ref(PSystem::GetUniqueRef())
+:	_ref(GSystem::GetUniqueRef())
 ,	_delete(false)
-,	_rect(0, 0, PSystem::GetWidth(), PSystem::GetHeight())
+,	_rect(0, 0, GSystem::GetWidth(), GSystem::GetHeight())
 ,	_visible(true)
 ,	_active(true)
 ,	_focus(false)
@@ -144,9 +144,9 @@ void UINode::Remove (UINode& node) {
 void UINode::SendDraw () {
 	if(_visible) {
 		
-		PSystem::MatrixSetProjectionDefault();
-		PSystem::MatrixTranslateProjection((float)_rect.x, (float)_rect.y);
-		PSystem::MatrixUpdate();
+		GSystem::MatrixSetProjectionDefault();
+		GSystem::MatrixTranslateProjection((float)_rect.x, (float)_rect.y);
+		GSystem::MatrixUpdate();
 		
 		OnDraw();
 		for(std::list<UINode*>::reverse_iterator i = _children.rbegin(); i != _children.rend(); i++)
@@ -291,20 +291,20 @@ UINode::_Root::_Root ()
 :	transitionIn(0)
 ,	transitionOut(0)
 {
-	PSystem::NewStartupCallback(StartupCallback);
-	PSystem::NewShutdownCallback(ShutdownCallback);
-	PSystem::NewDrawCallback(DrawCallback);
-	PSystem::NewMouseCallback(MouseCallback);
-	PSystem::NewMouseUpCallback(MouseUpCallback);
-	PSystem::NewMouseMoveCallback(MouseMoveCallback);
-	PSystem::NewMouseDragCallback(MouseDragCallback);
-	PSystem::NewMouseWheelCallback(MouseWheelCallback);
-	PSystem::NewKeyCallback(KeyCallback);
-	PSystem::NewKeyUpCallback(KeyUpCallback);
-	PSystem::NewASCIICallback(ASCIICallback);
-	PSystem::NewTouchCallback(TouchCallback);
-	PSystem::NewTouchUpCallback(TouchUpCallback);
-	PSystem::NewTouchMoveCallback(TouchMoveCallback);
+	GSystem::NewStartupCallback(StartupCallback);
+	GSystem::NewShutdownCallback(ShutdownCallback);
+	GSystem::NewDrawCallback(DrawCallback);
+	GSystem::NewMouseCallback(MouseCallback);
+	GSystem::NewMouseUpCallback(MouseUpCallback);
+	GSystem::NewMouseMoveCallback(MouseMoveCallback);
+	GSystem::NewMouseDragCallback(MouseDragCallback);
+	GSystem::NewMouseWheelCallback(MouseWheelCallback);
+	GSystem::NewKeyCallback(KeyCallback);
+	GSystem::NewKeyUpCallback(KeyUpCallback);
+	GSystem::NewASCIICallback(ASCIICallback);
+	GSystem::NewTouchCallback(TouchCallback);
+	GSystem::NewTouchUpCallback(TouchUpCallback);
+	GSystem::NewTouchMoveCallback(TouchMoveCallback);
 }
 
 UINode::_Root::~_Root () {
@@ -345,8 +345,8 @@ void UINode::_Root::DrawCallback () {
 	
 	static uint64 FRAMES = 0;
 	FRAMES++;
-	_ELAPSE = FRAMES * 1000 / PSystem::GetFPS() - _MILLISECONDS;
-	_MILLISECONDS = FRAMES * 1000 / PSystem::GetFPS();
+	_ELAPSE = FRAMES * 1000 / GSystem::GetFPS() - _MILLISECONDS;
+	_MILLISECONDS = FRAMES * 1000 / GSystem::GetFPS();
 	
 	
 	
@@ -354,14 +354,14 @@ void UINode::_Root::DrawCallback () {
 	if(_AUTORUN_LIST) {
 		while(_AUTORUN_LIST->begin() != _AUTORUN_LIST->end()) {
 #if DEBUG
-			PSystem::Debug("----------------------------------------------------------------\n");
-			PSystem::Debug("- %s\n", (const char*)_AUTORUN_LIST->begin()->first);
+			GSystem::Debug("----------------------------------------------------------------\n");
+			GSystem::Debug("- %s\n", (const char*)_AUTORUN_LIST->begin()->first);
 #endif
 			std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(_AUTORUN_LIST->begin()->first);
 			if(factory != _FACTORY_LIST->end() && _ROOT)
 				_ROOT->nodes.push_front(factory->second());
 #if DEBUG
-			PSystem::Debug("----------------------------------------------------------------\n");
+			GSystem::Debug("----------------------------------------------------------------\n");
 #endif
 			_AUTORUN_LIST->erase(_AUTORUN_LIST->begin());
 		}
@@ -403,8 +403,8 @@ void UINode::_Root::DrawCallback () {
 				}
 				
 #if DEBUG
-				PSystem::Debug("----------------------------------------------------------------\n");
-				PSystem::Debug("- %s\n", (const char*)_ROOT->to);
+				GSystem::Debug("----------------------------------------------------------------\n");
+				GSystem::Debug("- %s\n", (const char*)_ROOT->to);
 #endif
 				
 				std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(_ROOT->to);
@@ -412,7 +412,7 @@ void UINode::_Root::DrawCallback () {
 					_ROOT->nodes.push_front(factory->second());
 				
 #if DEBUG
-				PSystem::Debug("----------------------------------------------------------------\n");
+				GSystem::Debug("----------------------------------------------------------------\n");
 #endif
 				
 				_ROOT->to = NULL;
