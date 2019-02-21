@@ -1,15 +1,15 @@
-#include "PXML.h"
+#include "GXML.h"
 #if PLATFORM_MACOSX
 
 @interface _XMLParser : NSXMLParser<NSXMLParserDelegate> {
-	PXML* _xml;		// Pointer to main xml object
-	PXML* _element;	// Pointer to the current element
+	GXML* _xml;		// Pointer to main xml object
+	GXML* _element;	// Pointer to the current element
 }
 @end
 
 @implementation _XMLParser
 
-- (void) setxml: (PXML*)xml {
+- (void) setxml: (GXML*)xml {
 	_xml = xml;
 }
 
@@ -19,7 +19,7 @@
 
 - (void) parser: (NSXMLParser*)parser didStartElement: (NSString*)elementName namespaceURI: (NSString*)namespaceURI qualifiedName: (NSString*)qName attributes: (NSDictionary*)attributeDict {
 	if(_element) {
-		PXML* element = new PXML;
+		GXML* element = new GXML;
 		element->parent = _element;
 		_element->elements.insert(std::make_pair([[elementName lowercaseString] UTF8String], element));
 		_element = element;
@@ -48,20 +48,20 @@
 
 @end
 
-PXML::PXML ()
+GXML::GXML ()
 :	parent(NULL)
 {
 }
 
-PXML::~PXML () {
+GXML::~GXML () {
 	Delete();
 }
 
-PXML::PXML (const GString& resource) {
+GXML::GXML (const GString& resource) {
 	NewFromFile(resource);
 }
 
-bool PXML::NewFromFile (const GString& path) {
+bool GXML::NewFromFile (const GString& path) {
 	Delete();
 	
 	_XMLParser* parser = [[_XMLParser alloc] initWithContentsOfURL:[NSURL fileURLWithPath:[NSString stringWithUTF8String:path] isDirectory:NO]];
@@ -81,8 +81,8 @@ bool PXML::NewFromFile (const GString& path) {
 	return true;
 }
 
-void PXML::Delete () {
-	for(std::multimap<GString, PXML*>::iterator i = elements.begin(); i != elements.end(); i++)
+void GXML::Delete () {
+	for(std::multimap<GString, GXML*>::iterator i = elements.begin(); i != elements.end(); i++)
 		if(i->second) {
 			delete i->second;
 			i->second = NULL;
@@ -94,34 +94,34 @@ void PXML::Delete () {
 	parent = NULL;
 }
 
-const GString& PXML::GetTag () const {
+const GString& GXML::GetTag () const {
 	return tag;
 }
 
-const GString& PXML::GetContent () const {
+const GString& GXML::GetContent () const {
 	return content;
 }
 
-const GString* PXML::GetAttribute (const GString& name) const {
+const GString* GXML::GetAttribute (const GString& name) const {
 	std::map<GString, GString>::const_iterator find = attributes.find(GString(name).ToLower());
 	if(find != attributes.end())
 		return &find->second;
 	return NULL;
 }
 
-const PXML* PXML::GetElement (const GString& element, int_t index) const {
-	std::pair<std::multimap<GString, PXML*>::const_iterator, std::multimap<GString, PXML*>::const_iterator> find = elements.equal_range(GString(element).ToLower());
-	for(std::multimap<GString, PXML*>::const_iterator i = find.first; i != find.second; i++)
+const GXML* GXML::GetElement (const GString& element, int_t index) const {
+	std::pair<std::multimap<GString, GXML*>::const_iterator, std::multimap<GString, GXML*>::const_iterator> find = elements.equal_range(GString(element).ToLower());
+	for(std::multimap<GString, GXML*>::const_iterator i = find.first; i != find.second; i++)
 		if(index-- <= 0)
 			return i->second;
 	return NULL;
 }
 
-const PXML* PXML::GetParent () const {
+const GXML* GXML::GetParent () const {
 	return parent;
 }
 
-static GString _GetString (const PXML* xml, const GString& tab) {
+static GString _GetString (const GXML* xml, const GString& tab) {
 	
 	if(xml == NULL)
 		return NULL;
@@ -136,7 +136,7 @@ static GString _GetString (const PXML* xml, const GString& tab) {
 	string += ">\n";
 	
 	// Add elements recursively
-	for(std::multimap<GString, PXML*>::const_iterator i = xml->elements.begin(); i != xml->elements.end(); i++)
+	for(std::multimap<GString, GXML*>::const_iterator i = xml->elements.begin(); i != xml->elements.end(); i++)
 		string += _GetString(i->second, tab + "\t");
 	
 	// Add content (if it exists)
@@ -149,7 +149,7 @@ static GString _GetString (const PXML* xml, const GString& tab) {
 	return string;
 }
 
-GString PXML::GetString () const {
+GString GXML::GetString () const {
 	return GString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n") + _GetString(this, "");
 }
 

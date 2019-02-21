@@ -1,11 +1,11 @@
-#ifndef _P_FONT_RESOURCE_H_
-#define _P_FONT_RESOURCE_H_
+#ifndef _GFONTRESOURCE_H_
+#define _GFONTRESOURCE_H_
 
 #include "GTypes.h"
-#include "PPackage.h"
+#include "GPackage.h"
 
 
-#include "PXML.h"
+#include "GXML.h"
 //#include "PArchive.h"
 
 #include "GSystem.h"
@@ -13,10 +13,9 @@
 //#include "PImageResource.h"
 #include "GImage.h"
 
-#include "PFile.h"
 
 
-class PFontResource {
+class GFontResource {
 public:
 	struct Char {
 		uint16 x;
@@ -38,10 +37,10 @@ public:
 	uint64*			kernings;
 	GImage::Resource	image;			// The image data for this font
 	
-	PFontResource ();
-	~PFontResource ();
+	GFontResource ();
+	~GFontResource ();
 	
-	PFontResource (const GString& resource);
+	GFontResource (const GString& resource);
 	
 	bool New (const GString& resource);
 	bool NewFromPackage (const GString& resource);
@@ -50,9 +49,9 @@ public:
 	
 	void Delete ();
 	
-	bool WriteToPackage (PPackage& package, const GString& name);
+	bool WriteToPackage (GPackage& package, const GString& name);
 	
 	
 };
 
-#endif // _P_FONT_RESOURCE_H_
+#endif // _GFONTRESOURCE_H_

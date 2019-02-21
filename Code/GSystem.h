@@ -1,5 +1,5 @@
-#ifndef _G_SYSTEM_H_
-#define _G_SYSTEM_H_
+#ifndef _GSYSTEM_H_
+#define _GSYSTEM_H_
 
 #include "GTypes.h"
 
@@ -125,4 +125,4 @@ public:
 	static void RunTouchMoveCallbacks (int_t x, int_t y);
 };
 
-#endif // _G_SYSTEM_H_
+#endif // _GSYSTEM_H_

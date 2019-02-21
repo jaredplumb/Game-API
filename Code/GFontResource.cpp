@@ -1,4 +1,4 @@
-#include "PFontResource.h"
+#include "GFontResource.h"
 
 
 /* NOTES FOR BITMAP FONT CREATION
@@ -39,7 +39,7 @@ others are invalid
  */
 
 
-PFontResource::PFontResource ()
+GFontResource::GFontResource ()
 :	height(0)
 ,	base(0)
 ,	charCount(0)
@@ -53,13 +53,13 @@ PFontResource::PFontResource ()
 
 
 
-PFontResource::~PFontResource () {
+GFontResource::~GFontResource () {
 	Delete();
 }
 
 
 
-PFontResource::PFontResource (const GString& resource)
+GFontResource::GFontResource (const GString& resource)
 :	height(0)
 ,	base(0)
 ,	charCount(0)
@@ -74,7 +74,7 @@ PFontResource::PFontResource (const GString& resource)
 
 
 
-bool PFontResource::New (const GString& resource) {
+bool GFontResource::New (const GString& resource) {
 	if(NewFromPackage(resource))
 		return true;
 	return NewFromFile(resource);
@@ -82,11 +82,11 @@ bool PFontResource::New (const GString& resource) {
 
 
 
-bool PFontResource::NewFromPackage (const GString& resource) {
+bool GFontResource::NewFromPackage (const GString& resource) {
 	
-	uint64 archiveSize = PPackage::GetSize(resource + ".font");
+	uint64 archiveSize = GPackage::GetSize(resource + ".font");
 	uint8* archiveBuffer = new uint8[archiveSize];
-	if(PPackage::Read(resource + ".font", archiveBuffer, archiveSize) == false) {
+	if(GPackage::Read(resource + ".font", archiveBuffer, archiveSize) == false) {
 		GSystem::Debug("ERROR: Failed to read \"%s\" from packages!\n", (const char*)resource);
 		delete [] archiveBuffer;
 		return false;
@@ -152,9 +152,9 @@ static uint32 _ConvertUnicodeToHash (uint32 c) {
 
 
 
-bool PFontResource::NewFromFile (const GString& resource) {
+bool GFontResource::NewFromFile (const GString& resource) {
 	
-	PFile file;
+	GFile file;
 	if(file.OpenForRead(resource) == false) {
 		GSystem::Debug("ERROR: Failed to open font file \"%s\"!\n", (const char*)resource);
 		return false;
@@ -348,7 +348,7 @@ bool PFontResource::NewFromFile (const GString& resource) {
 
 
 
-void PFontResource::Delete () {
+void GFontResource::Delete () {
 	height = 0;
 	base = 0;
 	charCount = 0;
@@ -371,7 +371,7 @@ void PFontResource::Delete () {
 
 
 
-bool PFontResource::WriteToPackage (PPackage& package, const GString& name) {
+bool GFontResource::WriteToPackage (GPackage& package, const GString& name) {
 	
 	uint64 headerSize = sizeof(height) + sizeof(base) + sizeof(charCount) + sizeof(hashCount) + sizeof(kernCount);
 	uint64 archiveSize = headerSize + sizeof(Char) * charCount + sizeof(uint32) * hashCount + sizeof(uint64) * kernCount;

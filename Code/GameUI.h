@@ -1,6 +1,6 @@
-#ifndef _GAME_UI_H_
-#define _GAME_UI_H_
+#ifndef _GAMEUI_H_
+#define _GAMEUI_H_
 
 #include "UINode.h"
 
-#endif // _GAME_UI_H_
+#endif // _GAMEUI_H_

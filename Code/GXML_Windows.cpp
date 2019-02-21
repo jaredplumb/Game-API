@@ -1,7 +1,7 @@
-#include "PXML.h"
+#include "GXML.h"
 #if PLATFORM_WINDOWS
 
-static bool _ReadXML(CComPtr<IXmlReader>& reader, PXML* xml) {
+static bool _ReadXML(CComPtr<IXmlReader>& reader, GXML* xml) {
 
 	if (xml == NULL)
 		return false;
@@ -24,7 +24,7 @@ static bool _ReadXML(CComPtr<IXmlReader>& reader, PXML* xml) {
 
 		// If the tag already exists, then this is a new element and a child needs to be spawned
 		if (!xml->tag.IsEmpty()) {
-			PXML* element = new PXML;
+			GXML* element = new GXML;
 			element->parent = xml;
 			xml->elements.insert(std::make_pair(PString().Format("%S", name), element));
 			xml = element;
@@ -94,20 +94,20 @@ static bool _ReadXML(CComPtr<IXmlReader>& reader, PXML* xml) {
 	return _ReadXML(reader, xml);
 }
 
-PXML::PXML()
+GXML::GXML()
 : parent(NULL)
 {
 }
 
-PXML::~PXML() {
+GXML::~GXML() {
 	Delete();
 }
 
-PXML::PXML(const PString& resource) {
+GXML::GXML(const PString& resource) {
 	NewFromFile(resource);
 }
 
-bool PXML::NewFromFile(const PString& path) {
+bool GXML::NewFromFile(const PString& path) {
 	
 	Delete();
 
@@ -136,8 +136,8 @@ bool PXML::NewFromFile(const PString& path) {
 	return _ReadXML(reader, this);
 }
 
-void PXML::Delete() {
-	for (std::multimap<PString, PXML*>::iterator i = elements.begin(); i != elements.end(); i++)
+void GXML::Delete() {
+	for (std::multimap<PString, GXML*>::iterator i = elements.begin(); i != elements.end(); i++)
 	if (i->second) {
 		delete i->second;
 		i->second = NULL;
@@ -149,34 +149,34 @@ void PXML::Delete() {
 	parent = NULL;
 }
 
-const PString& PXML::GetTag() const {
+const PString& GXML::GetTag() const {
 	return tag;
 }
 
-const PString& PXML::GetContent() const {
+const PString& GXML::GetContent() const {
 	return content;
 }
 
-const PString* PXML::GetAttribute(const PString& name) const {
+const PString* GXML::GetAttribute(const PString& name) const {
 	std::map<PString, PString>::const_iterator find = attributes.find(PString(name).ToLower());
 	if (find != attributes.end())
 		return &find->second;
 	return NULL;
 }
 
-const PXML* PXML::GetElement(const PString& element, int_t index) const {
-	std::pair<std::multimap<PString, PXML*>::const_iterator, std::multimap<PString, PXML*>::const_iterator> find = elements.equal_range(PString(element).ToLower());
-	for (std::multimap<PString, PXML*>::const_iterator i = find.first; i != find.second; i++)
+const GXML* GXML::GetElement(const PString& element, int_t index) const {
+	std::pair<std::multimap<PString, GXML*>::const_iterator, std::multimap<PString, GXML*>::const_iterator> find = elements.equal_range(PString(element).ToLower());
+	for (std::multimap<PString, GXML*>::const_iterator i = find.first; i != find.second; i++)
 	if (index-- <= 0)
 		return i->second;
 	return NULL;
 }
 
-const PXML* PXML::GetParent() const {
+const GXML* GXML::GetParent() const {
 	return parent;
 }
 
-static PString _GetString(const PXML* xml, const PString& tab) {
+static PString _GetString(const GXML* xml, const PString& tab) {
 
 	if (xml == NULL)
 		return NULL;
@@ -191,7 +191,7 @@ static PString _GetString(const PXML* xml, const PString& tab) {
 	string += ">\n";
 
 	// Add elements recursively
-	for (std::multimap<PString, PXML*>::const_iterator i = xml->elements.begin(); i != xml->elements.end(); i++)
+	for (std::multimap<PString, GXML*>::const_iterator i = xml->elements.begin(); i != xml->elements.end(); i++)
 		string += _GetString(i->second, tab + "\t");
 
 	// Add content (if it exists)
@@ -204,7 +204,7 @@ static PString _GetString(const PXML* xml, const PString& tab) {
 	return string;
 }
 
-PString PXML::GetString() const {
+PString GXML::GetString() const {
 	return PString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n") + _GetString(this, "");
 }
 

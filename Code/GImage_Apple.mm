@@ -512,14 +512,14 @@ bool GImage::Resource::NewFromFile (const GString& resource) {
 bool GImage::Resource::NewFromPackage (const GString& resource) {
 	Delete();
 	
-	uint64 archiveSize = PPackage::GetSize(resource + ".image");
+	uint64 archiveSize = GPackage::GetSize(resource + ".image");
 	if(archiveSize == 0)
 		return false;
 	
 	uint8* archiveBuffer = new uint8[archiveSize];
 	
 	
-	if(PPackage::Read(resource + ".image", archiveBuffer, archiveSize) == false) {
+	if(GPackage::Read(resource + ".image", archiveBuffer, archiveSize) == false) {
 		//ERROR("Failed to read from package resource \"%s\"!", resource.GetString());
 		delete [] archiveBuffer;
 		return false;
@@ -531,7 +531,7 @@ bool GImage::Resource::NewFromPackage (const GString& resource) {
 	
 	buffer = new uint8[bufferSize];
 	
-	archiveSize = PArchive::Decompress(archiveBuffer + headerSize, archiveSize - headerSize, buffer, bufferSize);
+	archiveSize = GArchive::Decompress(archiveBuffer + headerSize, archiveSize - headerSize, buffer, bufferSize);
 	
 	if(archiveSize != bufferSize) {
 		//ERROR("Failed to decompress resource \"%s\"!", resource.GetString());
@@ -555,15 +555,15 @@ void GImage::Resource::Delete () {
 	}
 }
 
-bool GImage::Resource::WriteToPackage (PPackage& package, const GString& name) {
+bool GImage::Resource::WriteToPackage (GPackage& package, const GString& name) {
 	
 	uint64 headerSize = sizeof(width) + sizeof(height) + sizeof(bufferSize);
-	uint64 archiveSize = PArchive::GetBufferBounds(headerSize + sizeof(uint8) * bufferSize);
+	uint64 archiveSize = GArchive::GetBufferBounds(headerSize + sizeof(uint8) * bufferSize);
 	
 	uint8* archiveBuffer = new uint8[archiveSize];
 	memcpy(archiveBuffer, this, headerSize);
 	
-	archiveSize = PArchive::Compress(buffer, sizeof(uint8) * bufferSize, archiveBuffer + headerSize, archiveSize - headerSize);
+	archiveSize = GArchive::Compress(buffer, sizeof(uint8) * bufferSize, archiveBuffer + headerSize, archiveSize - headerSize);
 	
 	if(archiveSize == 0) {
 		//ERROR("Failed to compress image resource \"%s\"!", resource.GetString());

@@ -1,7 +1,7 @@
-#include "PFont.h"
+#include "GFont.h"
 
 
-struct PFont::_PrivateData {
+struct GFont::_PrivateData {
 	int_t refCount; // Used for the smart pointer code
 	GString refName; // Used for the smart pointer code
 	
@@ -18,7 +18,7 @@ struct PFont::_PrivateData {
 };
 
 
-std::map<GString, PFont::_PrivateData*>* PFont::_FONTS = NULL;
+std::map<GString, GFont::_PrivateData*>* GFont::_FONTS = NULL;
 
 
 
@@ -48,28 +48,28 @@ static int_t _FindIndexFromHash (uint32* hash, int_t hashCount, uint32 character
 
 
 
-PFont::PFont ()
+GFont::GFont ()
 :	_data(NULL)
 {
 }
 
-PFont::~PFont () {
+GFont::~GFont () {
 	Delete();
 }
 
 
-PFont::PFont (const PFontResource& resource, const GString& name)
+GFont::GFont (const GFontResource& resource, const GString& name)
 :	_data(NULL){
 	New(resource, name);
 }
 
-PFont::PFont (const GString& resource)
+GFont::GFont (const GString& resource)
 :	_data(NULL)
 {
 	New(resource);
 }
 
-bool PFont::New (const PFontResource& resource, const GString& name) {
+bool GFont::New (const GFontResource& resource, const GString& name) {
 	
 	_data = _FindData(name);
 	if(_data != NULL) {
@@ -139,11 +139,11 @@ bool PFont::New (const PFontResource& resource, const GString& name) {
 	return true;
 }
 
-bool PFont::New (const GString& resource) {
-	return New(PFontResource(resource), resource);
+bool GFont::New (const GString& resource) {
+	return New(GFontResource(resource), resource);
 }
 
-void PFont::Delete () {
+void GFont::Delete () {
 	if(_data == NULL)
 		return;
 	
@@ -185,15 +185,15 @@ void PFont::Delete () {
 
 
 
-int_t PFont::GetLineHeight () const {
+int_t GFont::GetLineHeight () const {
 	return (_data ? _data->height : 0);
 }
 
-int_t PFont::GetBaseHeight () const {
+int_t GFont::GetBaseHeight () const {
 	return (_data ? _data->base : 0);
 }
 
-GRect PFont::GetRect (const GString& text) const {
+GRect GFont::GetRect (const GString& text) const {
 	
 	if(_data == NULL || _data->charCount == 0 || text.IsEmpty())
 		return GRect();
@@ -274,12 +274,12 @@ GRect PFont::GetRect (const GString& text) const {
 }
 
 
-bool PFont::IsEmpty () const {
+bool GFont::IsEmpty () const {
 	return _data == NULL || _data->image.IsEmpty();
 }
 
 
-void PFont::Draw (const GString& text, int_t x, int_t y, float alpha) {
+void GFont::Draw (const GString& text, int_t x, int_t y, float alpha) {
 	if(_data == NULL || _data->charCount == 0 || text.IsEmpty())
 		return;
 	
@@ -340,9 +340,9 @@ void PFont::Draw (const GString& text, int_t x, int_t y, float alpha) {
 	}
 }
 
-PFont::_PrivateData* PFont::_FindData (const GString& key) {
+GFont::_PrivateData* GFont::_FindData (const GString& key) {
 	if(_FONTS) {
-		std::map<GString, PFont::_PrivateData*>::iterator i = _FONTS->find(key);
+		std::map<GString, GFont::_PrivateData*>::iterator i = _FONTS->find(key);
 		if(i != _FONTS->end()) {
 			return i->second;
 		}
@@ -350,13 +350,13 @@ PFont::_PrivateData* PFont::_FindData (const GString& key) {
 	return NULL;
 }
 
-void PFont::_AddData (const GString& key, _PrivateData* data) {
+void GFont::_AddData (const GString& key, _PrivateData* data) {
 	if(_FONTS == NULL)
-		_FONTS = new std::map<GString, PFont::_PrivateData*>;
+		_FONTS = new std::map<GString, GFont::_PrivateData*>;
 	_FONTS->insert(std::make_pair(key, data));
 }
 
-void PFont::_RemoveData (const GString& key) {
+void GFont::_RemoveData (const GString& key) {
 	if(_FONTS != NULL) {
 		_FONTS->erase(_FONTS->find(key));
 		if(_FONTS->empty()) {

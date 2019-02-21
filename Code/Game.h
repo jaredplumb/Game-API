@@ -5,17 +5,13 @@
 
 #include "GSystem.h"
 
-#include "PArchive.h"
+#include "GXML.h"
 
-#include "PDirectory.h"
-#include "PFile.h"
-#include "PXML.h"
-
-#include "PPackage.h"
+#include "GPackage.h"
 
 #include "GImage.h"
 
-#include "PFontResource.h"
-#include "PFont.h"
+#include "GFontResource.h"
+#include "GFont.h"
 
 #endif // _GAME_H_

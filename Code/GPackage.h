@@ -1,26 +1,24 @@
-#ifndef _P_PACKAGE_H_
-#define _P_PACKAGE_H_
+#ifndef _GPACKAGE_H_
+#define _GPACKAGE_H_
 
 #include "GTypes.h"
 #include "GSystem.h"
-#include "PFile.h"
-#include "PArchive.h"
 
-#define		P_PACKAGE_AUTOLOAD(n)		_P_PACKAGE_UNIQUE(n,__COUNTER__)
-#define		_P_PACKAGE_UNIQUE(n,u)		_P_PACKAGE_STATIC(n,u)
-#define		_P_PACKAGE_STATIC(n,u)		static PPackage _P_PACKAGE_ ## u ## _NAME(n, true);
+#define		GPACKAGE_AUTOLOAD(n)		_GPACKAGE_UNIQUE(n,__COUNTER__)
+#define		_GPACKAGE_UNIQUE(n,u)		_GPACKAGE_STATIC(n,u)
+#define		_GPACKAGE_STATIC(n,u)		static GPackage _GPACKAGE_ ## u ## _NAME(n, true);
 
-class PPackage {
+class GPackage {
 public:
 	
-	PPackage ();
-	~PPackage ();
+	GPackage ();
+	~GPackage ();
 	
 	/// This constructor calls OpenForRead
-	PPackage (const GString& path);
+	GPackage (const GString& path);
 	
 	/// This constructor sets the default WD then calls OpenForRead
-	PPackage (const GString& path, bool setDefaultWD);
+	GPackage (const GString& path, bool setDefaultWD);
 	
 	/// Opens a package for reading and adds itself to the global list of packages
 	bool OpenForRead (const GString& path);
@@ -41,9 +39,9 @@ public:
 	static bool Read (const GString& resource, void* data, uint64 size);
 	
 private:
-	PFile						_file;
+	GFile						_file;
 	uint64						_footer;
 	std::map<GString, uint64>	_resources;
 };
 
-#endif // _P_PACKAGE_H_
+#endif // _GPACKAGE_H_

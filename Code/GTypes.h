@@ -1,5 +1,10 @@
-#ifndef _G_TYPES_H_
-#define _G_TYPES_H_
+#ifndef _GTYPES_H_
+#define _GTYPES_H_
+
+// The idea behind this file is that all core Computer Science topics are included for a strong
+// foundation to any program.  This includes basic variable definitions, file handling, basic
+// threading, and even compression.  If all programs benefit from the functionality, it should
+// be added to this file.
 
 // The follwing macros may exist:
 // DEBUG
@@ -457,6 +462,88 @@ private:
 
 
 
+
+
+
+/// A PFile is a wrapper class around a C-File function calls.  This class uses the
+/// native width versions of the file functions allowing for very large files.
+class GFile {
+public:
+	
+	GFile ();
+	~GFile ();
+	
+	/// This constructor calls OpenForRead
+	GFile (const GString& path);
+	
+	/// Opens a file for reading only
+	bool OpenForRead (const GString& path);
+	
+	/// Opens a file for reading and writing
+	bool OpenForWrite (const GString& path);
+	
+	/// Appends a file for reading and writing
+	bool OpenForAppend (const GString& path);
+	
+	/// Closes this file
+	void Close ();
+	
+	/// Read data from this file
+	bool Read (void* data, uint_t size);
+	
+	/// Write data to this file
+	bool Write (const void* data, uint_t size);
+	
+	/// Is this file currently open
+	bool IsOpen () const;
+	
+	/// Returns the current position for reading and writing in the file
+	uint_t GetPosition () const;
+	
+	/// Returns the size of the file
+	uint_t GetSize () const;
+	
+	/// Sets the reading and writing position in the file
+	bool SetPosition (uint_t position);
+	
+private:
+	FILE* _file;
+};
+
+
+
+
+
+
+
+
+class GDirectory {
+public:
+	
+	GDirectory ();
+	~GDirectory ();
+	
+	GDirectory (const GString& path);
+	
+	bool Open (const GString& path);
+	
+	void Close ();
+	
+	uint_t GetSize () const;
+	
+	GString GetFile (uint_t index) const;
+	
+private:
+	std::vector<GString> _files; // Files are relative to the path used with Open
+};
+
+
+
+
+
+
+
+
 #if PLATFORM_WINDOWS
     class GThread {
     public:
@@ -505,4 +592,22 @@ private:
     };
 #endif
 
-#endif // _G_TYPES_H_
+
+
+
+
+
+class GArchive {
+public:
+	static const uint8 VERSION = 4;
+	static uint_t Compress (const void* srcBuffer, uint_t srcSize, void* dstBuffer, uint_t dstSize);
+	static uint_t Decompress (const void* srcBuffer, uint_t srcSize, void* dstBuffer, uint_t dstSize);
+	static uint_t GetBufferBounds (uint_t srcSize);
+};
+
+
+
+
+
+
+#endif // _GTYPES_H_

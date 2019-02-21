@@ -1,28 +1,28 @@
-#include "PPackage.h"
+#include "GPackage.h"
 
 static const uint8				_VERSION = 5;
 static const uint8				_IDENTIFIER[] = "PACKAGE";
-static std::list<PPackage*>*	_packages = NULL;
+static std::list<GPackage*>*	_packages = NULL;
 static GString					_lastResource;
-static PPackage*				_lastPackage = NULL;
+static GPackage*				_lastPackage = NULL;
 static uint64					_lastSize = 0;
 
-PPackage::PPackage ()
+GPackage::GPackage ()
 :	_footer(0)
 {
 }
 
-PPackage::~PPackage () {
+GPackage::~GPackage () {
 	Close();
 }
 
-PPackage::PPackage (const GString& path)
+GPackage::GPackage (const GString& path)
 :	_footer(0)
 {
 	OpenForRead(path);
 }
 
-PPackage::PPackage (const GString& path, bool setDefaultWD)
+GPackage::GPackage (const GString& path, bool setDefaultWD)
 :	_footer(0)
 {
 	if(setDefaultWD)
@@ -30,7 +30,7 @@ PPackage::PPackage (const GString& path, bool setDefaultWD)
 	OpenForRead(path);
 }
 
-bool PPackage::OpenForRead (const GString& path) {
+bool GPackage::OpenForRead (const GString& path) {
 	
 	Close();
 	
@@ -89,7 +89,7 @@ bool PPackage::OpenForRead (const GString& path) {
 	}
 	
 	uint8* buffer = new uint8[bufferSize];
-	archiveSize = PArchive::Decompress(archive, archiveSize, buffer, bufferSize);
+	archiveSize = GArchive::Decompress(archive, archiveSize, buffer, bufferSize);
 	if(archiveSize != bufferSize) {
 		GSystem::Debug("ERROR: Failed to decompress resource table for package \"%s\"!\n", (const char*)path);
 		delete[] archive;
@@ -110,7 +110,7 @@ bool PPackage::OpenForRead (const GString& path) {
 	delete[] buffer;
 
 	if(_packages == NULL)
-		_packages = new std::list<PPackage*>;
+		_packages = new std::list<GPackage*>;
 	_packages->push_back(this);
 	
     GSystem::Debug("%s ready for reading...\n", (const char*)path);
@@ -118,7 +118,7 @@ bool PPackage::OpenForRead (const GString& path) {
 	return true;
 }
 
-bool PPackage::OpenForWrite (const GString& path) {
+bool GPackage::OpenForWrite (const GString& path) {
 	Close();
 	
 	if(_file.OpenForWrite(path) == false) {
@@ -145,10 +145,10 @@ bool PPackage::OpenForWrite (const GString& path) {
 	return true;
 }
 
-bool PPackage::Close () {
+bool GPackage::Close () {
 	
 	if(_packages)
-		for(std::list<PPackage*>::iterator i = _packages->begin(); i != _packages->end(); i++)
+		for(std::list<GPackage*>::iterator i = _packages->begin(); i != _packages->end(); i++)
 			if(*i == this) {
 				_packages->erase(i);
 				break;
@@ -165,7 +165,7 @@ bool PPackage::Close () {
 	return true;
 }
 
-uint64 PPackage::GetSize (const GString& resource) {
+uint64 GPackage::GetSize (const GString& resource) {
 	_lastResource = resource;
 	_lastPackage = NULL;
 	_lastSize = 0;
@@ -173,7 +173,7 @@ uint64 PPackage::GetSize (const GString& resource) {
 	if(_packages == NULL)
 		return 0;
 	
-	for(std::list<PPackage*>::iterator p = _packages->begin(); p != _packages->end(); p++) {
+	for(std::list<GPackage*>::iterator p = _packages->begin(); p != _packages->end(); p++) {
 		std::map<GString, uint64>::iterator r = (*p)->_resources.find(resource);
 		if(r != (*p)->_resources.end()) {
 			
@@ -198,7 +198,7 @@ uint64 PPackage::GetSize (const GString& resource) {
 	return 0;
 }
 
-bool PPackage::Read (const GString& resource, void* data, uint64 size) {
+bool GPackage::Read (const GString& resource, void* data, uint64 size) {
 	if(resource != _lastResource || _lastPackage == NULL)
 		GetSize(resource);
 	
@@ -215,7 +215,7 @@ bool PPackage::Read (const GString& resource, void* data, uint64 size) {
 	return true;
 }
 
-bool PPackage::Write (const GString& resource, const void* data, uint64 size) {
+bool GPackage::Write (const GString& resource, const void* data, uint64 size) {
 	if(_file.SetPosition(_footer) == false) {
 		GSystem::Debug("ERROR: Failed to set package position for resource \"%s\"!\n", (const char*)resource);
 		return false;
@@ -290,9 +290,9 @@ bool PPackage::Write (const GString& resource, const void* data, uint64 size) {
 		offset += sizeof(uint64);
 	}
 	
-	uint64 archiveSize = PArchive::GetBufferBounds(bufferSize);
+	uint64 archiveSize = GArchive::GetBufferBounds(bufferSize);
 	uint8* archive = new uint8[archiveSize];
-	archiveSize = PArchive::Compress(buffer, bufferSize, archive, archiveSize);
+	archiveSize = GArchive::Compress(buffer, bufferSize, archive, archiveSize);
 	if(archive == 0) {
 		GSystem::Debug("ERROR: Failed to compress footer archive to package!\n");
 		delete [] buffer;

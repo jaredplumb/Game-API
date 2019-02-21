@@ -1,5 +1,5 @@
-#ifndef _UI_NODE_H_
-#define _UI_NODE_H_
+#ifndef _UINODE_H_
+#define _UINODE_H_
 
 #include "GTypes.h"
 
@@ -143,4 +143,4 @@ public:
 	
 };
 
-#endif // _UI_NODE_H_
+#endif // _UINODE_H_

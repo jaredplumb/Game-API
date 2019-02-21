@@ -1,5 +1,5 @@
-#ifndef _P_XML_FILE_H_
-#define _P_XML_FILE_H_
+#ifndef _GXML_H_
+#define _GXML_H_
 
 #include "GTypes.h"
 
@@ -9,7 +9,7 @@
 /// Although this class could be adjusted in the future by removing the const references and adding
 /// functions to set data.
 /// Implementation reference http://en.wikipedia.org/wiki/XML
-class PXML {
+class GXML {
 public:
 	
 	/// The tag <tag> of this xml element
@@ -22,17 +22,17 @@ public:
 	std::map<GString, GString> attributes;	// name/value
 	
 	/// Additional elements contained within this element
-	std::multimap<GString, PXML*> elements; // name of element/element
+	std::multimap<GString, GXML*> elements; // name of element/element
 	
 	/// The parent of this xml element, or NULL if this is the root element
-	PXML* parent;
+	GXML* parent;
 	
 	/// Default Constructor/Destructor
-	PXML ();
-	~PXML ();
+	GXML ();
+	~GXML ();
 	
 	/// Load data from the path supplied (.xml)
-	PXML (const GString& resource);
+	GXML (const GString& resource);
 	
 	/// Load data from the path supplied (.xml)
 	bool NewFromFile (const GString& path);
@@ -50,13 +50,13 @@ public:
 	const GString* GetAttribute (const GString& name) const;
 	
 	/// Return the nth element (index) with the given name
-	const PXML* GetElement (const GString& element, int_t index = 0) const;
+	const GXML* GetElement (const GString& element, int_t index = 0) const;
 	
 	/// Returns the parent of this element or NULL if this is the root
-	const PXML* GetParent () const;
+	const GXML* GetParent () const;
 	
 	/// Returns a large string with the contents of this xml as UTF8 text
 	GString GetString () const;
 };
 
-#endif // _P_XML_FILE_H_
+#endif // _GXML_H_

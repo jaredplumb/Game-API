@@ -3,7 +3,7 @@
 
 #include "GTypes.h"
 #include "GSystem.h"
-#include "PPackage.h"
+#include "GPackage.h"
 
 class GImage {
 public:
@@ -51,7 +51,7 @@ public:
 		bool NewFromFile (const GString& resource);
 		bool NewFromPackage (const GString& resource);
 		void Delete ();
-		bool WriteToPackage (PPackage& package, const GString& name);
+		bool WriteToPackage (GPackage& package, const GString& name);
 	};
 	
 	class Vertex {
