@@ -1,6 +1,5 @@
 #include "GSystem.h"
 
-static uint32															_RANDOM_SEED = 0;
 static std::map<int_t, void (*) ()>*									_STARTUP_CALLBACKS = NULL;
 static std::map<int_t, void (*) ()>*									_SHUTDOWN_CALLBACKS = NULL;
 static std::map<int_t, void (*) ()>*									_DRAW_CALLBACKS = NULL;
@@ -16,31 +15,13 @@ static std::map<int_t, void (*) (int_t x, int_t y)>*					_TOUCH_CALLBACKS = NULL
 static std::map<int_t, void (*) (int_t x, int_t y)>*					_TOUCHUP_CALLBACKS = NULL;
 static std::map<int_t, void (*) (int_t x, int_t y)>*					_TOUCHMOVE_CALLBACKS = NULL;
 
-// This random generator is from the BSD random, which is from:
-// "Random number generators: good ones are hard to find"
-// Park and Miller, Communications of the ACM, vol. 31, no. 10, October 1988, p. 1195.
-uint32 GSystem::GetRandom (uint32 range) {
-	if(_RANDOM_SEED == 0)
-		_RANDOM_SEED = (uint32)GetMilliseconds() + 1;
-	_RANDOM_SEED = 16807 * (_RANDOM_SEED % 127773) - 2836 * (_RANDOM_SEED / 127773);
-	if((int32)_RANDOM_SEED <= 0)
-		_RANDOM_SEED += 0x7fffffff;
-	return range ? _RANDOM_SEED % range : _RANDOM_SEED;
-}
-
-uint32 GSystem::SetRandomSeed (uint32 seed) {
-	uint32 original = _RANDOM_SEED;
-	_RANDOM_SEED = seed;
-	return original;
-}
-
-uint64 GSystem::GetHash (const uint8* bytes) {
+//uint64 GSystem::GetHash (const uint8* bytes) {
 	// en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
-	uint64 hash = 0xcbf29ce484222325;
-	while(*bytes)
-		hash = (hash * 1099511628211) ^ *bytes++;
-	return hash;
-}
+//	uint64 hash = 0xcbf29ce484222325;
+//	while(*bytes)
+//		hash = (hash * 1099511628211) ^ *bytes++;
+//	return hash;
+//}
 
 int_t GSystem::NewStartupCallback (void (* callback) ()) {
 	if(_STARTUP_CALLBACKS == NULL) _STARTUP_CALLBACKS = new std::map<int_t, void (*) ()>;

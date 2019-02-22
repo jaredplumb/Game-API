@@ -628,7 +628,7 @@ bool GDirectory::Open (const GString& path) {
 	
 #else
 	GString directory = path;
-	if(directory == NULL || directory[(int_t)0] == '\0')
+	if(directory.IsEmpty())
 		directory = "./";
 	
 	if(directory[directory.GetLength() - 1] != '/')
@@ -788,6 +788,50 @@ uint_t GArchive::GetBufferBounds (uint_t srcSize) {
 	// This is taken from the function compressBound in the zlib library.
 	// The last + number is what is needed for header values from GArchive.
 	return srcSize + (srcSize >> 12) + (srcSize >> 14) + 11 + 2;
+}
+
+
+
+
+
+
+void GConsole::Print (const char* message, ...) {
+	if (message) {
+		va_list args;
+		va_start(args, message);
+#if PLATFORM_WINDOWS && DEBUG
+		int size = vsnprintf(NULL, 0, message, args);
+		if(size > 0) {
+			char* string = new char[size + 1];
+			vsnprintf(string, size + 1, message, args);
+			OutputDebugStringA(string);
+			delete [] string;
+		}
+#endif
+		vprintf(message, args);
+		va_end(args);
+	}
+}
+
+void GConsole::Debug (const char* message, ...) {
+#if DEBUG
+	if (message) {
+		va_list args;
+		va_start(args, message);
+#if PLATFORM_WINDOWS
+		int size = vsnprintf(NULL, 0, message, args);
+		if(size > 0) {
+			char* string = new char[size + 1];
+			vsnprintf(string, size + 1, message, args);
+			OutputDebugStringA(string);
+			delete [] string;
+		}
+#else
+		vprintf(message, args);
+#endif
+		va_end(args);
+	}
+#endif
 }
 
 

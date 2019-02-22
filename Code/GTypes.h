@@ -610,4 +610,23 @@ public:
 
 
 
+
+class GConsole {
+public:
+	
+	/// Prints a formatted string to the console.
+	static void Print (const char* message, ...);
+	
+	/// Prints a formatted string to the console in debug builds only.
+	static void Debug (const char* message, ...);
+	
+};
+
+
+
+
+
+
+
+
 #endif // _GTYPES_H_

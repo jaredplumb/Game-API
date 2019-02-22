@@ -1,6 +1,13 @@
 #import "GSystem.h"
 #if PLATFORM_IOS
 
+//float left = self.view.safeAreaInsets.left;
+//float top = self.view.safeAreaInsets.top;
+//float right = self.view.safeAreaInsets.right;
+//float bottom = self.view.safeAreaInsets.bottom;
+//printf("%f,%f,%f,%f\n", left, top, right, bottom);
+
+
 
 static int_t			_WIDTH		    = 1280;
 static int_t			_HEIGHT		    = 720;
@@ -219,45 +226,6 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
-
-void GSystem::Print (const char* message, ...) {
-	if (message) {
-		va_list args;
-		va_start(args, message);
-#if PLATFORM_WINDOWS && DEBUG
-		int size = vsnprintf(NULL, 0, message, args);
-		if (size > 0) {
-			char* string = new char[size + 1];
-			vsnprintf(string, size + 1, message, args);
-			OutputDebugStringA(string);
-			delete[] string;
-		}
-#endif
-		vprintf(message, args);
-		va_end(args);
-	}
-}
-
-void GSystem::Debug (const char* message, ...) {
-#if DEBUG
-	if (message) {
-		va_list args;
-		va_start(args, message);
-#if PLATFORM_WINDOWS
-		int size = vsnprintf(NULL, 0, message, args);
-		if (size > 0) {
-			char* string = new char[size + 1];
-			vsnprintf(string, size + 1, message, args);
-			OutputDebugStringA(string);
-			delete[] string;
-		}
-#else
-		vprintf(message, args);
-#endif
-		va_end(args);
-	}
-#endif
-}
 
 int_t GSystem::GetWidth () {
     return _WIDTH;

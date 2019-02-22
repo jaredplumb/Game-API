@@ -11,7 +11,6 @@
 
 #include "GImage.h"
 
-#include "GFontResource.h"
 #include "GFont.h"
 
 #endif // _GAME_H_

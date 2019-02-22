@@ -9,7 +9,7 @@
 UINode::UINode ()
 :	_ref(GSystem::GetUniqueRef())
 ,	_delete(false)
-,	_rect(0, 0, GSystem::GetWidth(), GSystem::GetHeight())
+,	_rect(GSystem::GetRect())
 ,	_visible(true)
 ,	_active(true)
 ,	_focus(false)
@@ -58,6 +58,26 @@ uint64 UINode::GetMilliseconds () {
 
 uint64 UINode::GetElapse () {
 	return _ELAPSE;
+}
+
+// This random generator is from the BSD random, which is from:
+// "Random number generators: good ones are hard to find"
+// Park and Miller, Communications of the ACM, vol. 31, no. 10, October 1988, p. 1195.
+static uint32 _RANDOM_SEED = 0;
+
+uint32 UINode::GetRandom (uint32 range) {
+	_RANDOM_SEED = (_RANDOM_SEED != 0) ? (16807 * (_RANDOM_SEED % 127773) - 2836 * (_RANDOM_SEED / 127773)) : ((uint32)GSystem::GetMilliseconds() + 1);
+	if((int32)_RANDOM_SEED <= 0)
+		_RANDOM_SEED += 0x7fffffff;
+	return range ? _RANDOM_SEED % range : _RANDOM_SEED;
+}
+
+uint32 UINode::GetRandomSeed () {
+	return _RANDOM_SEED;
+}
+
+void UINode::SetRandomSeed (uint32 seed) {
+	_RANDOM_SEED = (seed != 0) ? (seed) : ((uint32)GSystem::GetMilliseconds() + 1);
 }
 
 
@@ -354,14 +374,14 @@ void UINode::_Root::DrawCallback () {
 	if(_AUTORUN_LIST) {
 		while(_AUTORUN_LIST->begin() != _AUTORUN_LIST->end()) {
 #if DEBUG
-			GSystem::Debug("----------------------------------------------------------------\n");
-			GSystem::Debug("- %s\n", (const char*)_AUTORUN_LIST->begin()->first);
+			GConsole::Debug("----------------------------------------------------------------\n");
+			GConsole::Debug("- %s\n", (const char*)_AUTORUN_LIST->begin()->first);
 #endif
 			std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(_AUTORUN_LIST->begin()->first);
 			if(factory != _FACTORY_LIST->end() && _ROOT)
 				_ROOT->nodes.push_front(factory->second());
 #if DEBUG
-			GSystem::Debug("----------------------------------------------------------------\n");
+			GConsole::Debug("----------------------------------------------------------------\n");
 #endif
 			_AUTORUN_LIST->erase(_AUTORUN_LIST->begin());
 		}
@@ -403,8 +423,8 @@ void UINode::_Root::DrawCallback () {
 				}
 				
 #if DEBUG
-				GSystem::Debug("----------------------------------------------------------------\n");
-				GSystem::Debug("- %s\n", (const char*)_ROOT->to);
+				GConsole::Debug("----------------------------------------------------------------\n");
+				GConsole::Debug("- %s\n", (const char*)_ROOT->to);
 #endif
 				
 				std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(_ROOT->to);
@@ -412,7 +432,7 @@ void UINode::_Root::DrawCallback () {
 					_ROOT->nodes.push_front(factory->second());
 				
 #if DEBUG
-				GSystem::Debug("----------------------------------------------------------------\n");
+				GConsole::Debug("----------------------------------------------------------------\n");
 #endif
 				
 				_ROOT->to = NULL;

@@ -4,13 +4,6 @@
 
 
 
-
-
-
-
-
-
-
 extern id<MTLDevice>				_P_DEVICE;
 extern id<MTLRenderCommandEncoder>	_P_RENDER;
 
@@ -20,8 +13,11 @@ struct GImage::_PrivateData {
 	
 	int_t width, height;
 	
+	// This is temp data set by the last draw call, use width and height instead of src and dst
+	// when getting information about the texture
+	// if src, dst, color, verticiesCount, or indiciesCount change, then data may be reset
 	GRect src, dst;
-	
+	GColor color;
 	
 	id<MTLTexture> texture;
 	Vertex* vertices;
@@ -39,28 +35,28 @@ GImage::GImage ()
 :	_data(NULL)
 {
 	if(New(GColor::WHITE) == false)
-		GSystem::Debug("ERROR: Could not create image with color 0xffffffff!\n");
+		GConsole::Debug("ERROR: Could not create image with color 0xffffffff!\n");
 }
 
 GImage::GImage (const Resource& resource)
 :	_data(NULL)
 {
 	if(New(resource) == false)
-		GSystem::Debug("ERROR: Could not load image from resource!\n");
+		GConsole::Debug("ERROR: Could not load image from resource!\n");
 }
 
 GImage::GImage (const GString& resource)
 :	_data(NULL)
 {
 	if(New(resource) == false)
-		GSystem::Debug("ERROR: Could not load image \"%s\"!\n", (const char*)resource);
+		GConsole::Debug("ERROR: Could not load image \"%s\"!\n", (const char*)resource);
 }
 
 GImage::GImage (const GColor& color)
 :	_data(NULL)
 {
 	if(New(color) == false)
-		GSystem::Debug("ERROR: Could not create image with color 0x%x!\n", color.color);
+		GConsole::Debug("ERROR: Could not create image with color 0x%x!\n", color.color);
 }
 
 GImage::~GImage () {
@@ -77,15 +73,7 @@ bool GImage::New (const Resource& resource) {
 	_data = new _PrivateData;
 	_data->width = resource.width;
 	_data->height = resource.height;
-	_data->src.x = 0;
-	_data->src.y = 0;
-	_data->src.width = resource.width;
-	_data->src.height = resource.height;
-	_data->dst.x = 0;
-	_data->dst.y = 0;
-	_data->dst.width = resource.width;
-	_data->dst.height = resource.height;
-	_data->texture = nil;
+	 _data->texture = nil;
 	_data->vertices = NULL;
 	_data->verticesCount = 0;
 	_data->indicies = nil;
@@ -103,52 +91,6 @@ bool GImage::New (const Resource& resource) {
 	}
 	
 	[_data->texture replaceRegion:MTLRegionMake2D(0, 0, (NSUInteger)resource.width, (NSUInteger)resource.height) mipmapLevel:0 withBytes:resource.buffer bytesPerRow:(NSUInteger)(resource.width * 4)];
-	
-	_data->verticesCount = 4;
-	_data->vertices = new Vertex[4];
-	
-	_data->vertices[0].xy[0] = (float)_data->dst.x;
-	_data->vertices[0].xy[1] = (float)_data->dst.y;
-	_data->vertices[0].rgba[0] = (uint8)0xff;
-	_data->vertices[0].rgba[1] = (uint8)0xff;
-	_data->vertices[0].rgba[2] = (uint8)0xff;
-	_data->vertices[0].rgba[3] = (uint8)0xff;
-	_data->vertices[0].uv[0] = (float)_data->src.x / (float)_data->width;
-	_data->vertices[0].uv[1] = (float)_data->src.y / (float)_data->height;
-	_data->vertices[1].xy[0] = (float)(_data->dst.x + _data->dst.width);
-	_data->vertices[1].xy[1] = (float)_data->dst.y;
-	_data->vertices[1].rgba[0] = (uint8)0xff;
-	_data->vertices[1].rgba[1] = (uint8)0xff;
-	_data->vertices[1].rgba[2] = (uint8)0xff;
-	_data->vertices[1].rgba[3] = (uint8)0xff;
-	_data->vertices[1].uv[0] = (float)(_data->src.x + _data->src.width) / (float)_data->width;
-	_data->vertices[1].uv[1] = (float)_data->src.y / (float)_data->height;
-	_data->vertices[2].xy[0] = (float)_data->dst.x;
-	_data->vertices[2].xy[1] = (float)(_data->dst.y + _data->dst.height);
-	_data->vertices[2].rgba[0] = (uint8)0xff;
-	_data->vertices[2].rgba[1] = (uint8)0xff;
-	_data->vertices[2].rgba[2] = (uint8)0xff;
-	_data->vertices[2].rgba[3] = (uint8)0xff;
-	_data->vertices[2].uv[0] = (float)_data->src.x / (float)_data->width;
-	_data->vertices[2].uv[1] = (float)(_data->src.y + _data->src.height) / (float)_data->height;
-	_data->vertices[3].xy[0] = (float)(_data->dst.x + _data->dst.width);
-	_data->vertices[3].xy[1] = (float)(_data->dst.y + _data->dst.height);
-	_data->vertices[3].rgba[0] = (uint8)0xff;
-	_data->vertices[3].rgba[1] = (uint8)0xff;
-	_data->vertices[3].rgba[2] = (uint8)0xff;
-	_data->vertices[3].rgba[3] = (uint8)0xff;
-	_data->vertices[3].uv[0] = (float)(_data->src.x + _data->src.width) / (float)_data->width;
-	_data->vertices[3].uv[1] = (float)(_data->src.y + _data->src.height) / (float)_data->height;
-	
-	uint16 indicies[6] = {
-		0, 1, 2, 1, 2, 3
-	};
-	_data->indiciesCount = 6;
-	_data->indicies = [_P_DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
-	if(_data->indicies == nil) {
-		Delete();
-		return false;
-	}
 	
 	return true;
 }
@@ -200,91 +142,71 @@ bool GImage::IsEmpty () const {
 }
 
 void GImage::Draw () {
-	if(_P_RENDER == nil || _data == NULL || _data->vertices == NULL || _data->texture == nil || _data->indicies == nil)
+	if(_data != NULL)
+		return Draw(GRect(0, 0, _data->width, _data->height), GRect(0, 0, _data->width, _data->height), GColor::WHITE);
+}
+
+void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
+	if(_P_RENDER == nil || _data == NULL || _data->texture == nil)
 		return;
+	
+	if(_data->verticesCount != 4) {
+		if(_data->vertices)
+			delete [] _data->vertices;
+		_data->verticesCount = 4;
+		_data->vertices = new Vertex[4];
+		_data->src = GRect();
+		_data->dst = GRect();
+		_data->color = 0;
+	}
+	
+	if(_data->indiciesCount != 6) {
+		uint16 indicies[6] = {
+			0, 1, 2, 1, 2, 3
+		};
+		_data->indiciesCount = 6;
+		_data->indicies = [_P_DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
+	}
+	
+	if(_data->src != src || _data->dst != dst) {
+		_data->src = src;
+		_data->dst = dst;
+		_data->vertices[0].xy[0] = (float)_data->dst.x;
+		_data->vertices[0].xy[1] = (float)_data->dst.y;
+		_data->vertices[0].uv[0] = (float)_data->src.x / (float)_data->width;
+		_data->vertices[0].uv[1] = (float)_data->src.y / (float)_data->height;
+		_data->vertices[1].xy[0] = (float)(_data->dst.x + _data->dst.width);
+		_data->vertices[1].xy[1] = (float)_data->dst.y;
+		_data->vertices[1].uv[0] = (float)(_data->src.x + _data->src.width) / (float)_data->width;
+		_data->vertices[1].uv[1] = (float)_data->src.y / (float)_data->height;
+		_data->vertices[2].xy[0] = (float)_data->dst.x;
+		_data->vertices[2].xy[1] = (float)(_data->dst.y + _data->dst.height);
+		_data->vertices[2].uv[0] = (float)_data->src.x / (float)_data->width;
+		_data->vertices[2].uv[1] = (float)(_data->src.y + _data->src.height) / (float)_data->height;
+		_data->vertices[3].xy[0] = (float)(_data->dst.x + _data->dst.width);
+		_data->vertices[3].xy[1] = (float)(_data->dst.y + _data->dst.height);
+		_data->vertices[3].uv[0] = (float)(_data->src.x + _data->src.width) / (float)_data->width;
+		_data->vertices[3].uv[1] = (float)(_data->src.y + _data->src.height) / (float)_data->height;
+	}
+	
+	if(_data->color != color) {
+		_data->color = color;
+		for(int_t i = 0; i < _data->verticesCount; i++) {
+			_data->vertices[i].rgba[0] = color.GetRed();
+			_data->vertices[i].rgba[1] = color.GetGreen();
+			_data->vertices[i].rgba[2] = color.GetBlue();
+			_data->vertices[i].rgba[3] = color.GetAlpha();
+		}
+	}
 	
 	[_P_RENDER setVertexBytes:_data->vertices length:sizeof(Vertex) * _data->verticesCount atIndex:0];
 	[_P_RENDER setFragmentTexture:_data->texture atIndex:0];
 	[_P_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
-	
-}
-
-void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
-	if(_data == NULL)
-		return;
-	
-	//if(src == _data->src && dst == _data->dst && color.GetRed() == _data->vertices[0].rgba[0] && color.GetGreen() == _data->vertices[0].rgba[1] && color.GetBlue() == _data->vertices[0].rgba[2] && color.GetAlpha() == _data->vertices[0].rgba[3])
-	//	return Draw();
-	
-	//if(_data->verticesCount != 4) {
-	//	if(_data->vertices)
-	//		delete [] _data->vertices;
-	//	_data->verticesCount = 4;
-	//	_data->vertices = new Vertex[4];
-	//}
-	_data->src = src;
-	_data->dst = dst;
-	
-	
-	_data->vertices[0].xy[0] = (float)_data->dst.x;
-	_data->vertices[0].xy[1] = (float)_data->dst.y;
-	_data->vertices[0].rgba[0] = color.GetRed();
-	_data->vertices[0].rgba[1] = color.GetGreen();
-	_data->vertices[0].rgba[2] = color.GetBlue();
-	_data->vertices[0].rgba[3] = color.GetAlpha();
-	_data->vertices[0].uv[0] = (float)_data->src.x / (float)_data->width;
-	_data->vertices[0].uv[1] = (float)_data->src.y / (float)_data->height;
-	_data->vertices[1].xy[0] = (float)(_data->dst.x + _data->dst.width);
-	_data->vertices[1].xy[1] = (float)_data->dst.y;
-	_data->vertices[1].rgba[0] = color.GetRed();
-	_data->vertices[1].rgba[1] = color.GetGreen();
-	_data->vertices[1].rgba[2] = color.GetBlue();
-	_data->vertices[1].rgba[3] = color.GetAlpha();
-	_data->vertices[1].uv[0] = (float)(_data->src.x + _data->src.width) / (float)_data->width;
-	_data->vertices[1].uv[1] = (float)_data->src.y / (float)_data->height;
-	_data->vertices[2].xy[0] = (float)_data->dst.x;
-	_data->vertices[2].xy[1] = (float)(_data->dst.y + _data->dst.height);
-	_data->vertices[2].rgba[0] = color.GetRed();
-	_data->vertices[2].rgba[1] = color.GetGreen();
-	_data->vertices[2].rgba[2] = color.GetBlue();
-	_data->vertices[2].rgba[3] = color.GetAlpha();
-	_data->vertices[2].uv[0] = (float)_data->src.x / (float)_data->width;
-	_data->vertices[2].uv[1] = (float)(_data->src.y + _data->src.height) / (float)_data->height;
-	_data->vertices[3].xy[0] = (float)(_data->dst.x + _data->dst.width);
-	_data->vertices[3].xy[1] = (float)(_data->dst.y + _data->dst.height);
-	_data->vertices[3].rgba[0] = color.GetRed();
-	_data->vertices[3].rgba[1] = color.GetGreen();
-	_data->vertices[3].rgba[2] = color.GetBlue();
-	_data->vertices[3].rgba[3] = color.GetAlpha();
-	_data->vertices[3].uv[0] = (float)(_data->src.x + _data->src.width) / (float)_data->width;
-	_data->vertices[3].uv[1] = (float)(_data->src.y + _data->src.height) / (float)_data->height;
-	
-	Draw();
 }
 
 void GImage::Draw (int_t x, int_t y, float alpha) {
-	if(_data == NULL)
-		return;
-	
-	if(x == _data->dst.x && y == _data->dst.y && (uint8)(alpha * 255.0f) == _data->vertices[0].rgba[3])
-		return Draw();
-	
-	_data->dst.x = x;
-	_data->dst.y = y;
-	
-	_data->vertices[0].xy[0] = (float)_data->dst.x;
-	_data->vertices[0].xy[1] = (float)_data->dst.y;
-	_data->vertices[0].rgba[3] = (uint8)(alpha * 255.0f);
-	_data->vertices[1].xy[0] = (float)(_data->dst.x + _data->dst.width);
-	_data->vertices[1].xy[1] = (float)_data->dst.y;
-	_data->vertices[1].rgba[3] = (uint8)(alpha * 255.0f);
-	_data->vertices[2].xy[0] = (float)_data->dst.x;
-	_data->vertices[2].xy[1] = (float)(_data->dst.y + _data->dst.height);
-	_data->vertices[2].rgba[3] = (uint8)(alpha * 255.0f);
-	_data->vertices[3].xy[0] = (float)(_data->dst.x + _data->dst.width);
-	_data->vertices[3].xy[1] = (float)(_data->dst.y + _data->dst.height);
-	_data->vertices[3].rgba[3] = (uint8)(alpha * 255.0f);
-	Draw();
+	if(_data != NULL)
+		return Draw(GRect(0, 0, _data->width, _data->height), GRect(x, y, _data->width, _data->height), GColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
 }
 
 void GImage::Draw (const GRect& dst, float alpha) {
@@ -296,59 +218,76 @@ void GImage::Draw (const GRect& src, int_t x, int_t y, float alpha) {
 	Draw(src, GRect(x, y, src.width, src.height), GColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
 }
 
-void GImage::DrawRect (const GRect& rect, const GColor& color) {
+void GImage::DrawRect (const GRect& dst, const GColor& color) {
 	if(_data)
-		Draw(GRect(0, 0, _data->width, _data->height), rect, color);
+		Draw(GRect(0, 0, _data->width, _data->height), dst, color);
 }
 
 void GImage::DrawLine (const GPoint& a, const GPoint& b, int_t width, const GColor& color) {
-	if(_data == NULL || _data->vertices == NULL || _data->verticesCount == 0)
+	if(_P_RENDER == nil || _data == NULL || _data->texture == nil)
 		return;
 	
-	if(a.x == _data->src.x && a.y == _data->src.y && b.x == _data->dst.x && b.y == _data->dst.y && width == _data->dst.width && 
-	   color.GetRed() == _data->vertices[0].rgba[0] && color.GetGreen() == _data->vertices[0].rgba[1] && color.GetBlue() == _data->vertices[0].rgba[2] && color.GetAlpha() == _data->vertices[0].rgba[3])
-		Draw();
+	if(_data->verticesCount != 4) {
+		if(_data->vertices)
+			delete [] _data->vertices;
+		_data->verticesCount = 4;
+		_data->vertices = new Vertex[4];
+		_data->src = GRect();
+		_data->dst = GRect();
+		_data->color = 0;
+	}
 	
-	_data->src.x = a.x;
-	_data->src.y = a.y;
-	_data->dst.x = b.x;
-	_data->dst.y = b.y;
-	_data->dst.width = width;
+	if(_data->indiciesCount != 6) {
+		uint16 indicies[6] = {
+			0, 1, 2, 1, 2, 3
+		};
+		_data->indiciesCount = 6;
+		_data->indicies = [_P_DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
+	}
 	
-	float theta = (float)atan2f((float)(b.y - a.y), (float)(b.x - a.x));
-	float tsin = (float)width * 0.5f * (float)sinf(theta);
-	float tcos = (float)width * 0.5f * (float)cosf(theta);
+	GRect src(a.x, a.y, width, 0);
+	GRect dst(b.x, b.y, width, 0);
+	if(_data->src != src || _data->dst != dst) {
+		_data->src = src;
+		_data->dst = dst;
+		float theta = (float)atan2f((float)(b.y - a.y), (float)(b.x - a.x));
+		float tsin = (float)width * 0.5f * (float)sinf(theta);
+		float tcos = (float)width * 0.5f * (float)cosf(theta);
+		_data->vertices[0].xy[0] = (float)a.x + tsin;
+		_data->vertices[0].xy[1] = (float)a.y - tcos;
+		_data->vertices[0].uv[0] = (float)0;
+		_data->vertices[0].uv[1] = (float)0;
+		_data->vertices[1].xy[0] = (float)a.x - tsin;
+		_data->vertices[1].xy[1] = (float)a.y + tcos;
+		_data->vertices[1].uv[0] = (float)1;
+		_data->vertices[1].uv[1] = (float)0;
+		_data->vertices[2].xy[0] = (float)b.x + tsin;
+		_data->vertices[2].xy[1] = (float)b.y - tcos;
+		_data->vertices[2].uv[0] = (float)0;
+		_data->vertices[2].uv[1] = (float)1;
+		_data->vertices[3].xy[0] = (float)b.x - tsin;
+		_data->vertices[3].xy[1] = (float)b.y + tcos;
+		_data->vertices[3].uv[0] = (float)1;
+		_data->vertices[3].uv[1] = (float)1;
+	}
 	
-	_data->vertices[0].xy[0] = (float)a.x + tsin;
-	_data->vertices[0].xy[1] = (float)a.y - tcos;
-	_data->vertices[0].rgba[0] = color.GetRed();
-	_data->vertices[0].rgba[1] = color.GetGreen();
-	_data->vertices[0].rgba[2] = color.GetBlue();
-	_data->vertices[0].rgba[3] = color.GetAlpha();
-	_data->vertices[1].xy[0] = (float)a.x - tsin;
-	_data->vertices[1].xy[1] = (float)a.y + tcos;
-	_data->vertices[1].rgba[0] = color.GetRed();
-	_data->vertices[1].rgba[1] = color.GetGreen();
-	_data->vertices[1].rgba[2] = color.GetBlue();
-	_data->vertices[1].rgba[3] = color.GetAlpha();
-	_data->vertices[2].xy[0] = (float)b.x + tsin;
-	_data->vertices[2].xy[1] = (float)b.y - tcos;
-	_data->vertices[2].rgba[0] = color.GetRed();
-	_data->vertices[2].rgba[1] = color.GetGreen();
-	_data->vertices[2].rgba[2] = color.GetBlue();
-	_data->vertices[2].rgba[3] = color.GetAlpha();
-	_data->vertices[3].xy[0] = (float)b.x - tsin;
-	_data->vertices[3].xy[1] = (float)b.y + tcos;
-	_data->vertices[3].rgba[0] = color.GetRed();
-	_data->vertices[3].rgba[1] = color.GetGreen();
-	_data->vertices[3].rgba[2] = color.GetBlue();
-	_data->vertices[3].rgba[3] = color.GetAlpha();
+	if(_data->color != color) {
+		_data->color = color;
+		for(int_t i = 0; i < _data->verticesCount; i++) {
+			_data->vertices[i].rgba[0] = color.GetRed();
+			_data->vertices[i].rgba[1] = color.GetGreen();
+			_data->vertices[i].rgba[2] = color.GetBlue();
+			_data->vertices[i].rgba[3] = color.GetAlpha();
+		}
+	}
 	
-	Draw();
+	[_P_RENDER setVertexBytes:_data->vertices length:sizeof(Vertex) * _data->verticesCount atIndex:0];
+	[_P_RENDER setFragmentTexture:_data->texture atIndex:0];
+	[_P_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
-void GImage::DrawEllipse (const GRect& rect, const GColor& color, const int_t sides) {
-	if(_data == NULL)
+void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int_t sides) {
+	if(_P_RENDER == nil || _data == NULL || _data->texture == nil)
 		return;
 	
 	if(_data->verticesCount != sides) {
@@ -356,8 +295,11 @@ void GImage::DrawEllipse (const GRect& rect, const GColor& color, const int_t si
 			delete [] _data->vertices;
 		_data->verticesCount = sides;
 		_data->vertices = new Vertex[_data->verticesCount];
+		_data->src = GRect();
+		_data->dst = GRect();
+		_data->color = 0;
+		_data->indiciesCount = 0;
 	}
-	
 	
 	if(_data->indiciesCount != sides * 3 - 2) {
 		_data->indiciesCount = sides * 3 - 2;
@@ -370,60 +312,78 @@ void GImage::DrawEllipse (const GRect& rect, const GColor& color, const int_t si
 		}
 	}
 	
-	for(int_t i = 0; i < sides; i++) {
-		float theta = 2.0f * (float)M_PI * (float)i / (float)sides;
-		float x = cosf(theta) * (float)rect.width * 0.5f;
-		float y = sinf(theta) * (float)rect.height * 0.5f;
-		_data->vertices[i].xy[0] = (float)rect.x + (float)rect.width * 0.5f + x;
-		_data->vertices[i].xy[1] = (float)rect.y + (float)rect.height * 0.5f + y;
-		_data->vertices[i].rgba[0] = color.GetRed();
-		_data->vertices[i].rgba[1] = color.GetGreen();
-		_data->vertices[i].rgba[2] = color.GetBlue();
-		_data->vertices[i].rgba[3] = color.GetAlpha();
-		_data->vertices[i].uv[0] = ((float)rect.width * 0.5f + x) / (float)rect.width;
-		_data->vertices[i].uv[1] = ((float)rect.height * 0.5f + y) / (float)rect.height;
+	GRect src(0, 0, _data->width, _data->height);
+	if(_data->src != src || _data->dst != dst) {
+		_data->src = src;
+		_data->dst = dst;
+		for(int_t i = 0; i < sides; i++) {
+			float theta = 2.0f * (float)M_PI * (float)i / (float)sides;
+			float x = cosf(theta) * (float)dst.width * 0.5f;
+			float y = sinf(theta) * (float)dst.height * 0.5f;
+			_data->vertices[i].xy[0] = (float)dst.x + (float)dst.width * 0.5f + x;
+			_data->vertices[i].xy[1] = (float)dst.y + (float)dst.height * 0.5f + y;
+			_data->vertices[i].uv[0] = ((float)dst.width * 0.5f + x) / (float)dst.width;
+			_data->vertices[i].uv[1] = ((float)dst.height * 0.5f + y) / (float)dst.height;
+		}
 	}
 	
-	Draw();
+	if(_data->color != color) {
+		_data->color = color;
+		for(int_t i = 0; i < _data->verticesCount; i++) {
+			_data->vertices[i].rgba[0] = color.GetRed();
+			_data->vertices[i].rgba[1] = color.GetGreen();
+			_data->vertices[i].rgba[2] = color.GetBlue();
+			_data->vertices[i].rgba[3] = color.GetAlpha();
+		}
+	}
 	
+	[_P_RENDER setVertexBytes:_data->vertices length:sizeof(Vertex) * _data->verticesCount atIndex:0];
+	[_P_RENDER setFragmentTexture:_data->texture atIndex:0];
+	[_P_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 void GImage::DrawQuad (const float vertices[8], const float coords[8], const GColor& color) {
-	if(_data == NULL)
+	if(_P_RENDER == nil || _data == NULL || _data->texture == nil)
 		return;
 	
 	if(_data->verticesCount != 4) {
 		if(_data->vertices)
 			delete [] _data->vertices;
 		_data->verticesCount = 4;
-		_data->vertices = new Vertex[_data->verticesCount];
+		_data->vertices = new Vertex[4];
+		_data->src = GRect();
+		_data->dst = GRect();
+		_data->color = 0;
 	}
 	
 	if(_data->indiciesCount != 6) {
+		uint16 indicies[6] = {
+			0, 1, 2, 1, 2, 3
+		};
 		_data->indiciesCount = 6;
-		_data->indicies = [_P_DEVICE newBufferWithLength:(sizeof(uint16) * _data->indiciesCount) options:MTLResourceStorageModeShared];
-		uint16* indicies = (uint16*)_data->indicies.contents;
-		indicies[0] = 0;
-		indicies[1] = 1;
-		indicies[2] = 2;
-		indicies[3] = 1;
-		indicies[4] = 2;
-		indicies[5] = 3;
+		_data->indicies = [_P_DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
 	}
 	
 	for(int_t i = 0; i < 4; i++) {
 		_data->vertices[i].xy[0] = vertices[i * 2 + 0];
 		_data->vertices[i].xy[1] = vertices[i * 2 + 1];
-		_data->vertices[i].rgba[0] = color.GetRed();
-		_data->vertices[i].rgba[1] = color.GetGreen();
-		_data->vertices[i].rgba[2] = color.GetBlue();
-		_data->vertices[i].rgba[3] = color.GetAlpha();
 		_data->vertices[i].uv[0] = coords[i * 2 + 0];
 		_data->vertices[i].uv[1] = coords[i * 2 + 1];
 	}
 	
-	Draw();
+	if(_data->color != color) {
+		_data->color = color;
+		for(int_t i = 0; i < _data->verticesCount; i++) {
+			_data->vertices[i].rgba[0] = color.GetRed();
+			_data->vertices[i].rgba[1] = color.GetGreen();
+			_data->vertices[i].rgba[2] = color.GetBlue();
+			_data->vertices[i].rgba[3] = color.GetAlpha();
+		}
+	}
 	
+	[_P_RENDER setVertexBytes:_data->vertices length:sizeof(Vertex) * _data->verticesCount atIndex:0];
+	[_P_RENDER setFragmentTexture:_data->texture atIndex:0];
+	[_P_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 void GImage::DrawVertices (const Vertex verticies[], int_t verticesCount, const uint16 indicies[], int_t indiciesCount) {
@@ -457,7 +417,7 @@ GImage::Resource::Resource (const GString& resource)
 ,	buffer(NULL)
 {
 	if(New(resource) == false)
-		GSystem::Debug("ERROR: Could not load image resource \"%s\"!\n", (const char*)resource);
+		GConsole::Debug("ERROR: Could not load image resource \"%s\"!\n", (const char*)resource);
 }
 
 GImage::Resource::~Resource () {

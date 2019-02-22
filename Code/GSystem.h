@@ -10,27 +10,16 @@
 /// Several functions and all the callbacks will only work after calling Run(), which can be
 /// ignored when working with tools.
 /// The design of this class should avoid including any other library headers except GPlatform.h.
+
 class GSystem {
 public:
 	
-	/// Prints a formatted string to the console.
-	static void Print (const char* message, ...);
+	/// Returns the system rect in pixels
+	static GRect GetRect ();
 	
-	/// Prints a formatted string to the console in debug builds only.
-	static void Debug (const char* message, ...);
+	/// Returns the safe rect in pixels, which is the area with no obstructed visuals or interactions
+	static GRect GetSafeRect ();
 	
-	/// Returns the width of the system area in pixels.
-	static int_t GetWidth ();
-	
-	/// Returns the height of the system area in pixels.
-	static int_t GetHeight ();
-	
-    /// Returns the "safe" width for interaction, mostly useful for mobile or console
-    static int_t GetSafeWidth ();
-    
-    /// Returns the "safe" height for interaction, mostly useful for mobile or console
-    static int_t GetSafeHeight ();
-    
 	/// Returns the the current FPS.
 	static int_t GetFPS ();
 	
@@ -46,23 +35,17 @@ public:
 	/// Returns the startup time in nanoseconds.
 	static uint64 GetNanoseconds ();
 	
-	/// Returns a value from 0 to one minus range, unless range is 0, then the maximum uint32 size is used
-	static uint32 GetRandom (uint32 range = 0);
-	
-	/// Sets the global random seed, returning the old seed, if seed is 0, then a random time value is used
-	static uint32 SetRandomSeed (uint32 seed = 0);
-	
-	/// Returns a FNV-1 64-bit hash given the bytes
-	static uint64 GetHash (const uint8* bytes);
-	
 	/// Sets the default working directory to the Resources directory.
 	static void SetDefaultWD ();
 	
-	/// Sets the default screen widht and height, must be called before calling Run(), will not work on most platforms (do not use this function)
-	static void SetDefaultScreenSize (int_t width, int_t height);
+	/// Sets the preferred screen width and height, fps, or arg, must be called before calling Run(), some
+	/// options will not work on all platforms
+	static void RunPreferredSize (int_t width, int_t height);
+	static void RunPreferredFPS (int_t fps);
+	static void RunPreferredArgs (int_t argc, char* argv[]);
 	
 	/// Runs the core game system until finished (or in some cases indefinitely) returning the exit code
-	static int_t Run (int_t argc, char* argv[]);
+	static int_t Run ();
 	
 	// Typical usage is to set the matrix to default, then tranlate/scale/rotate, then update the matrix
 	static void MatrixSetModelDefault ();		// Set model to identity

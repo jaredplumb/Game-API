@@ -1,12 +1,11 @@
 #import "GSystem.h"
 #if PLATFORM_MACOSX
 
-
-static int_t			_WIDTH		    = 1280;
-static int_t			_HEIGHT		    = 720;
-static int_t            _SAFE_WIDTH     = 1280;
-static int_t            _SAFE_HEIGHT    = 720;
+static GRect			_RECT			= { 0, 0, 1280, 720 };
+static GRect			_SAFE_RECT		= { 0, 0, 1280, 720 };
 static int_t			_FPS		    = 60;
+static int_t			_ARG_C			= 0;
+static char**			_ARG_V			= NULL;
 
 id<MTLDevice>				_P_DEVICE = nil;
 id<MTLRenderCommandEncoder>	_P_RENDER = nil;
@@ -62,7 +61,7 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 }
 
 - (void) setupWindow {
-	NSRect windowRect = NSMakeRect(0, 0, _WIDTH, _HEIGHT);
+	NSRect windowRect = NSMakeRect(0, 0, _RECT.width, _RECT.height);
 	self.window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable) backing:NSBackingStoreBuffered defer:YES];
 	[self.window setTitle:[[NSProcessInfo processInfo] processName]];
 	[self.window center];
@@ -312,59 +311,15 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
-void GSystem::Print (const char* message, ...) {
-	if (message) {
-		va_list args;
-		va_start(args, message);
-#if PLATFORM_WINDOWS && DEBUG
-		int size = vsnprintf(NULL, 0, message, args);
-		if(size > 0) {
-			char* string = new char[size + 1];
-			vsnprintf(string, size + 1, message, args);
-			OutputDebugStringA(string);
-			delete [] string;
-		}
-#endif
-		vprintf(message, args);
-		va_end(args);
-	}
+
+
+
+GRect GSystem::GetRect () {
+	return _RECT;
 }
 
-void GSystem::Debug (const char* message, ...) {
-#if DEBUG
-	if (message) {
-		va_list args;
-		va_start(args, message);
-#if PLATFORM_WINDOWS
-		int size = vsnprintf(NULL, 0, message, args);
-		if(size > 0) {
-			char* string = new char[size + 1];
-			vsnprintf(string, size + 1, message, args);
-			OutputDebugStringA(string);
-			delete [] string;
-		}
-#else
-		vprintf(message, args);
-#endif
-		va_end(args);
-	}
-#endif
-}
-
-int_t GSystem::GetWidth () {
-    return _WIDTH;
-}
-
-int_t GSystem::GetHeight () {
-    return _HEIGHT;
-}
-
-int_t GSystem::GetSafeWidth () {
-    return _SAFE_WIDTH;
-}
-
-int_t GSystem::GetSafeHeight () {
-    return _SAFE_HEIGHT;
+GRect GSystem::GetSafeRect () {
+	return _SAFE_RECT;
 }
 
 int_t GSystem::GetFPS () {
@@ -396,18 +351,29 @@ void GSystem::SetDefaultWD () {
 	chdir(resources);
 }
 
-void GSystem::SetDefaultScreenSize (int_t width, int_t height) {
-	_WIDTH = width;
-	_HEIGHT = height;
-    _SAFE_WIDTH = _WIDTH;
-    _SAFE_HEIGHT = _HEIGHT;
+
+
+
+
+void GSystem::RunPreferredSize (int_t width, int_t height) {
+	_RECT = GRect(0, 0, width, height);
+	_SAFE_RECT = GRect(0, 0, width, height);
 }
 
-int_t GSystem::Run (int_t argc, char* argv[]) {
+void GSystem::RunPreferredFPS (int_t fps) {
+	_FPS = fps;
+}
+
+void GSystem::RunPreferredArgs (int_t argc, char* argv[]) {
+	_ARG_C = argc;
+	_ARG_V = argv;
+}
+
+int_t GSystem::Run () {
 	GSystem::SetDefaultWD();
 	
 #if DEBUG
-	GSystem::Debug("WD: %s\n", getwd(NULL));
+	GConsole::Debug("WD: %s\n", getwd(NULL));
 #endif
 	
 	@autoreleasepool {
@@ -467,7 +433,7 @@ void GSystem::MatrixSetModelDefault () {
 
 void GSystem::MatrixSetProjectionDefault () {
 	//_EFFECT.transform.projectionMatrix = GLKMatrix4MakeOrtho((float)0, (float)_WIDTH, (float)_HEIGHT, (float)0, (float)-1, (float)1);
-	_PROJECTION_MATRIX = matrix_ortho((float)0, (float)_WIDTH, (float)_HEIGHT, (float)0, (float)-1, (float)1);
+	_PROJECTION_MATRIX = matrix_ortho((float)0, (float)_RECT.width, (float)_RECT.height, (float)0, (float)-1, (float)1);
 }
 
 void GSystem::MatrixTranslateModel (float x, float y) {
