@@ -137,6 +137,7 @@ enum vkey_t {
 #endif
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
+#import <AVFoundation/AVFoundation.h>
 #endif
 
 // C includes
