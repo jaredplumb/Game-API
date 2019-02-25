@@ -40,7 +40,6 @@ GSound::~GSound () {
 
 
 bool GSound::New (const Resource& resource) {
-	
 	Delete();
 	
 	_data = new _PrivateData;
@@ -50,6 +49,8 @@ bool GSound::New (const Resource& resource) {
 	if(error != nil || _data->player == nil)
 		return false;
 	
+	[_data->player play]; // This play with an immediate stop is a hack to make sure the audio is loaded into memory
+	[_data->player stop];
 	[_data->player prepareToPlay];
 	
 	return true;
@@ -73,8 +74,10 @@ void GSound::Delete () {
 
 
 void GSound::Play () {
-	if(_data != NULL && _data->player != nil)
+	if(_data != NULL && _data->player != nil) {
 		[_data->player play];
+		[_data->player prepareToPlay];
+	}
 }
 
 bool GSound::IsPlaying () {
@@ -129,12 +132,35 @@ bool GSound::Resource::NewFromFile (const GString& resource) {
 	bufferSize = [data length];
 	buffer = new uint8[bufferSize];
 	[data getBytes:buffer length:bufferSize];
-	
 	return true;
 }
 
 bool GSound::Resource::NewFromPackage (const GString& resource) {
-	return false;
+	Delete();
+	
+	uint64 archiveSize = GPackage::GetSize(resource + ".sound");
+	if(archiveSize == 0)
+		return false;
+	
+	uint8* archiveBuffer = new uint8[archiveSize];
+	if(GPackage::Read(resource + ".sound", archiveBuffer, archiveSize) == false) {
+		delete [] archiveBuffer;
+		return false;
+	}
+	
+	uint64 headerSize = sizeof(bufferSize);
+	memcpy(this, archiveBuffer, headerSize);
+	
+	buffer = new uint8[bufferSize];
+	archiveSize = GArchive::Decompress(archiveBuffer + headerSize, archiveSize - headerSize, buffer, bufferSize);
+	
+	if(archiveSize != bufferSize) {
+		delete [] archiveBuffer;
+		return false;
+	}
+	
+	delete [] archiveBuffer;
+	return true;
 }
 
 void GSound::Resource::Delete () {
@@ -146,7 +172,26 @@ void GSound::Resource::Delete () {
 }
 
 bool GSound::Resource::WriteToPackage (GPackage& package, const GString& name) {
-	return false;
+	uint64 headerSize = sizeof(bufferSize);
+	uint64 archiveSize = GArchive::GetBufferBounds(headerSize + sizeof(uint8) * bufferSize);
+	
+	uint8* archiveBuffer = new uint8[archiveSize];
+	memcpy(archiveBuffer, this, headerSize);
+	
+	archiveSize = GArchive::Compress(buffer, sizeof(uint8) * bufferSize, archiveBuffer + headerSize, archiveSize - headerSize);
+	
+	if(archiveSize == 0) {
+		delete [] archiveBuffer;
+		return false;
+	}
+	
+	if(package.Write(name + ".sound", archiveBuffer, archiveSize + headerSize) == false) {
+		delete [] archiveBuffer;
+		return false;
+	}
+	
+	delete [] archiveBuffer;
+	return true;
 }
 
 
