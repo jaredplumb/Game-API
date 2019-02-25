@@ -9,29 +9,27 @@
 /* Begin PBXBuildFile section */
 		2F0AC30C1F807E34009B5A1E /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F0AC30A1F807E27009B5A1E /* Metal.framework */; };
 		2F0AC30D1F807E39009B5A1E /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F0AC30B1F807E27009B5A1E /* MetalKit.framework */; };
-		2F0DB0662204EE670072B7CF /* PNode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB03F2204EE650072B7CF /* PNode.cpp */; };
-		2F0DB0672204EE670072B7CF /* PImage_Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0402204EE650072B7CF /* PImage_Common.cpp */; };
-		2F0DB0682204EE670072B7CF /* PShader_Apple.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0412204EE650072B7CF /* PShader_Apple.metal */; };
-		2F0DB0692204EE670072B7CF /* PDirectory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0422204EE650072B7CF /* PDirectory.cpp */; };
-		2F0DB06A2204EE670072B7CF /* PXML_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0442204EE650072B7CF /* PXML_Windows.cpp */; };
-		2F0DB06B2204EE670072B7CF /* PFont.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0452204EE650072B7CF /* PFont.cpp */; };
-		2F0DB06C2204EE670072B7CF /* PSystem_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0482204EE650072B7CF /* PSystem_Apple.mm */; };
-		2F0DB06D2204EE670072B7CF /* PImage_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB04A2204EE650072B7CF /* PImage_Windows.cpp */; };
-		2F0DB06E2204EE670072B7CF /* PXML_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB04E2204EE650072B7CF /* PXML_Apple.mm */; };
-		2F0DB06F2204EE670072B7CF /* PFontResource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0502204EE650072B7CF /* PFontResource.cpp */; };
-		2F0DB0702204EE670072B7CF /* PImage_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0512204EE650072B7CF /* PImage_Apple.mm */; };
-		2F0DB0712204EE670072B7CF /* PFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0532204EE660072B7CF /* PFile.cpp */; };
-		2F0DB0722204EE670072B7CF /* PSystem_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0552204EE660072B7CF /* PSystem_Windows.cpp */; };
-		2F0DB0732204EE670072B7CF /* PArchive_zlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0562204EE660072B7CF /* PArchive_zlib.cpp */; };
-		2F0DB0742204EE670072B7CF /* PPackage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB0582204EE660072B7CF /* PPackage.cpp */; };
-		2F0DB0752204EE670072B7CF /* PString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB05A2204EE660072B7CF /* PString.cpp */; };
-		2F0DB0762204EE670072B7CF /* PSystem_Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB05C2204EE660072B7CF /* PSystem_Common.cpp */; };
-		2F0DB0772204EE670072B7CF /* PArchive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F0DB05D2204EE660072B7CF /* PArchive.cpp */; };
 		2F47A73E18DB803F0054053B /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F47A73D18DB803F0054053B /* OpenGL.framework */; };
 		2F47A74018DB804E0054053B /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F47A73F18DB804E0054053B /* GLKit.framework */; };
 		2F47A74218DB80620054053B /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F47A74118DB80620054053B /* Cocoa.framework */; };
 		2F772BEE168E0D4600A6864F /* Hermes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F772BEB168E0D4600A6864F /* Hermes.cpp */; };
 		2F772BEF168E0D4600A6864F /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F772BED168E0D4600A6864F /* Main.cpp */; };
+		2F9C466C222467A400CB7CDC /* GFont.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C4654222467A400CB7CDC /* GFont.cpp */; };
+		2F9C466D222467A400CB7CDC /* GImage_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C4655222467A400CB7CDC /* GImage_Windows.cpp */; };
+		2F9C466E222467A400CB7CDC /* GImage_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C4657222467A400CB7CDC /* GImage_Apple.mm */; };
+		2F9C466F222467A400CB7CDC /* GPackage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C4659222467A400CB7CDC /* GPackage.cpp */; };
+		2F9C4670222467A400CB7CDC /* GSystem_Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C465A222467A400CB7CDC /* GSystem_Common.cpp */; };
+		2F9C4671222467A400CB7CDC /* GSound_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C465D222467A400CB7CDC /* GSound_Apple.mm */; };
+		2F9C4672222467A400CB7CDC /* GSystem_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C465F222467A400CB7CDC /* GSystem_Windows.cpp */; };
+		2F9C4673222467A400CB7CDC /* GXML_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C4661222467A400CB7CDC /* GXML_Apple.mm */; };
+		2F9C4674222467A400CB7CDC /* GShader_Apple.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C4663222467A400CB7CDC /* GShader_Apple.metal */; };
+		2F9C4675222467A400CB7CDC /* GSystem_iOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C4665222467A400CB7CDC /* GSystem_iOS.mm */; };
+		2F9C4676222467A400CB7CDC /* GTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C4666222467A400CB7CDC /* GTypes.cpp */; };
+		2F9C4677222467A400CB7CDC /* GXML_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C4667222467A400CB7CDC /* GXML_Windows.cpp */; };
+		2F9C4678222467A400CB7CDC /* GSystem_MacOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C4669222467A400CB7CDC /* GSystem_MacOS.mm */; };
+		2F9C4679222467A400CB7CDC /* UINode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F9C466B222467A400CB7CDC /* UINode.cpp */; };
+		2F9C467B2224688500CB7CDC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F9C467A2224688500CB7CDC /* AVFoundation.framework */; };
+		2F9C467D2224688E00CB7CDC /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F9C467C2224688E00CB7CDC /* libz.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -49,51 +47,38 @@
 /* Begin PBXFileReference section */
 		2F0AC30A1F807E27009B5A1E /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Metal.framework; sourceTree = DEVELOPER_DIR; };
 		2F0AC30B1F807E27009B5A1E /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
-		2F0DB03F2204EE650072B7CF /* PNode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PNode.cpp; path = ../Code/PNode.cpp; sourceTree = "<group>"; };
-		2F0DB0402204EE650072B7CF /* PImage_Common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PImage_Common.cpp; path = ../Code/PImage_Common.cpp; sourceTree = "<group>"; };
-		2F0DB0412204EE650072B7CF /* PShader_Apple.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; name = PShader_Apple.metal; path = ../Code/PShader_Apple.metal; sourceTree = "<group>"; };
-		2F0DB0422204EE650072B7CF /* PDirectory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PDirectory.cpp; path = ../Code/PDirectory.cpp; sourceTree = "<group>"; };
-		2F0DB0432204EE650072B7CF /* PPackage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PPackage.h; path = ../Code/PPackage.h; sourceTree = "<group>"; };
-		2F0DB0442204EE650072B7CF /* PXML_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PXML_Windows.cpp; path = ../Code/PXML_Windows.cpp; sourceTree = "<group>"; };
-		2F0DB0452204EE650072B7CF /* PFont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PFont.cpp; path = ../Code/PFont.cpp; sourceTree = "<group>"; };
-		2F0DB0462204EE650072B7CF /* PRect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PRect.h; path = ../Code/PRect.h; sourceTree = "<group>"; };
-		2F0DB0472204EE650072B7CF /* PDirectory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PDirectory.h; path = ../Code/PDirectory.h; sourceTree = "<group>"; };
-		2F0DB0482204EE650072B7CF /* PSystem_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PSystem_Apple.mm; path = ../Code/PSystem_Apple.mm; sourceTree = "<group>"; };
-		2F0DB0492204EE650072B7CF /* PMutex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PMutex.h; path = ../Code/PMutex.h; sourceTree = "<group>"; };
-		2F0DB04A2204EE650072B7CF /* PImage_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PImage_Windows.cpp; path = ../Code/PImage_Windows.cpp; sourceTree = "<group>"; };
-		2F0DB04B2204EE650072B7CF /* PXML.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PXML.h; path = ../Code/PXML.h; sourceTree = "<group>"; };
-		2F0DB04C2204EE650072B7CF /* PFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PFile.h; path = ../Code/PFile.h; sourceTree = "<group>"; };
-		2F0DB04D2204EE650072B7CF /* PNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PNode.h; path = ../Code/PNode.h; sourceTree = "<group>"; };
-		2F0DB04E2204EE650072B7CF /* PXML_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PXML_Apple.mm; path = ../Code/PXML_Apple.mm; sourceTree = "<group>"; };
-		2F0DB04F2204EE650072B7CF /* PArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PArchive.h; path = ../Code/PArchive.h; sourceTree = "<group>"; };
-		2F0DB0502204EE650072B7CF /* PFontResource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PFontResource.cpp; path = ../Code/PFontResource.cpp; sourceTree = "<group>"; };
-		2F0DB0512204EE650072B7CF /* PImage_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PImage_Apple.mm; path = ../Code/PImage_Apple.mm; sourceTree = "<group>"; };
-		2F0DB0522204EE660072B7CF /* PPlatform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PPlatform.h; path = ../Code/PPlatform.h; sourceTree = "<group>"; };
-		2F0DB0532204EE660072B7CF /* PFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PFile.cpp; path = ../Code/PFile.cpp; sourceTree = "<group>"; };
-		2F0DB0542204EE660072B7CF /* PSize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PSize.h; path = ../Code/PSize.h; sourceTree = "<group>"; };
-		2F0DB0552204EE660072B7CF /* PSystem_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PSystem_Windows.cpp; path = ../Code/PSystem_Windows.cpp; sourceTree = "<group>"; };
-		2F0DB0562204EE660072B7CF /* PArchive_zlib.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PArchive_zlib.cpp; path = ../Code/PArchive_zlib.cpp; sourceTree = "<group>"; };
-		2F0DB0572204EE660072B7CF /* PColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PColor.h; path = ../Code/PColor.h; sourceTree = "<group>"; };
-		2F0DB0582204EE660072B7CF /* PPackage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PPackage.cpp; path = ../Code/PPackage.cpp; sourceTree = "<group>"; };
-		2F0DB0592204EE660072B7CF /* PVector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PVector.h; path = ../Code/PVector.h; sourceTree = "<group>"; };
-		2F0DB05A2204EE660072B7CF /* PString.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PString.cpp; path = ../Code/PString.cpp; sourceTree = "<group>"; };
-		2F0DB05B2204EE660072B7CF /* PString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PString.h; path = ../Code/PString.h; sourceTree = "<group>"; };
-		2F0DB05C2204EE660072B7CF /* PSystem_Common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PSystem_Common.cpp; path = ../Code/PSystem_Common.cpp; sourceTree = "<group>"; };
-		2F0DB05D2204EE660072B7CF /* PArchive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PArchive.cpp; path = ../Code/PArchive.cpp; sourceTree = "<group>"; };
-		2F0DB05E2204EE660072B7CF /* PSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PSystem.h; path = ../Code/PSystem.h; sourceTree = "<group>"; };
-		2F0DB05F2204EE660072B7CF /* PThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PThread.h; path = ../Code/PThread.h; sourceTree = "<group>"; };
-		2F0DB0602204EE660072B7CF /* PPoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PPoint.h; path = ../Code/PPoint.h; sourceTree = "<group>"; };
-		2F0DB0612204EE660072B7CF /* PImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PImage.h; path = ../Code/PImage.h; sourceTree = "<group>"; };
-		2F0DB0622204EE660072B7CF /* PFontResource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PFontResource.h; path = ../Code/PFontResource.h; sourceTree = "<group>"; };
-		2F0DB0632204EE660072B7CF /* PFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PFont.h; path = ../Code/PFont.h; sourceTree = "<group>"; };
-		2F0DB0642204EE660072B7CF /* PArchive_zlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PArchive_zlib.h; path = ../Code/PArchive_zlib.h; sourceTree = "<group>"; };
-		2F0DB0652204EE660072B7CF /* Plumb2D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Plumb2D.h; path = ../Code/Plumb2D.h; sourceTree = "<group>"; };
 		2F47A73D18DB803F0054053B /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		2F47A73F18DB804E0054053B /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
 		2F47A74118DB80620054053B /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2F772BEB168E0D4600A6864F /* Hermes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Hermes.cpp; sourceTree = "<group>"; };
 		2F772BEC168E0D4600A6864F /* Hermes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Hermes.h; sourceTree = "<group>"; };
 		2F772BED168E0D4600A6864F /* Main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Main.cpp; sourceTree = "<group>"; };
+		2F9C4654222467A400CB7CDC /* GFont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFont.cpp; path = ../Code/GFont.cpp; sourceTree = "<group>"; };
+		2F9C4655222467A400CB7CDC /* GImage_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GImage_Windows.cpp; path = ../Code/GImage_Windows.cpp; sourceTree = "<group>"; };
+		2F9C4656222467A400CB7CDC /* GSound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GSound.h; path = ../Code/GSound.h; sourceTree = "<group>"; };
+		2F9C4657222467A400CB7CDC /* GImage_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GImage_Apple.mm; path = ../Code/GImage_Apple.mm; sourceTree = "<group>"; };
+		2F9C4658222467A400CB7CDC /* GImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GImage.h; path = ../Code/GImage.h; sourceTree = "<group>"; };
+		2F9C4659222467A400CB7CDC /* GPackage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GPackage.cpp; path = ../Code/GPackage.cpp; sourceTree = "<group>"; };
+		2F9C465A222467A400CB7CDC /* GSystem_Common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GSystem_Common.cpp; path = ../Code/GSystem_Common.cpp; sourceTree = "<group>"; };
+		2F9C465B222467A400CB7CDC /* GSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GSystem.h; path = ../Code/GSystem.h; sourceTree = "<group>"; };
+		2F9C465C222467A400CB7CDC /* GameUI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GameUI.h; path = ../Code/GameUI.h; sourceTree = "<group>"; };
+		2F9C465D222467A400CB7CDC /* GSound_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GSound_Apple.mm; path = ../Code/GSound_Apple.mm; sourceTree = "<group>"; };
+		2F9C465E222467A400CB7CDC /* GFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFont.h; path = ../Code/GFont.h; sourceTree = "<group>"; };
+		2F9C465F222467A400CB7CDC /* GSystem_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GSystem_Windows.cpp; path = ../Code/GSystem_Windows.cpp; sourceTree = "<group>"; };
+		2F9C4660222467A400CB7CDC /* GTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GTypes.h; path = ../Code/GTypes.h; sourceTree = "<group>"; };
+		2F9C4661222467A400CB7CDC /* GXML_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GXML_Apple.mm; path = ../Code/GXML_Apple.mm; sourceTree = "<group>"; };
+		2F9C4662222467A400CB7CDC /* Game.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Game.h; path = ../Code/Game.h; sourceTree = "<group>"; };
+		2F9C4663222467A400CB7CDC /* GShader_Apple.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; name = GShader_Apple.metal; path = ../Code/GShader_Apple.metal; sourceTree = "<group>"; };
+		2F9C4664222467A400CB7CDC /* GPackage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GPackage.h; path = ../Code/GPackage.h; sourceTree = "<group>"; };
+		2F9C4665222467A400CB7CDC /* GSystem_iOS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GSystem_iOS.mm; path = ../Code/GSystem_iOS.mm; sourceTree = "<group>"; };
+		2F9C4666222467A400CB7CDC /* GTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GTypes.cpp; path = ../Code/GTypes.cpp; sourceTree = "<group>"; };
+		2F9C4667222467A400CB7CDC /* GXML_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GXML_Windows.cpp; path = ../Code/GXML_Windows.cpp; sourceTree = "<group>"; };
+		2F9C4668222467A400CB7CDC /* UINode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UINode.h; path = ../Code/UINode.h; sourceTree = "<group>"; };
+		2F9C4669222467A400CB7CDC /* GSystem_MacOS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GSystem_MacOS.mm; path = ../Code/GSystem_MacOS.mm; sourceTree = "<group>"; };
+		2F9C466A222467A400CB7CDC /* GXML.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GXML.h; path = ../Code/GXML.h; sourceTree = "<group>"; };
+		2F9C466B222467A400CB7CDC /* UINode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UINode.cpp; path = ../Code/UINode.cpp; sourceTree = "<group>"; };
+		2F9C467A2224688500CB7CDC /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		2F9C467C2224688E00CB7CDC /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		2FD7A4BC15B914E500F424E8 /* Hermes */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Hermes; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -102,6 +87,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F9C467D2224688E00CB7CDC /* libz.tbd in Frameworks */,
+				2F9C467B2224688500CB7CDC /* AVFoundation.framework in Frameworks */,
 				2F47A74218DB80620054053B /* Cocoa.framework in Frameworks */,
 				2F47A74018DB804E0054053B /* GLKit.framework in Frameworks */,
 				2F47A73E18DB803F0054053B /* OpenGL.framework in Frameworks */,
@@ -113,50 +100,35 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2F47A6F018DB7B530054053B /* Plumb2D */ = {
+		2F47A6F018DB7B530054053B /* Game API */ = {
 			isa = PBXGroup;
 			children = (
-				2F0DB0562204EE660072B7CF /* PArchive_zlib.cpp */,
-				2F0DB0642204EE660072B7CF /* PArchive_zlib.h */,
-				2F0DB05D2204EE660072B7CF /* PArchive.cpp */,
-				2F0DB04F2204EE650072B7CF /* PArchive.h */,
-				2F0DB0572204EE660072B7CF /* PColor.h */,
-				2F0DB0422204EE650072B7CF /* PDirectory.cpp */,
-				2F0DB0472204EE650072B7CF /* PDirectory.h */,
-				2F0DB0532204EE660072B7CF /* PFile.cpp */,
-				2F0DB04C2204EE650072B7CF /* PFile.h */,
-				2F0DB0452204EE650072B7CF /* PFont.cpp */,
-				2F0DB0632204EE660072B7CF /* PFont.h */,
-				2F0DB0502204EE650072B7CF /* PFontResource.cpp */,
-				2F0DB0622204EE660072B7CF /* PFontResource.h */,
-				2F0DB0512204EE650072B7CF /* PImage_Apple.mm */,
-				2F0DB0402204EE650072B7CF /* PImage_Common.cpp */,
-				2F0DB04A2204EE650072B7CF /* PImage_Windows.cpp */,
-				2F0DB0612204EE660072B7CF /* PImage.h */,
-				2F0DB0652204EE660072B7CF /* Plumb2D.h */,
-				2F0DB0492204EE650072B7CF /* PMutex.h */,
-				2F0DB03F2204EE650072B7CF /* PNode.cpp */,
-				2F0DB04D2204EE650072B7CF /* PNode.h */,
-				2F0DB0582204EE660072B7CF /* PPackage.cpp */,
-				2F0DB0432204EE650072B7CF /* PPackage.h */,
-				2F0DB0522204EE660072B7CF /* PPlatform.h */,
-				2F0DB0602204EE660072B7CF /* PPoint.h */,
-				2F0DB0462204EE650072B7CF /* PRect.h */,
-				2F0DB0412204EE650072B7CF /* PShader_Apple.metal */,
-				2F0DB0542204EE660072B7CF /* PSize.h */,
-				2F0DB05A2204EE660072B7CF /* PString.cpp */,
-				2F0DB05B2204EE660072B7CF /* PString.h */,
-				2F0DB0482204EE650072B7CF /* PSystem_Apple.mm */,
-				2F0DB05C2204EE660072B7CF /* PSystem_Common.cpp */,
-				2F0DB0552204EE660072B7CF /* PSystem_Windows.cpp */,
-				2F0DB05E2204EE660072B7CF /* PSystem.h */,
-				2F0DB05F2204EE660072B7CF /* PThread.h */,
-				2F0DB0592204EE660072B7CF /* PVector.h */,
-				2F0DB04E2204EE650072B7CF /* PXML_Apple.mm */,
-				2F0DB0442204EE650072B7CF /* PXML_Windows.cpp */,
-				2F0DB04B2204EE650072B7CF /* PXML.h */,
+				2F9C4662222467A400CB7CDC /* Game.h */,
+				2F9C465C222467A400CB7CDC /* GameUI.h */,
+				2F9C4654222467A400CB7CDC /* GFont.cpp */,
+				2F9C465E222467A400CB7CDC /* GFont.h */,
+				2F9C4657222467A400CB7CDC /* GImage_Apple.mm */,
+				2F9C4655222467A400CB7CDC /* GImage_Windows.cpp */,
+				2F9C4658222467A400CB7CDC /* GImage.h */,
+				2F9C4659222467A400CB7CDC /* GPackage.cpp */,
+				2F9C4664222467A400CB7CDC /* GPackage.h */,
+				2F9C4663222467A400CB7CDC /* GShader_Apple.metal */,
+				2F9C465D222467A400CB7CDC /* GSound_Apple.mm */,
+				2F9C4656222467A400CB7CDC /* GSound.h */,
+				2F9C465A222467A400CB7CDC /* GSystem_Common.cpp */,
+				2F9C4665222467A400CB7CDC /* GSystem_iOS.mm */,
+				2F9C4669222467A400CB7CDC /* GSystem_MacOS.mm */,
+				2F9C465F222467A400CB7CDC /* GSystem_Windows.cpp */,
+				2F9C465B222467A400CB7CDC /* GSystem.h */,
+				2F9C4666222467A400CB7CDC /* GTypes.cpp */,
+				2F9C4660222467A400CB7CDC /* GTypes.h */,
+				2F9C4661222467A400CB7CDC /* GXML_Apple.mm */,
+				2F9C4667222467A400CB7CDC /* GXML_Windows.cpp */,
+				2F9C466A222467A400CB7CDC /* GXML.h */,
+				2F9C466B222467A400CB7CDC /* UINode.cpp */,
+				2F9C4668222467A400CB7CDC /* UINode.h */,
 			);
-			name = Plumb2D;
+			name = "Game API";
 			sourceTree = "<group>";
 		};
 		2FD7A4B115B914E500F424E8 = {
@@ -165,7 +137,7 @@
 				2F772BEB168E0D4600A6864F /* Hermes.cpp */,
 				2F772BEC168E0D4600A6864F /* Hermes.h */,
 				2F772BED168E0D4600A6864F /* Main.cpp */,
-				2F47A6F018DB7B530054053B /* Plumb2D */,
+				2F47A6F018DB7B530054053B /* Game API */,
 				2FD7A56615B91D3D00F424E8 /* Frameworks */,
 				2FD7A4BD15B914E500F424E8 /* Products */,
 			);
@@ -182,6 +154,8 @@
 		2FD7A56615B91D3D00F424E8 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2F9C467C2224688E00CB7CDC /* libz.tbd */,
+				2F9C467A2224688500CB7CDC /* AVFoundation.framework */,
 				2F47A74118DB80620054053B /* Cocoa.framework */,
 				2F47A73F18DB804E0054053B /* GLKit.framework */,
 				2F0AC30A1F807E27009B5A1E /* Metal.framework */,
@@ -241,26 +215,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2F0DB06E2204EE670072B7CF /* PXML_Apple.mm in Sources */,
-				2F0DB0692204EE670072B7CF /* PDirectory.cpp in Sources */,
-				2F0DB06B2204EE670072B7CF /* PFont.cpp in Sources */,
-				2F0DB06D2204EE670072B7CF /* PImage_Windows.cpp in Sources */,
-				2F0DB0732204EE670072B7CF /* PArchive_zlib.cpp in Sources */,
-				2F0DB0762204EE670072B7CF /* PSystem_Common.cpp in Sources */,
-				2F0DB0722204EE670072B7CF /* PSystem_Windows.cpp in Sources */,
+				2F9C4674222467A400CB7CDC /* GShader_Apple.metal in Sources */,
+				2F9C4671222467A400CB7CDC /* GSound_Apple.mm in Sources */,
+				2F9C466E222467A400CB7CDC /* GImage_Apple.mm in Sources */,
+				2F9C4677222467A400CB7CDC /* GXML_Windows.cpp in Sources */,
+				2F9C466C222467A400CB7CDC /* GFont.cpp in Sources */,
+				2F9C4672222467A400CB7CDC /* GSystem_Windows.cpp in Sources */,
 				2F772BEE168E0D4600A6864F /* Hermes.cpp in Sources */,
-				2F0DB0672204EE670072B7CF /* PImage_Common.cpp in Sources */,
-				2F0DB0742204EE670072B7CF /* PPackage.cpp in Sources */,
-				2F0DB0662204EE670072B7CF /* PNode.cpp in Sources */,
-				2F0DB06C2204EE670072B7CF /* PSystem_Apple.mm in Sources */,
-				2F0DB0752204EE670072B7CF /* PString.cpp in Sources */,
-				2F0DB06A2204EE670072B7CF /* PXML_Windows.cpp in Sources */,
-				2F0DB06F2204EE670072B7CF /* PFontResource.cpp in Sources */,
-				2F0DB0702204EE670072B7CF /* PImage_Apple.mm in Sources */,
 				2F772BEF168E0D4600A6864F /* Main.cpp in Sources */,
-				2F0DB0712204EE670072B7CF /* PFile.cpp in Sources */,
-				2F0DB0682204EE670072B7CF /* PShader_Apple.metal in Sources */,
-				2F0DB0772204EE670072B7CF /* PArchive.cpp in Sources */,
+				2F9C4673222467A400CB7CDC /* GXML_Apple.mm in Sources */,
+				2F9C4678222467A400CB7CDC /* GSystem_MacOS.mm in Sources */,
+				2F9C4675222467A400CB7CDC /* GSystem_iOS.mm in Sources */,
+				2F9C466F222467A400CB7CDC /* GPackage.cpp in Sources */,
+				2F9C466D222467A400CB7CDC /* GImage_Windows.cpp in Sources */,
+				2F9C4670222467A400CB7CDC /* GSystem_Common.cpp in Sources */,
+				2F9C4676222467A400CB7CDC /* GTypes.cpp in Sources */,
+				2F9C4679222467A400CB7CDC /* UINode.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

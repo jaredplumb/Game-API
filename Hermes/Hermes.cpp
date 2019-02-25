@@ -1,74 +1,82 @@
 #include "Hermes.h"
 
-bool Hermes::Build (const PString& path) {
+bool Hermes::Build (const GString& path) {
 	
-	PXML xml;
+	GXML xml;
 	if(xml.NewFromFile(path) == false) {
-		PSystem::Print("Failed to read xml hermes file!\n");
+		GConsole::Print("Failed to read xml hermes file!\n");
 		return false;
 	}
 	
-	PString packagePath = PString(path).TrimExtension() + ".package";
-	PSystem::Print("Building %s...\n", (const char*)packagePath);
+	GString packagePath = GString(path).TrimExtension() + ".package";
+	GConsole::Print("Building %s...\n", (const char*)packagePath);
 	
-	PPackage package;
+	GPackage package;
 	if(package.OpenForWrite(packagePath) == false) {
-		PSystem::Print("Failed to open package file!\n");
+		GConsole::Print("Failed to open package file!\n");
 		return false;
 	}
 	
-	for(std::multimap<PString, PXML*>::const_iterator i = xml.elements.begin(); i != xml.elements.end(); i++) {
+	for(std::multimap<GString, GXML*>::const_iterator i = xml.elements.begin(); i != xml.elements.end(); i++) {
 		
 		if(i->second == NULL)
 			continue;
 		
 		// Find the initial files
-		PString src = *i->second->GetAttribute("src");
+		GString src = *i->second->GetAttribute("src");
 		if(src.IsEmpty()) {
 			src = i->second->GetContent();
 			src.TrimSpaces();
 		}
 		if(src.IsEmpty()) {
-			PSystem::Print("Element %s has no source!\n", (const char*)i->second->tag);
+			GConsole::Print("Element %s has no source!\n", (const char*)i->second->tag);
 			continue;
 		}
 		
 		// If there is a wildcard, adjust for the wildcard
-		PString left;
-		PString right;
-		if(PString::strstr(src, "*") != NULL) {
-			right = PString::strstr(src, "*") + 1;
+		GString left;
+		GString right;
+		if(GString::strstr(src, "*") != NULL) {
+			right = GString::strstr(src, "*") + 1;
 			left = src;
 			left[left.GetLength() - right.GetLength() - 1] = '\0';
 			src.TrimToDirectory();
 		}
 		
 		// Cycle through the directory building resources
-		PDirectory dir(src);
+		GDirectory dir(src);
 		for(uint_t d = 0; d < dir.GetSize(); d++) {
-			PString file = dir.GetFile(d);
-			if((left.IsEmpty() && right.IsEmpty()) || (file.GetLength() >= left.GetLength() + right.GetLength() && PString::strncmp(file, left, left.GetLength()) == 0 && PString::strncmp(file + file.GetLength() - right.GetLength(), right, right.GetLength()) == 0)) {
-				PString name = file;
+			GString file = dir.GetFile(d);
+			if((left.IsEmpty() && right.IsEmpty()) || (file.GetLength() >= left.GetLength() + right.GetLength() && GString::strncmp(file, left, left.GetLength()) == 0 && GString::strncmp(file + file.GetLength() - right.GetLength(), right, right.GetLength()) == 0)) {
+				GString name = file;
 				name[name.GetLength() - right.GetLength()] = '\0';
-				PSystem::Print("Building %s %s as ", (const char*)i->second->tag, (const char*)name);
+				GConsole::Print("Building %s %s as ", (const char*)i->second->tag, (const char*)name);
 				name = name + left.GetLength();
-				PSystem::Print("\"%s\"...\n", (const char*)name);
+				GConsole::Print("\"%s\"...\n", (const char*)name);
 				
 				// All the heavy lifting goes here
-				if(PString::stricmp(i->second->tag, "images") == 0) {
-					PImage::Resource image;
+				
+				// Images
+				if(GString::stricmp(i->second->tag, "images") == 0) {
+					GImage::Resource image;
 					if(image.NewFromFile(file) == false || image.WriteToPackage(package, name) == false)
-						PSystem::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
-				//} else if(PString::stricmp(i->second->tag, "sounds") == 0) {
-				//	PSoundResource sound;
-				//	if(sound.NewFromFile(file))
-				//		sound.Write(package, name);
-				} else if(PString::stricmp(i->second->tag, "fonts") == 0) {
-					PFontResource font;
+						GConsole::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
+				
+				// Sounds
+				} else if(GString::stricmp(i->second->tag, "sounds") == 0) {
+					GSound::Resource sound;
+					if(sound.NewFromFile(file) == false || sound.WriteToPackage(package, name) == false)
+						GConsole::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
+				
+				// Fonts
+				} else if(GString::stricmp(i->second->tag, "fonts") == 0) {
+					GFont::Resource font;
 					if(font.NewFromFile(file) == false || font.WriteToPackage(package, name) == false)
-						PSystem::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
+						GConsole::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
+				
+				// Unknown
 				} else {
-					PSystem::Print("Unknown file type \"%s\" for file \"%s\"!\n", (const char*)i->second->tag, (const char*)file);
+					GConsole::Print("Unknown file type \"%s\" for file \"%s\"!\n", (const char*)i->second->tag, (const char*)file);
 				}
 			}
 		}
