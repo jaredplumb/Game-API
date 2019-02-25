@@ -1,8 +1,8 @@
 #import "GSystem.h"
 #if PLATFORM_MACOSX
 
-static GRect			_RECT			= { 0, 0, 1280, 720 };
-static GRect			_SAFE_RECT		= { 0, 0, 1280, 720 };
+static GRect			_RECT			(0, 0, 1280, 720);
+static GRect			_SAFE_RECT		(0, 0, 1280, 720);
 static int_t			_FPS		    = 60;
 static int_t			_ARG_C			= 0;
 static char**			_ARG_V			= NULL;
