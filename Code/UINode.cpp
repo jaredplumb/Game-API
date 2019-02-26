@@ -33,6 +33,9 @@ UINode::~UINode () {
 
 
 
+int_t UINode::GetUniqueRef () const {
+	return _ref;
+}
 
 int_t UINode::GetWidth () const {
 	return _rect.width;

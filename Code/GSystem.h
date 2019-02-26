@@ -23,7 +23,7 @@ public:
 	/// Returns the the current FPS.
 	static int_t GetFPS ();
 	
-	/// Returns a unique integer, per application session.
+	/// Returns a new unique integer, per application session.
 	static int_t GetUniqueRef ();
 	
 	/// Returns the startup time in milliseconds.

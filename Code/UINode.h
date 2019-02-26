@@ -12,6 +12,7 @@ public:
 	UINode ();
 	virtual ~UINode ();
 	
+	int_t GetUniqueRef () const;					// Returns this UINode's unique reference, useful for OnEvent
 	int_t GetWidth () const;
 	int_t GetHeight () const;
 	GRect GetRect () const;
