@@ -14,6 +14,7 @@ static std::map<int_t, void (*) (char key)>*							_ASCII_CALLBACKS = NULL;
 static std::map<int_t, void (*) (int_t x, int_t y)>*					_TOUCH_CALLBACKS = NULL;
 static std::map<int_t, void (*) (int_t x, int_t y)>*					_TOUCHUP_CALLBACKS = NULL;
 static std::map<int_t, void (*) (int_t x, int_t y)>*					_TOUCHMOVE_CALLBACKS = NULL;
+static std::map<int_t, void (*) (int_t event, void* data)>*				_EVENT_CALLBACKS = NULL;
 
 //uint64 GSystem::GetHash (const uint8* bytes) {
 	// en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
@@ -121,6 +122,13 @@ int_t GSystem::NewTouchMoveCallback (void (* callback) (int_t x, int_t y)) {
 	return ref;
 }
 
+int_t GSystem::NewEventCallback (void (* callback) (int_t event, void* data)) {
+	if(_EVENT_CALLBACKS == NULL) _EVENT_CALLBACKS = new std::map<int_t, void (*) (int_t event, void* data)>;
+	int_t ref = GetUniqueRef();
+	_EVENT_CALLBACKS->insert(std::make_pair(ref, callback));
+	return ref;
+}
+
 void GSystem::DeleteStartupCallback (int_t ref) {
 	if(_STARTUP_CALLBACKS) _STARTUP_CALLBACKS->erase(_STARTUP_CALLBACKS->find(ref));
 }
@@ -175,6 +183,10 @@ void GSystem::DeleteTouchUpCallback (int_t ref) {
 
 void GSystem::DeleteTouchMoveCallback (int_t ref) {
 	if(_TOUCHMOVE_CALLBACKS) _TOUCHMOVE_CALLBACKS->erase(_TOUCHMOVE_CALLBACKS->find(ref));
+}
+
+void GSystem::DeleteEventCallback (int_t ref) {
+	if(_EVENT_CALLBACKS) _EVENT_CALLBACKS->erase(_EVENT_CALLBACKS->find(ref));
 }
 
 void GSystem::DeleteAllCallbacks () {
@@ -233,6 +245,10 @@ void GSystem::DeleteAllCallbacks () {
 	if(_TOUCHMOVE_CALLBACKS) {
 		delete _TOUCHMOVE_CALLBACKS;
 		_TOUCHMOVE_CALLBACKS = NULL;
+	}
+	if(_EVENT_CALLBACKS) {
+		delete _EVENT_CALLBACKS;
+		_EVENT_CALLBACKS = NULL;
 	}
 }
 
@@ -318,4 +334,10 @@ void GSystem::RunTouchMoveCallbacks (int_t x, int_t y) {
 	if(_TOUCHMOVE_CALLBACKS)
 		for(std::map<int_t, void (*) (int_t, int_t)>::iterator i = _TOUCHMOVE_CALLBACKS->begin(); i != _TOUCHMOVE_CALLBACKS->end(); i++)
 			i->second(x, y);
+}
+
+void GSystem::RunEventCallbacks (int_t event, void* data) {
+	if(_EVENT_CALLBACKS)
+		for(std::map<int_t, void (*) (int_t, void*)>::iterator i = _EVENT_CALLBACKS->begin(); i != _EVENT_CALLBACKS->end(); i++)
+			i->second(event, data);
 }

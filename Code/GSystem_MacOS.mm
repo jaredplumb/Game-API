@@ -181,36 +181,42 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) rightMouseDown: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) otherMouseDown: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) mouseUp: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) rightMouseUp: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) otherMouseUp: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) mouseMoved: (NSEvent*)theEvent {
@@ -223,18 +229,21 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) rightMouseDragged: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) otherMouseDragged: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) scrollWheel: (NSEvent*)theEvent {
@@ -246,12 +255,7 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 		GSystem::RunKeyCallbacks((vkey_t)[theEvent keyCode]);
 	if([[theEvent characters] length] > 0 && isprint((int)[[theEvent characters] UTF8String][0]))
 		GSystem::RunASCIICallbacks((char)[[theEvent characters] UTF8String][0]);
-	
-	
 	//wchar_t key = [[theEvent characters] characterAtIndex:0];
-	
-	
-	
 }
 
 - (void) keyUp: (NSEvent*)theEvent {
@@ -260,8 +264,6 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 }
 
 - (void) flagsChanged: (NSEvent*)theEvent {
-	
-	
 	
 	//unsigned long cmods = [theEvent modifierFlags];
 	//if ((cmods & 0xffff0000) != _Modifiers)
@@ -280,7 +282,6 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	// }
 	//    _Modifiers = cmods & 0xffff0000;
 	//}
-	
 	
 	//GetCurrentKeyModifiers
 	//GetCurrentEventKeyModifiers

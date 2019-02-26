@@ -5,7 +5,7 @@
 
 #define		UINODE_NAME(c,n)			static UINode::Factory<c> _UI_NODE_ ## c ## _NAME(n, false);
 #define		UINODE_AUTORUN(c,n)			static UINode::Factory<c> _UI_NODE_ ## c ## _NAME(n, true);
-#define		UINODE_PACKAGE(n)			_UINODEPACKAGE_UNIQUE(n,__COUNTER__)
+#define		UINODE_PACKAGE(n)			_UINODEPACKAGE_UNIQUE(n, __COUNTER__)
 
 class UINode {
 public:
@@ -25,6 +25,9 @@ public:
 	static void SetRandomSeed (uint32 seed = 0);	// Sets the global random seed, if seed is 0, then a random time value is used
 	
 	
+	
+	// TODO: Set settings access by string with a SetSetting, GetSetting option
+	// TODO: Add layout manager similar to Java Swing or WPF, default is an absolute positioning
 	
 	
 	void Run (const GString& name);				// Exits the current root UINode and runs the named UINode
@@ -50,6 +53,7 @@ public:
 	virtual void OnTouch (int_t x, int_t y) {}
 	virtual void OnTouchUp (int_t x, int_t y) {}
 	virtual void OnTouchMove (int_t x, int_t y) {}
+	virtual void OnEvent (int_t event, void* data) {}
 	
 	void SendDraw ();
 	void SendMouse (int_t x, int_t y, int_t button);
@@ -63,6 +67,7 @@ public:
 	void SendTouch (int_t x, int_t y);
 	void SendTouchUp (int_t x, int_t y);
 	void SendTouchMove (int_t x, int_t y);
+	void SendEvent (int_t event, void* data);
 	
 	
 	
@@ -116,6 +121,7 @@ private:
 		static void TouchCallback (int_t x, int_t y);
 		static void TouchUpCallback (int_t x, int_t y);
 		static void TouchMoveCallback (int_t x, int_t y);
+		static void EventCallback (int_t event, void* data);
 		static const int FADE_TIME = 500; // Milliseconds;
 	};
 	

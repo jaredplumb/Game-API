@@ -299,6 +299,17 @@ void UINode::SendTouchMove (int_t x, int_t y) {
 	}
 }
 
+void UINode::SendEvent (int_t event, void* data) {
+	if(_visible && _active) {
+		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
+			if((*i)->_focus)
+				return (*i)->SendEvent(event, data);
+			else
+				(*i)->SendEvent(event, data);
+		OnEvent(event, data);
+	}
+}
+
 
 
 
@@ -325,6 +336,7 @@ UINode::_Root::_Root ()
 	GSystem::NewTouchCallback(TouchCallback);
 	GSystem::NewTouchUpCallback(TouchUpCallback);
 	GSystem::NewTouchMoveCallback(TouchMoveCallback);
+	GSystem::NewEventCallback(EventCallback);
 }
 
 UINode::_Root::~_Root () {
@@ -532,6 +544,12 @@ void UINode::_Root::TouchMoveCallback (int_t x, int_t y) {
 	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
 		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendTouchMove(x - (*i)->_rect.x, y - (*i)->_rect.y);
+}
+
+void UINode::_Root::EventCallback (int_t event, void* data) {
+	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendEvent(event, data);
 }
 
 
