@@ -83,6 +83,40 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
+static NSString* _SHADER = @""
+"#include <metal_stdlib>\n"
+"#include <simd/simd.h>\n"
+"using namespace metal;\n"
+"\n"
+"struct _CustomVertex {\n"
+"	packed_float2 xy;\n"
+"	packed_uchar4 rgba;\n"
+"	packed_float2 uv;\n"
+"};\n"
+"\n"
+"struct _VertexOutput {\n"
+"	float4 xyzw [[position]];\n"
+"	float4 rgba;\n"
+"	float2 uv;\n"
+"};\n"
+"\n"
+"vertex _VertexOutput _VertexShader (constant _CustomVertex* vertexArray [[buffer(0)]],\n"
+"									constant float4x4* matrix  [[buffer(1)]],\n"
+"									ushort vertexID [[vertex_id]]) {\n"
+"	_VertexOutput out;\n"
+"	out.xyzw = *matrix * float4(vertexArray[vertexID].xy, 0.0, 1.0);\n"
+"	out.rgba = float4(vertexArray[vertexID].rgba) / 255.0;\n"
+"	out.uv = float2(vertexArray[vertexID].uv);\n"
+"	return out;\n"
+"}\n"
+"\n"
+"fragment float4 _FragmentShader (_VertexOutput in [[stage_in]],\n"
+"								 texture2d<float> texture [[texture(0)]]) {\n"
+"	return in.rgba * float4(texture.sample(sampler(mag_filter::linear, min_filter::linear), in.uv));\n"
+"}\n"
+"";
+
+
 
 
 
@@ -108,7 +142,8 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	self.clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
 	[self mtkView:self drawableSizeWillChange:frameRect.size];
 	
-	id<MTLLibrary> defaultLibrary = [self.device newDefaultLibrary];
+	NSError* error = NULL;
+	id<MTLLibrary> defaultLibrary = [self.device newLibraryWithSource:_SHADER options:nil error:&error];
 	id<MTLFunction> vertexFunction = [defaultLibrary newFunctionWithName:@"_VertexShader"];
 	id<MTLFunction> fragmentFunction = [defaultLibrary newFunctionWithName:@"_FragmentShader"];
 	
@@ -122,7 +157,6 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	pipelineStateDescriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
 	pipelineStateDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
 	
-	NSError* error = NULL;
 	_pipelineState = [self.device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
 	_commandQueue = [self.device newCommandQueue];
 	
