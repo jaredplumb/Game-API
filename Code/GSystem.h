@@ -73,7 +73,6 @@ public:
 	static int_t NewTouchCallback (void (* callback) (int_t x, int_t y));
 	static int_t NewTouchUpCallback (void (* callback) (int_t x, int_t y));
 	static int_t NewTouchMoveCallback (void (* callback) (int_t x, int_t y));
-	static int_t NewEventCallback (void (* callback) (int_t event, void* data));
 	
 	// Callbacks do not need to be deleted, they will automatically be deleted after shutdown
 	static void DeleteStartupCallback (int_t ref);
@@ -90,7 +89,6 @@ public:
 	static void DeleteTouchCallback (int_t ref);
 	static void DeleteTouchUpCallback (int_t ref);
 	static void DeleteTouchMoveCallback (int_t ref);
-	static void DeleteEventCallback (int_t ref);
 	static void DeleteAllCallbacks (); // Very dangerous to call, used internally
 	
 	// These should not be called without a good reason (they are used internally)
@@ -108,7 +106,6 @@ public:
 	static void RunTouchCallbacks (int_t x, int_t y);
 	static void RunTouchUpCallbacks (int_t x, int_t y);
 	static void RunTouchMoveCallbacks (int_t x, int_t y);
-	static void RunEventCallbacks (int_t event, void* data);
 };
 
 #endif // _GSYSTEM_H_

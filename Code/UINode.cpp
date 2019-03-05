@@ -8,7 +8,6 @@
 
 UINode::UINode ()
 :	_ref(GSystem::GetUniqueRef())
-,	_delete(false)
 ,	_rect(GSystem::GetRect())
 ,	_visible(true)
 ,	_active(true)
@@ -19,14 +18,8 @@ UINode::UINode ()
 }
 
 UINode::~UINode () {
-	
 	if(_parent)
 		_parent->Remove(*this);
-	
-	while(_alloc.empty() == false) {
-		delete _alloc.back();
-		_alloc.pop_back();
-	}
 }
 
 
@@ -35,6 +28,10 @@ UINode::~UINode () {
 
 int_t UINode::GetUniqueRef () const {
 	return _ref;
+}
+
+UINode* UINode::GetParent() const {
+	return _parent;
 }
 
 int_t UINode::GetWidth () const {
@@ -136,26 +133,8 @@ void UINode::Add (UINode& node) {
 	
 }
 
-void UINode::Add (UINode* node) {
-	node->_delete = true;
-	_alloc.push_back(node);
-	Add(*node);
-}
-
-void UINode::Add (const GString& name) {
-	std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(name);
-	if(factory != _FACTORY_LIST->end()) {
-		UINode* node = factory->second();
-		node->_delete = true;
-		_alloc.push_back(node);
-		Add(*node);
-	}
-}
-
 void UINode::Remove (UINode& node) {
 	_children.remove(&node);
-	if(node._delete)
-		_alloc.remove(&node);
 	if(node._parent == this)
 		node._parent = NULL;
 }
@@ -302,14 +281,14 @@ void UINode::SendTouchMove (int_t x, int_t y) {
 	}
 }
 
-void UINode::SendEvent (int_t event, void* data) {
+void UINode::SendEvent (UINode* node) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			if((*i)->_focus)
-				return (*i)->SendEvent(event, data);
+				return (*i)->SendEvent(node);
 			else
-				(*i)->SendEvent(event, data);
-		OnEvent(event, data);
+				(*i)->SendEvent(node);
+		OnEvent(node);
 	}
 }
 
@@ -339,7 +318,6 @@ UINode::_Root::_Root ()
 	GSystem::NewTouchCallback(TouchCallback);
 	GSystem::NewTouchUpCallback(TouchUpCallback);
 	GSystem::NewTouchMoveCallback(TouchMoveCallback);
-	GSystem::NewEventCallback(EventCallback);
 }
 
 UINode::_Root::~_Root () {
@@ -548,13 +526,6 @@ void UINode::_Root::TouchMoveCallback (int_t x, int_t y) {
 		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendTouchMove(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
-
-void UINode::_Root::EventCallback (int_t event, void* data) {
-	if(_ROOT && !_ROOT->transitionIn && !_ROOT->transitionOut)
-		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			(*i)->SendEvent(event, data);
-}
-
 
 
 

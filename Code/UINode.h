@@ -13,6 +13,7 @@ public:
 	virtual ~UINode ();
 	
 	int_t GetUniqueRef () const;					// Returns this UINode's unique reference, useful for OnEvent
+	UINode* GetParent () const;						// Returns this nodes parent
 	int_t GetWidth () const;
 	int_t GetHeight () const;
 	GRect GetRect () const;
@@ -37,8 +38,6 @@ public:
 	void Exit ();								// Will delete this UINode as soon as possible
 	
 	void Add (UINode& node);
-	void Add (UINode* node); // This function will delete the node after use
-	void Add (const GString& name);
 	void Remove (UINode& node);
 	
 	
@@ -54,7 +53,7 @@ public:
 	virtual void OnTouch (int_t x, int_t y) {}
 	virtual void OnTouchUp (int_t x, int_t y) {}
 	virtual void OnTouchMove (int_t x, int_t y) {}
-	virtual void OnEvent (int_t event, void* data) {}
+	virtual void OnEvent (UINode* node) {}
 	
 	void SendDraw ();
 	void SendMouse (int_t x, int_t y, int_t button);
@@ -68,10 +67,12 @@ public:
 	void SendTouch (int_t x, int_t y);
 	void SendTouchUp (int_t x, int_t y);
 	void SendTouchMove (int_t x, int_t y);
-	void SendEvent (int_t event, void* data);
+	void SendEvent (UINode* node);
 	
 	
 	
+	inline bool operator== (const UINode& n) const                            { return _ref == n._ref; }
+	inline bool operator!= (const UINode& n) const                            { return _ref != n._ref; }
 	
 	
 	
@@ -80,7 +81,6 @@ public:
 private:
 	
 	int_t				_ref;
-	bool				_delete; // This node will be deleted when it's parent is deleted
 	GRect				_rect;
 	bool				_visible;
 	bool				_active;
@@ -88,7 +88,6 @@ private:
 	bool				_exit;
 	UINode*				_parent;
 	std::list<UINode*>	_children;
-	std::list<UINode*> 	_alloc; // These are children created with the Add(GString) or Add(Node*) functions, they will be deleted when this node is deleted
 	
 	struct _Root {
 		std::list<UINode*> nodes;
@@ -122,7 +121,6 @@ private:
 		static void TouchCallback (int_t x, int_t y);
 		static void TouchUpCallback (int_t x, int_t y);
 		static void TouchMoveCallback (int_t x, int_t y);
-		static void EventCallback (int_t event, void* data);
 		static const int FADE_TIME = 500; // Milliseconds;
 	};
 	

@@ -1,92 +1,134 @@
 #include "UIButton.h"
-#include "GSystem.h"
 
 UIButton::UIButton ()
-:	_touch(-1, -1)
-,	_down(false)
+:	_isDown(false)
+,	_font(NULL)
+,	_button(NULL)
+,	_down(NULL)
+,	_click(NULL)
 {
 }
 
-UIButton::UIButton (int_t x, int_t y, const GString& button, const GString& down, const GString& click)
-:	_touch(-1, -1)
-,	_down(false)
-,	_imageButton(button)
-,	_imageDown(down)
-,	_soundClick(click)
+UIButton::UIButton (const GString& text, int_t x, int_t y, GFont* font, GImage* button, GImage* down, GSound* click, UINode* parent)
+:	_isDown(false)
+,	_font(NULL)
+,	_button(NULL)
+,	_down(NULL)
+,	_click(NULL)
 {
-	SetRect(GRect(x, y, _imageButton.GetWidth(), _imageButton.GetHeight()));
+	New(text, x, y, font, button, down, click, parent);
 }
 
-UIButton::UIButton (const GPoint& loc, const GString& button, const GString& down, const GString& click)
-:	_touch(-1, -1)
-,	_down(false)
-,	_imageButton(button)
-,	_imageDown(down)
-,	_soundClick(click)
+UIButton::UIButton (const GString& text, const GPoint& loc, GFont* font, GImage* button, GImage* down, GSound* click, UINode* parent)
+:	UIButton(text, loc.x, loc.y, font, button, down, click, parent)
 {
-	SetRect(GRect(loc.x, loc.y, _imageButton.GetWidth(), _imageButton.GetHeight()));
+}
+
+UIButton::UIButton (const GString& text, int_t x, int_t y, ButtonFactory& factory, UINode* parent)
+:	UIButton(text, x, y, &factory.font, &factory.button, &factory.down, &factory.click, parent)
+{
+}
+
+UIButton::UIButton (const GString& text, const GPoint& loc, ButtonFactory& factory, UINode* parent)
+:	UIButton(text, loc.x, loc.y, &factory.font, &factory.button, &factory.down, &factory.click, parent)
+{
 }
 
 UIButton::~UIButton () {
 	Delete();
 }
 
-bool UIButton::New (int_t x, int_t y, const GString& button, const GString& down, const GString& click) {
-	_touch.x = -1;
-	_touch.y = -1;
-	_down = false;
-	_imageButton.New(button);
-	_imageDown.New(down);
-	_soundClick.New(click);
-	SetRect(GRect(x, y, _imageButton.GetWidth(), _imageButton.GetHeight()));
-	return !_imageButton.IsEmpty();
+bool UIButton::New (const GString& text, int_t x, int_t y, GFont* font, GImage* button, GImage* down, GSound* click, UINode* parent) {
+	_text = text;
+	_loc.x = 0;
+	_loc.y = 0;
+	_isDown = false;
+	_font = font;
+	_button = button;
+	_down = down;
+	_click = click;
+	if(_button)
+		SetRect(GRect(x, y, _button->GetWidth(), _button->GetHeight()));
+	if(parent)
+		parent->Add(*this);
+	return true;
 }
 
-bool UIButton::New (const GPoint& loc, const GString& button, const GString& down, const GString& click) {
-	return New(loc.x, loc.y, button, down, click);
+bool UIButton::New (const GString& text, const GPoint& loc, GFont* font, GImage* button, GImage* down, GSound* click, UINode* parent) {
+	return New(text, loc.x, loc.y, font, button, down, click, parent);
+}
+
+bool UIButton::New (const GString& text, int_t x, int_t y, ButtonFactory& factory, UINode* parent) {
+	return New(text, x, y, &factory.font, &factory.button, &factory.down, &factory.click, parent);
+}
+
+bool UIButton::New (const GString& text, const GPoint& loc, ButtonFactory& factory, UINode* parent) {
+	return New(text, loc.x, loc.y, &factory.font, &factory.button, &factory.down, &factory.click, parent);
 }
 
 void UIButton::Delete () {
-	_touch.x = -1;
-	_touch.y = -1;
-	_down = false;
-	_imageButton.Delete();
-	_imageDown.Delete();
-	_soundClick.Delete();
+	_text.Delete();
+	_loc.x = 0;
+	_loc.y = 0;
+	_isDown = false;
+	_font = NULL;
+	_button = NULL;
+	_down = NULL;
+	_click = NULL;
 }
 
 bool UIButton::IsDown () const {
-	return _down;
+	return _isDown;
 }
 
 void UIButton::OnDraw () {
-	if(_down && _touch.x >= 0 && _touch.x < GetWidth() && _touch.y >= 0 && _touch.y < GetHeight())
-		_imageDown.Draw((GetWidth() - _imageDown.GetWidth()) / 2, (GetHeight() - _imageDown.GetHeight()) / 2);
-	else
-		_imageButton.Draw((GetWidth() - _imageButton.GetWidth()) / 2, (GetHeight() - _imageButton.GetHeight()) / 2);
+	if(_isDown == true && _down != NULL && _loc.x >= 0 && _loc.x < GetWidth() && _loc.y >= 0 && _loc.y < GetHeight())
+		_down->Draw((GetWidth() - _down->GetWidth()) / 2, (GetHeight() - _down->GetHeight()) / 2);
+	else if(_button != NULL)
+		_button->Draw((GetWidth() - _button->GetWidth()) / 2, (GetHeight() - _button->GetHeight()) / 2);
+	if(_font != NULL) {
+		GRect rect = _font->GetRect(_text);
+		rect.x = (GetWidth() - rect.width) / 2 - rect.x;
+		rect.y = (GetHeight() - rect.height) / 2 - rect.y;
+		_font->Draw(_text, rect.x, rect.y);
+	}
 }
 
 void UIButton::OnTouch (int_t x, int_t y) {
-	_touch.x = x;
-	_touch.y = y;
 	if(x >= 0 && x < GetWidth() && y >= 0 && y < GetHeight()) {
-		_soundClick.Play();
-		_down = true;
-		//_startingScreenLoc = GetScreenLoc();
+		_loc.x = x;
+		_loc.y = y;
+		_isDown = true;
+		if(_click)
+			_click->Play();
 	}
 }
 
 void UIButton::OnTouchUp (int_t x, int_t y) {
-	_touch.x = x;
-	_touch.y = y;
-	if(_down && x >= 0 && x < GetWidth() && y >= 0 && y < GetHeight())
-		GSystem::RunEventCallbacks(GetUniqueRef(), this);
-	_down = false;
+	if(_isDown == true && x >= 0 && x < GetWidth() && y >= 0 && y < GetHeight()) {
+		_loc.x = x;
+		_loc.y = y;
+		UINode* root = this;
+		while(root->GetParent() != NULL)
+			root = root->GetParent();
+		root->SendEvent(this);
+	}
+	_isDown = false;
 }
 
 void UIButton::OnTouchMove (int_t x, int_t y) {
-	_touch.x = x;
-	_touch.y = y;
-	//if(_down && _startingScreenLoc != GetScreenLoc())
-	//	_down = false;
+	_loc.x = x;
+	_loc.y = y;
+}
+
+UIButton::ButtonFactory::ButtonFactory ()
+{
+}
+
+UIButton::ButtonFactory::ButtonFactory (const GString& font_, const GString& button_, const GString& down_, const GString& click_)
+:	font(font_)
+,	button(button_)
+,	down(down_)
+,	click(click_)
+{
 }

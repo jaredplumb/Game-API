@@ -4,16 +4,23 @@
 #include "UINode.h"
 #include "GImage.h"
 #include "GSound.h"
+#include "GFont.h"
 
 class UIButton : public UINode {
 public:
+	class ButtonFactory;
+	
 	UIButton ();
-	UIButton (int_t x, int_t y, const GString& button, const GString& down, const GString& click);
-	UIButton (const GPoint& loc, const GString& button, const GString& down, const GString& click);
+	UIButton (const GString& text, int_t x, int_t y, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
+	UIButton (const GString& text, const GPoint& loc, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
+	UIButton (const GString& text, int_t x, int_t y, ButtonFactory& factory, UINode* parent = NULL);
+	UIButton (const GString& text, const GPoint& loc, ButtonFactory& factory, UINode* parent = NULL);
 	virtual ~UIButton ();
 	
-	bool New (int_t x, int_t y, const GString& button, const GString& down, const GString& click);
-	bool New (const GPoint& loc, const GString& button, const GString& down, const GString& click);
+	bool New (const GString& text, int_t x, int_t y, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
+	bool New (const GString& text, const GPoint& loc, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
+	bool New (const GString& text, int_t x, int_t y, ButtonFactory& factory, UINode* parent = NULL);
+	bool New (const GString& text, const GPoint& loc, ButtonFactory& factory, UINode* parent = NULL);
 	void Delete ();
 	
 	bool IsDown () const;
@@ -23,12 +30,24 @@ public:
 	virtual void OnTouchUp (int_t x, int_t y) override;
 	virtual void OnTouchMove (int_t x, int_t y) override;
 	
+	class ButtonFactory {
+	public:
+		GFont font;
+		GImage button;
+		GImage down;
+		GSound click;
+		ButtonFactory ();
+		ButtonFactory (const GString& font_, const GString& button_, const GString& down_, const GString& click_ = NULL);
+	};
+	
 private:
-	GPoint		_touch;
-	bool		_down;
-	GImage		_imageButton;
-	GImage		_imageDown;
-	GSound		_soundClick;
+	GString		_text;
+	GPoint		_loc;
+	bool		_isDown;
+	GFont*		_font;
+	GImage*		_button;
+	GImage*		_down;
+	GSound*		_click;
 };
 
 #endif // _UIBUTTON_H_
