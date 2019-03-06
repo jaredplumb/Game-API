@@ -19,7 +19,9 @@ public:
 	void Delete ();
 	
 	void Play ();
-	bool IsPlaying ();
+	void Stop ();
+	void Pause ();
+	bool IsPlaying (); // Returns if the sound is playing, but may return false if called immediately after calling play due to the background thread
 	
 	class Resource {
 	public:

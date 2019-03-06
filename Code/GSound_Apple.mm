@@ -1,15 +1,9 @@
 #include "GSound.h"
 #if PLATFORM_MACOSX
 
-
-
-
 struct GSound::_PrivateData {
 	AVAudioPlayer* player;
 };
-
-
-
 
 GSound::GSound ()
 :	_data(NULL)
@@ -23,7 +17,6 @@ GSound::GSound (const Resource& resource)
 		GConsole::Debug("ERROR: Could not load sound from resource!\n");
 }
 
-
 GSound::GSound (const GString& resource)
 :	_data(NULL)
 {
@@ -35,10 +28,6 @@ GSound::~GSound () {
 	Delete();
 }
 
-
-
-
-
 bool GSound::New (const Resource& resource) {
 	Delete();
 	
@@ -49,8 +38,6 @@ bool GSound::New (const Resource& resource) {
 	if(error != nil || _data->player == nil)
 		return false;
 	
-	[_data->player play]; // This play with an immediate stop is a hack to make sure the audio is loaded into memory
-	[_data->player stop];
 	[_data->player prepareToPlay];
 	
 	return true;
@@ -67,36 +54,33 @@ void GSound::Delete () {
 	}
 }
 
-
-
-
-
-
-
 void GSound::Play () {
-	if(_data != NULL && _data->player != nil) {
-		[_data->player play];
-		[_data->player prepareToPlay];
-	}
+	if(_data != NULL && _data->player != nil)
+		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+			[_data->player play];
+			[_data->player prepareToPlay];
+		});
+}
+
+void GSound::Stop () {
+	if(_data != NULL && _data->player != nil)
+		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+			[_data->player stop];
+			[_data->player prepareToPlay];
+		});
+}
+
+void GSound::Pause () {
+	if(_data != NULL && _data->player != nil)
+		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+			[_data->player pause];
+			[_data->player prepareToPlay];
+		});
 }
 
 bool GSound::IsPlaying () {
 	return _data != NULL ? [_data->player isPlaying] : false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 GSound::Resource::Resource ()
 :	bufferSize(0)
@@ -193,10 +177,5 @@ bool GSound::Resource::WriteToPackage (GPackage& package, const GString& name) {
 	delete [] archiveBuffer;
 	return true;
 }
-
-
-
-
-
 
 #endif // PLATFORM_MACOSX
