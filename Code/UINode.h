@@ -12,13 +12,20 @@ public:
 	UINode ();
 	virtual ~UINode ();
 	
-	int_t GetUniqueRef () const;					// Returns this UINode's unique reference, useful for OnEvent
+	int_t GetUniqueRef () const;					// Returns this UINode's unique reference
 	UINode* GetParent () const;						// Returns this nodes parent
 	int_t GetWidth () const;
 	int_t GetHeight () const;
-	GRect GetRect () const;
+	GRect GetRect () const;							// Returns the rect of this UINode, relative to the parent
 	
 	void SetRect (const GRect& rect);
+	void SetVisible (bool visible);
+	void SetActive (bool active);
+	
+	bool IsVisible () const;
+	bool IsActive () const;
+	
+	static UINode* NewNode (const GString& name);	// Create a new node using the given name
 	
 	static uint64 GetMilliseconds ();				// Returns frame locked milliseconds
 	static uint64 GetElapse ();						// Returns frame locked elapse time
@@ -29,19 +36,17 @@ public:
 	
 	
 	// TODO: Set settings access by string with a SetSetting, GetSetting option
-	// TODO: Add layout manager similar to Java Swing or WPF, default is an absolute positioning
 	
 	
 	void Run (const GString& name);				// Exits the current root UINode and runs the named UINode
-	//void RunAsChild (const GString& name);		// Run the named UINode as a child of this UINode
-	//void RunLast ();							// Runs the name of the previous UINode
 	void Exit ();								// Will delete this UINode as soon as possible
+	void ExitCancel ();							// Cancels an exit
 	
 	void Add (UINode& node);
 	void Remove (UINode& node);
 	
 	
-	virtual void OnDraw () {} // OnDraw is special in that it will be called when a child has focus
+	virtual void OnDraw () {}
 	virtual void OnMouse (int_t x, int_t y, int_t button) {}
 	virtual void OnMouseUp (int_t x, int_t y, int_t button) {}
 	virtual void OnMouseMove (int_t x, int_t y) {}
@@ -54,6 +59,7 @@ public:
 	virtual void OnTouchUp (int_t x, int_t y) {}
 	virtual void OnTouchMove (int_t x, int_t y) {}
 	virtual void OnEvent (UINode* node) {}
+	virtual bool OnExit () { return true; } // Once Exit is called (or Run on a different Node), this function will be called repeatedly until true is returned
 	
 	void SendDraw ();
 	void SendMouse (int_t x, int_t y, int_t button);
@@ -68,6 +74,7 @@ public:
 	void SendTouchUp (int_t x, int_t y);
 	void SendTouchMove (int_t x, int_t y);
 	void SendEvent (UINode* node);
+	bool SendExit ();
 	
 	
 	
@@ -81,31 +88,19 @@ public:
 private:
 	
 	int_t				_ref;
-	GRect				_rect;
+	GRect				_rect;		// This is the screen coordinates of this node initially set to the entire screen
 	bool				_visible;
 	bool				_active;
-	bool				_focus; // A node in focus will not pass events, more than one node could have focus, all node by default have no focus
-	bool				_exit;
+	bool				_exit;		// Node will exit as soon as possible, _exit will block most events when true
 	UINode*				_parent;
 	std::list<UINode*>	_children;
 	
 	struct _Root {
-		std::list<UINode*> nodes;
-		
-		
-		GString current;
-		GString last;
-		GString from;
-		GString to;
-		uint64 transitionIn;
-		uint64 transitionOut;
-		//PImage fade;
-		
+		std::map<GString, UINode*> nodes;
 		
 		_Root ();
 		~_Root ();
-		
-		void Run (const GString& name);
+		static void RunOnRoot (const GString& name);
 		
 		static void StartupCallback ();
 		static void ShutdownCallback ();
@@ -121,7 +116,6 @@ private:
 		static void TouchCallback (int_t x, int_t y);
 		static void TouchUpCallback (int_t x, int_t y);
 		static void TouchMoveCallback (int_t x, int_t y);
-		static const int FADE_TIME = 500; // Milliseconds;
 	};
 	
 	static std::map<GString, UINode* (*) ()>*	_FACTORY_LIST;
