@@ -61,6 +61,19 @@ void UINode::SetRect (const GRect& rect) {
 		(*i)->SetRect(GRect((*i)->_rect).Offset(-x, -y));
 }
 
+void UINode::SetRectCenterInParent () {
+	int_t width;
+	int_t height;
+	if(_parent) {
+		width = _parent->_rect.width;
+		height = _parent->_rect.height;
+	} else {
+		width = GSystem::GetRect().width;
+		height = GSystem::GetRect().height;
+	}
+	SetRect(GRect(width / 2 - GetWidth() / 2, height / 2 - GetHeight() / 2, GetWidth(), GetHeight()));
+}
+
 void UINode::SetVisible (bool visible) {
 	_visible = visible;
 }
