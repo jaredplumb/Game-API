@@ -15,4 +15,12 @@
 
 #include "GFont.h"
 
+#include "UINode.h"
+
+#include "UIButton.h"
+
+#include "UIImage.h"
+
+#include "UILabel.h"
+
 #endif // _GAME_H_
