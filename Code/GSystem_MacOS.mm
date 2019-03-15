@@ -406,10 +406,7 @@ void GSystem::RunPreferredArgs (int_t argc, char* argv[]) {
 
 int_t GSystem::Run () {
 	GSystem::SetDefaultWD();
-	
-#if DEBUG
 	GConsole::Debug("WD: %s\n", getwd(NULL));
-#endif
 	
 	@autoreleasepool {
 		[NSApplication sharedApplication];

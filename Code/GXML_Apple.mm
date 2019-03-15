@@ -1,5 +1,5 @@
 #include "GXML.h"
-#if PLATFORM_MACOSX
+#if PLATFORM_MACOSX || PLATFORM_IOS
 
 @interface _XMLParser : NSXMLParser<NSXMLParserDelegate> {
 	GXML* _xml;		// Pointer to main xml object
@@ -153,4 +153,4 @@ GString GXML::GetString () const {
 	return GString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n") + _GetString(this, "");
 }
 
-#endif // PLATFORM_MACOSX
+#endif // PLATFORM_MACOSX || PLATFORM_IOS

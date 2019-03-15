@@ -130,8 +130,9 @@ enum vkey_t {
 // Core Objective-C imports
 #ifdef __OBJC__
 #if PLATFORM_IOS
+#import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import <GLKit/GLKit.h>
+//#import <GLKit/GLKit.h>
 #else
 #import <Cocoa/Cocoa.h>
 #endif

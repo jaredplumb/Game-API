@@ -1,5 +1,5 @@
 #include "GImage.h"
-#if PLATFORM_MACOSX
+#if PLATFORM_MACOSX || PLATFORM_IOS
 
 
 
@@ -548,4 +548,4 @@ bool GImage::Resource::WriteToPackage (GPackage& package, const GString& name) {
 
 
 
-#endif // PLATFORM_MACOSX
+#endif // PLATFORM_MACOSX || PLATFORM_IOS

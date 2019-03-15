@@ -9,11 +9,11 @@
 
 
 
-static int_t			_WIDTH		    = 1280;
-static int_t			_HEIGHT		    = 720;
-static int_t            _SAFE_WIDTH     = 1280;
-static int_t            _SAFE_HEIGHT    = 720;
+static GRect			_RECT			(0, 0, 1280, 720);
+static GRect			_SAFE_RECT		(0, 0, 1280, 720);
 static int_t			_FPS		    = 60;
+static int_t			_ARG_C			= 0;
+static char**			_ARG_V			= NULL;
 
 id<MTLDevice>				_P_DEVICE = nil;
 id<MTLRenderCommandEncoder>	_P_RENDER = nil;
@@ -227,20 +227,13 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
-int_t GSystem::GetWidth () {
-    return _WIDTH;
+
+GRect GSystem::GetRect () {
+	return _RECT;
 }
 
-int_t GSystem::GetHeight () {
-    return _HEIGHT;
-}
-
-int_t GSystem::GetSafeWidth () {
-    return _SAFE_WIDTH;
-}
-
-int_t GSystem::GetSafeHeight () {
-    return _SAFE_HEIGHT;
+GRect GSystem::GetSafeRect () {
+	return _SAFE_RECT;
 }
 
 int_t GSystem::GetFPS () {
@@ -272,22 +265,32 @@ void GSystem::SetDefaultWD () {
 	chdir(resources);
 }
 
-void GSystem::SetDefaultScreenSize (int_t width, int_t height) {
-	_WIDTH = width;
-	_HEIGHT = height;
-    _SAFE_WIDTH = _WIDTH;
-    _SAFE_HEIGHT = _HEIGHT;
+
+
+
+
+void GSystem::RunPreferredSize (int_t width, int_t height) {
+	_RECT = GRect(0, 0, width, height);
+	_SAFE_RECT = GRect(0, 0, width, height);
 }
 
-int_t GSystem::Run (int_t argc, char* argv[]) {
+void GSystem::RunPreferredFPS (int_t fps) {
+	_FPS = fps;
+}
+
+void GSystem::RunPreferredArgs (int_t argc, char* argv[]) {
+	_ARG_C = argc;
+	_ARG_V = argv;
+}
+
+
+
+int_t GSystem::Run () {
 	GSystem::SetDefaultWD();
-	
-#if DEBUG
-	GSystem::Debug("WD: %s\n", getwd(NULL));
-#endif
+	GConsole::Debug("WD: %s\n", getwd(NULL));
 	
 	@autoreleasepool {
-        return UIApplicationMain((int)argc, argv, nil, NSStringFromClass([_MyAppDelegate class]));
+        return UIApplicationMain((int)_ARG_C, _ARG_V, nil, NSStringFromClass([_MyAppDelegate class]));
 	}
 	
 	return EXIT_SUCCESS;
@@ -340,7 +343,7 @@ void GSystem::MatrixSetModelDefault () {
 
 void GSystem::MatrixSetProjectionDefault () {
 	//_EFFECT.transform.projectionMatrix = GLKMatrix4MakeOrtho((float)0, (float)_WIDTH, (float)_HEIGHT, (float)0, (float)-1, (float)1);
-	_PROJECTION_MATRIX = matrix_ortho((float)0, (float)_WIDTH, (float)_HEIGHT, (float)0, (float)-1, (float)1);
+	_PROJECTION_MATRIX = matrix_ortho((float)0, (float)_RECT.width, (float)_RECT.height, (float)0, (float)-1, (float)1);
 }
 
 void GSystem::MatrixTranslateModel (float x, float y) {

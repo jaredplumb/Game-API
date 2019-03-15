@@ -1,5 +1,5 @@
 #include "GSound.h"
-#if PLATFORM_MACOSX
+#if PLATFORM_MACOSX || PLATFORM_IOS
 
 struct GSound::_PrivateData {
 	AVAudioPlayer* player;
@@ -178,4 +178,4 @@ bool GSound::Resource::WriteToPackage (GPackage& package, const GString& name) {
 	return true;
 }
 
-#endif // PLATFORM_MACOSX
+#endif // PLATFORM_MACOSX || PLATFORM_IOS
