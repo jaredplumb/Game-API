@@ -1,5 +1,5 @@
 #import "GSystem.h"
-#if PLATFORM_MACOSX
+#if PLATFORM_MACOSX || PLATFORM_IOS
 
 static GRect			_RECT			(0, 0, 1280, 720);
 static GRect			_SAFE_RECT		(0, 0, 1280, 720);
@@ -15,9 +15,18 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
+
+#if PLATFORM_MACOSX
 @interface _MyAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate>
-@property (strong, nonatomic) NSWindow* window;
+@property (strong, nonatomic) NSWindow* _window;
 @end
+#endif
+
+#if PLATFORM_IOS
+@interface _MyAppDelegate : UIResponder <UIApplicationDelegate>
+@property (strong, nonatomic) UIWindow* _window;
+@end
+#endif
 
 @interface _MyMetalView : MTKView <MTKViewDelegate>
 @end
@@ -28,11 +37,42 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
+
+
 @implementation _MyAppDelegate
 
 - (void) applicationDidFinishLaunching: (NSNotification*)aNotification {
-	[self setupMenu];
-	[self setupWindow];
+	
+#if PLATFORM_MACOSX
+	// Setup the menus
+	NSString* appName = [[NSProcessInfo processInfo] processName];
+	NSMenu* mainMenu = [NSMenu new];
+	NSMenuItem* appMenuItem = [NSMenuItem new];
+	[mainMenu addItem:appMenuItem];
+	NSMenu* appMenu = [NSMenu new];
+	[appMenuItem setSubmenu:appMenu];
+	NSMenuItem* quitMenuItem = [[NSMenuItem alloc] initWithTitle:[@"Quit " stringByAppendingString:appName] action:@selector(terminate:) keyEquivalent:@"q"];
+	[appMenu addItem:quitMenuItem];
+	[NSApp setMainMenu:mainMenu];
+#endif
+	
+#if PLATFORM_MACOSX
+	// Setup the window
+	NSRect windowRect = NSMakeRect(0, 0, _RECT.width, _RECT.height);
+	self._window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable) backing:NSBackingStoreBuffered defer:YES];
+	[self._window setTitle:[[NSProcessInfo processInfo] processName]];
+	[self._window center];
+	[self._window setContentView:[[_MyMetalView alloc] initWithFrame:windowRect]];
+	[self._window makeKeyAndOrderFront:self];
+#endif
+	
+#if PLATFORM_IOS
+	self._window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+	self._window.backgroundColor = [UIColor blackColor];
+	self._window.rootViewController = [[UIViewController alloc] initWithNibName:nil bundle:nil];
+	[self._window.rootViewController setView:[[_MyMetalView alloc] initWithFrame:self.window.bounds]];
+	[self._window makeKeyAndVisible];
+#endif
 	
 	// Run the startup callbacks after everything is turned on
 	GSystem::RunStartupCallbacks();
@@ -44,34 +84,29 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	GSystem::RunShutdownCallbacks();
 }
 
-- (void) setupMenu {
-	NSString* appName = [[NSProcessInfo processInfo] processName];
-	
-	NSMenu* mainMenu = [NSMenu new];
-	NSMenuItem* appMenuItem = [NSMenuItem new];
-	[mainMenu addItem:appMenuItem];
-	
-	NSMenu* appMenu = [NSMenu new];
-	[appMenuItem setSubmenu:appMenu];
-	
-	NSMenuItem* quitMenuItem = [[NSMenuItem alloc] initWithTitle:[@"Quit " stringByAppendingString:appName] action:@selector(terminate:) keyEquivalent:@"q"];
-	[appMenu addItem:quitMenuItem];
-	
-	[NSApp setMainMenu:mainMenu];
-}
-
-- (void) setupWindow {
-	NSRect windowRect = NSMakeRect(0, 0, _RECT.width, _RECT.height);
-	self.window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable) backing:NSBackingStoreBuffered defer:YES];
-	[self.window setTitle:[[NSProcessInfo processInfo] processName]];
-	[self.window center];
-	[self.window setContentView:[[_MyMetalView alloc] initWithFrame:windowRect]];
-	[self.window makeKeyAndOrderFront:self];
-}
-
+#if PLATFORM_MACOSX
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication *)sender {
 	return YES;
 }
+#endif
+
+#if PLATFORM_IOS
+- (void) applicationWillResignActive: (UIApplication*)application {
+	//GSystem::RunPauseCallbacks();
+}
+
+- (void) applicationDidEnterBackground: (UIApplication*)application {
+	//GSystem::RunDeactivateCallbacks();
+}
+
+- (void) applicationWillEnterForeground: (UIApplication*)application {
+	//GSystem::RunActivateCallbacks();
+}
+
+- (void) applicationDidBecomeActive: (UIApplication*)application {
+	//GSystem::RunResumeCallbacks();
+}
+#endif
 
 @end // _MyAppDelegate
 
@@ -130,10 +165,12 @@ static NSString* _SHADER = @""
 	vector_uint2 _viewport;
 }
 
-- (id) initWithFrame: (NSRect)frameRect {
+- (id) initWithFrame: (CGRect)frameRect {
 	
+#if PLATFORM_MACOSX
 	// Convert the view to use the full pixel coordinates of the screen (retina)
 	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect];
+#endif
 	
 	_P_DEVICE = MTLCreateSystemDefaultDevice();
 	self = [super initWithFrame:frameRect device:_P_DEVICE];
@@ -210,6 +247,8 @@ static NSString* _SHADER = @""
 - (BOOL) resignFirstResponder {
 	return YES;
 }
+
+#if PLATFORM_MACOSX
 
 - (void) mouseDown: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
@@ -324,6 +363,41 @@ static NSString* _SHADER = @""
 	//printf("0x%x %d\n", [theEvent keyCode], (bool)([theEvent modifierFlags] & NSShiftKeyMask));
 }
 
+#endif // PLATFORM_MACOSX
+
+#if PLATFORM_IOS
+
+- (void) touchesBegan: (NSSet*)touches withEvent:(UIEvent*)event {
+	for(UITouch* touch in touches) {
+		CGPoint touchLocation = [touch locationInView:self];
+		GSystem::RunTouchCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
+	}
+}
+
+- (void) touchesMoved: (NSSet*)touches withEvent:(UIEvent*)event {
+	for(UITouch* touch in touches) {
+		CGPoint touchLocation = [touch locationInView:self];
+		GSystem::RunTouchMoveCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
+	}
+}
+
+- (void) touchesEnded: (NSSet*)touches withEvent:(UIEvent*)event {
+	for(UITouch* touch in touches) {
+		CGPoint touchLocation = [touch locationInView:self];
+		GSystem::RunTouchUpCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
+	}
+}
+
+- (void) touchesCancelled: (NSSet*)touches withEvent:(UIEvent*)event {
+	for(UITouch* touch in touches) {
+		CGPoint touchLocation = [touch locationInView:self];
+		GSystem::RunTouchUpCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
+	}
+}
+
+#endif // PLATFORM_IOS
+
+
 @end // _MyMetalView
 
 
@@ -408,12 +482,20 @@ int_t GSystem::Run () {
 	GSystem::SetDefaultWD();
 	GConsole::Debug("WD: %s\n", getwd(NULL));
 	
+#if PLATFORM_MACOSX
 	@autoreleasepool {
 		[NSApplication sharedApplication];
 		_MyAppDelegate* delegate = [[_MyAppDelegate alloc] init];
 		[[NSApplication sharedApplication] setDelegate:delegate];
 		[[NSApplication sharedApplication] run];
 	}
+#endif
+	
+#if PLATFORM_IOS
+	@autoreleasepool {
+		return UIApplicationMain((int)_ARG_C, _ARG_V, nil, NSStringFromClass([_MyAppDelegate class]));
+	}
+#endif
 	
 	return EXIT_SUCCESS;
 }
@@ -502,4 +584,4 @@ void GSystem::MatrixUpdate () {
 	}
 }
 
-#endif // PLATFORM_MACOSX
+#endif // PLATFORM_MACOSX // PLATFORM_IOS

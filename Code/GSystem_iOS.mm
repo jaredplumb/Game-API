@@ -1,5 +1,5 @@
 #import "GSystem.h"
-#if PLATFORM_IOS
+#if FALSE // PLATFORM_IOS
 
 //float left = self.view.safeAreaInsets.left;
 //float top = self.view.safeAreaInsets.top;
