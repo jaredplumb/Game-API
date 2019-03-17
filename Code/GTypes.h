@@ -35,7 +35,7 @@
 #error Unknown Platform
 #endif
 
-#if defined(G_PLATFORM_IOS)
+#if defined(PLATFORM_IOS)
 #ifdef __arm__
 #define HARDWARE_ARM 1
 #define ENDIAN_LITTLE 1

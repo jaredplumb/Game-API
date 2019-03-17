@@ -1,14 +1,21 @@
 #import "GSystem.h"
 #if PLATFORM_MACOSX || PLATFORM_IOS
 
+//float left = self.view.safeAreaInsets.left;
+//float top = self.view.safeAreaInsets.top;
+//float right = self.view.safeAreaInsets.right;
+//float bottom = self.view.safeAreaInsets.bottom;
+//printf("%f,%f,%f,%f\n", left, top, right, bottom);
+
 static GRect			_RECT			(0, 0, 1280, 720);
 static GRect			_SAFE_RECT		(0, 0, 1280, 720);
+static GRect			_PREFERRED_RECT	(0, 0, 1280, 720);
 static int_t			_FPS		    = 60;
 static int_t			_ARG_C			= 0;
 static char**			_ARG_V			= NULL;
 
-id<MTLDevice>				_P_DEVICE = nil;
-id<MTLRenderCommandEncoder>	_P_RENDER = nil;
+id<MTLDevice>				_DEVICE = nil;
+id<MTLRenderCommandEncoder>	_RENDER = nil;
 static matrix_float4x4		_MODEL_MATRIX;
 static matrix_float4x4		_PROJECTION_MATRIX;
 
@@ -16,24 +23,44 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
+
+
+
 #if PLATFORM_MACOSX
+@interface _MyViewController : NSViewController
+@end
+
 @interface _MyAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate>
 @property (strong, nonatomic) NSWindow* _window;
 @end
 #endif
 
 #if PLATFORM_IOS
+@interface _MyViewController : UIViewController
+@end
+
 @interface _MyAppDelegate : UIResponder <UIApplicationDelegate>
 @property (strong, nonatomic) UIWindow* _window;
+@property (strong, nonatomic) _MyViewController* _controller;
 @end
 #endif
+
+
+
 
 @interface _MyMetalView : MTKView <MTKViewDelegate>
 @end
 
 
 
+@implementation _MyViewController
 
+- (void) viewDidLoad {
+	[super viewDidLoad];
+	self.view = [[_MyMetalView alloc] initWithFrame:self.view.frame];
+}
+
+@end // _MyViewController
 
 
 
@@ -41,9 +68,10 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 @implementation _MyAppDelegate
 
+#if PLATFORM_MACOSX
+
 - (void) applicationDidFinishLaunching: (NSNotification*)aNotification {
 	
-#if PLATFORM_MACOSX
 	// Setup the menus
 	NSString* appName = [[NSProcessInfo processInfo] processName];
 	NSMenu* mainMenu = [NSMenu new];
@@ -54,9 +82,7 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	NSMenuItem* quitMenuItem = [[NSMenuItem alloc] initWithTitle:[@"Quit " stringByAppendingString:appName] action:@selector(terminate:) keyEquivalent:@"q"];
 	[appMenu addItem:quitMenuItem];
 	[NSApp setMainMenu:mainMenu];
-#endif
 	
-#if PLATFORM_MACOSX
 	// Setup the window
 	NSRect windowRect = NSMakeRect(0, 0, _RECT.width, _RECT.height);
 	self._window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable) backing:NSBackingStoreBuffered defer:YES];
@@ -64,49 +90,62 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	[self._window center];
 	[self._window setContentView:[[_MyMetalView alloc] initWithFrame:windowRect]];
 	[self._window makeKeyAndOrderFront:self];
-#endif
-	
-#if PLATFORM_IOS
-	self._window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-	self._window.backgroundColor = [UIColor blackColor];
-	self._window.rootViewController = [[UIViewController alloc] initWithNibName:nil bundle:nil];
-	[self._window.rootViewController setView:[[_MyMetalView alloc] initWithFrame:self.window.bounds]];
-	[self._window makeKeyAndVisible];
-#endif
 	
 	// Run the startup callbacks after everything is turned on
 	GSystem::RunStartupCallbacks();
 }
 
 - (void) applicationWillTerminate: (NSNotification*)notification {
-	
 	// Run the shutdown callbacks before everything is turned off
 	GSystem::RunShutdownCallbacks();
 }
 
-#if PLATFORM_MACOSX
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication *)sender {
 	return YES;
 }
-#endif
+
+#endif // PLATFORM_MACOSX
 
 #if PLATFORM_IOS
+
+- (BOOL) application: (UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
+	
+	// Setup the window
+	self._window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+	[self._window setBackgroundColor:[UIColor blackColor]];
+	[self._window setRootViewController:[_MyViewController new]];
+	[self._window makeKeyAndVisible];
+	
+	// Run the startup callbacks after everything is turned on
+	GSystem::RunStartupCallbacks();
+	
+	return YES;
+}
+
 - (void) applicationWillResignActive: (UIApplication*)application {
-	//GSystem::RunPauseCallbacks();
+	// Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
+	// Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
 }
 
 - (void) applicationDidEnterBackground: (UIApplication*)application {
-	//GSystem::RunDeactivateCallbacks();
+	// Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
+	// If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
 }
 
 - (void) applicationWillEnterForeground: (UIApplication*)application {
-	//GSystem::RunActivateCallbacks();
+	// Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
 }
 
 - (void) applicationDidBecomeActive: (UIApplication*)application {
-	//GSystem::RunResumeCallbacks();
+	// Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
 }
-#endif
+
+- (void) applicationWillTerminate: (UIApplication*)application {
+	// Run the shutdown callbacks before everything is turned off
+	GSystem::RunShutdownCallbacks();
+}
+
+#endif // PLATFORM_IOS
 
 @end // _MyAppDelegate
 
@@ -172,8 +211,8 @@ static NSString* _SHADER = @""
 	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect];
 #endif
 	
-	_P_DEVICE = MTLCreateSystemDefaultDevice();
-	self = [super initWithFrame:frameRect device:_P_DEVICE];
+	_DEVICE = MTLCreateSystemDefaultDevice();
+	self = [super initWithFrame:frameRect device:_DEVICE];
 	self.delegate = self;
 	self.colorPixelFormat = MTLPixelFormatBGRA8Unorm;
 	self.clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
@@ -208,9 +247,9 @@ static NSString* _SHADER = @""
 	
 	if(renderPassDescriptor != nil) {
 		
-		_P_RENDER = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-		[_P_RENDER setViewport:(MTLViewport){(double)0, (double)0, (double)_viewport.x, (double)_viewport.y, (double)-1, (double)1}];
-		[_P_RENDER setRenderPipelineState:_pipelineState];
+		_RENDER = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+		[_RENDER setViewport:(MTLViewport){(double)0, (double)0, (double)_viewport.x, (double)_viewport.y, (double)-1, (double)1}];
+		[_RENDER setRenderPipelineState:_pipelineState];
 		
 		GSystem::MatrixSetModelDefault();
 		GSystem::MatrixSetProjectionDefault();
@@ -218,7 +257,7 @@ static NSString* _SHADER = @""
 		
 		GSystem::RunDrawCallbacks();
 		
-		[_P_RENDER endEncoding];
+		[_RENDER endEncoding];
 		
 		[commandBuffer presentDrawable:view.currentDrawable];
 		
@@ -251,69 +290,69 @@ static NSString* _SHADER = @""
 #if PLATFORM_MACOSX
 
 - (void) mouseDown: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) rightMouseDown: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) otherMouseDown: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) mouseUp: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) rightMouseUp: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) otherMouseUp: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) mouseMoved: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) mouseDragged: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) rightMouseDragged: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) otherMouseDragged: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
 	location.y = self.frame.size.height - location.y;
 	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
@@ -467,6 +506,7 @@ void GSystem::SetDefaultWD () {
 void GSystem::RunPreferredSize (int_t width, int_t height) {
 	_RECT = GRect(0, 0, width, height);
 	_SAFE_RECT = GRect(0, 0, width, height);
+	_PREFERRED_RECT = GRect(0, 0, width, height);
 }
 
 void GSystem::RunPreferredFPS (int_t fps) {
@@ -577,10 +617,10 @@ void GSystem::MatrixRotateProjection (float degrees) {
 }
 
 void GSystem::MatrixUpdate () {
-	if(_P_RENDER != nil) {
+	if(_RENDER != nil) {
 		static matrix_float4x4 MATRIX;
 		MATRIX = matrix_multiply(_PROJECTION_MATRIX, _MODEL_MATRIX);
-		[_P_RENDER setVertexBytes:&MATRIX length:sizeof(MATRIX) atIndex:1];
+		[_RENDER setVertexBytes:&MATRIX length:sizeof(MATRIX) atIndex:1];
 	}
 }
 
