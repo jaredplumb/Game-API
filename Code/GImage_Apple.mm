@@ -1,9 +1,7 @@
 #include "GImage.h"
 #if PLATFORM_MACOSX || PLATFORM_IOS
 
-
-
-
+// These are defined in GSystem_Apple.mm
 extern id<MTLDevice>				_DEVICE;
 extern id<MTLRenderCommandEncoder>	_RENDER;
 
