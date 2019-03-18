@@ -45,6 +45,10 @@ GRect UINode::GetRect() const {
 	return _parent ? GRect(_rect).Offset(-_parent->_rect.x, -_parent->_rect.y) : _rect;
 }
 
+GRect UINode::GetScreenRect () const {
+	return (_parent ? _parent->GetScreenRect() : GSystem::GetRect()).Offset(-_rect.x, -_rect.y);
+}
+
 void UINode::SetRect (const GRect& rect) {
 	int_t x = _rect.x;
 	int_t y = _rect.y;

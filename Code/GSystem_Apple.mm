@@ -83,13 +83,18 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	[appMenu addItem:quitMenuItem];
 	[NSApp setMainMenu:mainMenu];
 	
+	// Adjust Rects for actual window sizes
+	_RECT = _PREFERRED_RECT;
+	_SAFE_RECT = _PREFERRED_RECT;
+	
 	// Setup the window
 	NSRect windowRect = NSMakeRect(0, 0, _RECT.width, _RECT.height);
-	self._window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable) backing:NSBackingStoreBuffered defer:YES];
+	self._window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable) backing:NSBackingStoreBuffered defer:YES];
+	[self._window setContentAspectRatio:NSMakeSize((CGFloat)_PREFERRED_RECT.width / (CGFloat)_PREFERRED_RECT.height, ((CGFloat)1))];
 	[self._window setTitle:[[NSProcessInfo processInfo] processName]];
-	[self._window center];
 	[self._window setContentView:[[_MyMetalView alloc] initWithFrame:windowRect]];
 	[self._window makeKeyAndOrderFront:self];
+	[self._window center];
 	
 	// Run the startup callbacks after everything is turned on
 	GSystem::RunStartupCallbacks();
@@ -156,7 +161,8 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
-
+// Added this as a string for simplicity for multiple platforms.  This can be added to a .metal file instead
+// and the id<MTLLibrary> defaultLibrary code below can be changed to newDefaultLibrary.
 static NSString* _SHADER = @""
 "#include <metal_stdlib>\n"
 "#include <simd/simd.h>\n"
@@ -213,9 +219,9 @@ static NSString* _SHADER = @""
 	
 	_DEVICE = MTLCreateSystemDefaultDevice();
 	self = [super initWithFrame:frameRect device:_DEVICE];
-	self.delegate = self;
-	self.colorPixelFormat = MTLPixelFormatBGRA8Unorm;
-	self.clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
+	[self setDelegate:self];
+	[self setColorPixelFormat:MTLPixelFormatBGRA8Unorm];
+	[self setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
 	[self mtkView:self drawableSizeWillChange:frameRect.size];
 	
 	NSError* error = NULL;
@@ -239,12 +245,9 @@ static NSString* _SHADER = @""
 	return self;
 }
 
-- (void) drawInMTKView:(nonnull MTKView*)view { 
-	
+- (void) drawInMTKView:(nonnull MTKView*)view {
 	id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
-	
 	MTLRenderPassDescriptor* renderPassDescriptor = view.currentRenderPassDescriptor;
-	
 	if(renderPassDescriptor != nil) {
 		
 		_RENDER = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
@@ -254,22 +257,32 @@ static NSString* _SHADER = @""
 		GSystem::MatrixSetModelDefault();
 		GSystem::MatrixSetProjectionDefault();
 		GSystem::MatrixUpdate();
-		
 		GSystem::RunDrawCallbacks();
 		
 		[_RENDER endEncoding];
 		
 		[commandBuffer presentDrawable:view.currentDrawable];
-		
 	}
-	
 	[commandBuffer commit];
-	
 }
 
 - (void) mtkView:(nonnull MTKView*)view drawableSizeWillChange:(CGSize)size {
 	_viewport.x = size.width;
 	_viewport.y = size.height;
+	
+	// Adjust the main screen rect for screen size changes
+	_RECT.width = (int_t)((CGFloat)_PREFERRED_RECT.width *
+						   ((CGFloat)_viewport.x / (CGFloat)_viewport.y) /
+						   ((CGFloat)_PREFERRED_RECT.width / (CGFloat)_PREFERRED_RECT.height)
+						   );
+	_RECT.height = (int_t)((CGFloat)_PREFERRED_RECT.height *
+						   ((CGFloat)_viewport.y / (CGFloat)_viewport.x) /
+						   ((CGFloat)_PREFERRED_RECT.height / (CGFloat)_PREFERRED_RECT.width)
+						   );
+	if(_RECT.width < _PREFERRED_RECT.width)
+		_RECT.width = _PREFERRED_RECT.width;
+	if(_RECT.height < _PREFERRED_RECT.height)
+		_RECT.height = _PREFERRED_RECT.height;
 }
 
 - (void) encodeWithCoder:(nonnull NSCoder*)aCoder { 
@@ -290,70 +303,90 @@ static NSString* _SHADER = @""
 #if PLATFORM_MACOSX
 
 - (void) mouseDown: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) rightMouseDown: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) otherMouseDown: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) mouseUp: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) rightMouseUp: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) otherMouseUp: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) mouseMoved: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) mouseDragged: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) rightMouseDragged: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
 
 - (void) otherMouseDragged: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:self];
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
 	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
@@ -504,8 +537,6 @@ void GSystem::SetDefaultWD () {
 
 
 void GSystem::RunPreferredSize (int_t width, int_t height) {
-	_RECT = GRect(0, 0, width, height);
-	_SAFE_RECT = GRect(0, 0, width, height);
 	_PREFERRED_RECT = GRect(0, 0, width, height);
 }
 
@@ -587,7 +618,7 @@ void GSystem::MatrixSetModelDefault () {
 
 void GSystem::MatrixSetProjectionDefault () {
 	//_EFFECT.transform.projectionMatrix = GLKMatrix4MakeOrtho((float)0, (float)_WIDTH, (float)_HEIGHT, (float)0, (float)-1, (float)1);
-	_PROJECTION_MATRIX = matrix_ortho((float)0, (float)_RECT.width, (float)_RECT.height, (float)0, (float)-1, (float)1);
+	_PROJECTION_MATRIX = matrix_ortho((float)_RECT.x, (float)_RECT.width, (float)_RECT.height, (float)_RECT.y, (float)-1, (float)1);
 }
 
 void GSystem::MatrixTranslateModel (float x, float y) {
