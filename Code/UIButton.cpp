@@ -24,16 +24,6 @@ UIButton::UIButton (const GString& text, const GPoint& loc, GFont* font, GImage*
 {
 }
 
-UIButton::UIButton (const GString& text, int_t x, int_t y, ButtonFactory& factory, UINode* parent)
-:	UIButton(text, x, y, &factory.font, &factory.button, &factory.down, &factory.click, parent)
-{
-}
-
-UIButton::UIButton (const GString& text, const GPoint& loc, ButtonFactory& factory, UINode* parent)
-:	UIButton(text, loc.x, loc.y, &factory.font, &factory.button, &factory.down, &factory.click, parent)
-{
-}
-
 UIButton::~UIButton () {
 	Delete();
 }
@@ -56,14 +46,6 @@ bool UIButton::New (const GString& text, int_t x, int_t y, GFont* font, GImage* 
 
 bool UIButton::New (const GString& text, const GPoint& loc, GFont* font, GImage* button, GImage* down, GSound* click, UINode* parent) {
 	return New(text, loc.x, loc.y, font, button, down, click, parent);
-}
-
-bool UIButton::New (const GString& text, int_t x, int_t y, ButtonFactory& factory, UINode* parent) {
-	return New(text, x, y, &factory.font, &factory.button, &factory.down, &factory.click, parent);
-}
-
-bool UIButton::New (const GString& text, const GPoint& loc, ButtonFactory& factory, UINode* parent) {
-	return New(text, loc.x, loc.y, &factory.font, &factory.button, &factory.down, &factory.click, parent);
 }
 
 void UIButton::Delete () {
@@ -119,16 +101,4 @@ void UIButton::OnTouchUp (int_t x, int_t y) {
 void UIButton::OnTouchMove (int_t x, int_t y) {
 	_loc.x = x;
 	_loc.y = y;
-}
-
-UIButton::ButtonFactory::ButtonFactory ()
-{
-}
-
-UIButton::ButtonFactory::ButtonFactory (const GString& font_, const GString& button_, const GString& down_, const GString& click_)
-:	font(font_)
-,	button(button_)
-,	down(down_)
-,	click(click_)
-{
 }
