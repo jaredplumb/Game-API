@@ -16,7 +16,8 @@ public:
 	UINode* GetParent () const;						// Returns this nodes parent
 	int_t GetWidth () const;
 	int_t GetHeight () const;
-	GRect GetRect () const;							// Returns the rect of this UINode, relative to the parent
+	GRect GetRect () const;							// Returns the rect of this UINode (0,0 location)
+	GRect GetRectInParent () const;					// Returns the rect of this UINode, relative to the parent
 	GRect GetScreenRect () const;					// Returns the rect of the screen relative self
 	
 	void SetRect (const GRect& rect);				// Sets the rect of this node relative to the parent

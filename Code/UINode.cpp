@@ -42,11 +42,15 @@ int_t UINode::GetHeight () const {
 }
 
 GRect UINode::GetRect() const {
+	return GRect(0, 0, _rect.width, _rect.height);
+}
+
+GRect UINode::GetRectInParent() const {
 	return _parent ? GRect(_rect).Offset(-_parent->_rect.x, -_parent->_rect.y) : _rect;
 }
 
 GRect UINode::GetScreenRect () const {
-	return (_parent ? _parent->GetScreenRect() : GSystem::GetRect()).Offset(-_rect.x, -_rect.y);
+	return GSystem::GetRect().Offset(-_rect.x, -_rect.y);
 }
 
 void UINode::SetRect (const GRect& rect) {
