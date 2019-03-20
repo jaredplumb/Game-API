@@ -23,4 +23,6 @@
 
 #include "UILabel.h"
 
+#include "UITransition.h"
+
 #endif // _GAME_H_
