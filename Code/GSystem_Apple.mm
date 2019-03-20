@@ -109,7 +109,7 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	[NSApp setMainMenu:mainMenu];
 	
 	// Setup the window
-	NSRect windowRect = NSMakeRect(0, 0, _RECT.width, _RECT.height);
+	NSRect windowRect = NSMakeRect(0, 0, _PREFERRED_RECT.width, _PREFERRED_RECT.height);
 	self._window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable) backing:NSBackingStoreBuffered defer:YES];
 	[self._window setContentAspectRatio:NSMakeSize((CGFloat)_PREFERRED_RECT.width / (CGFloat)_PREFERRED_RECT.height, ((CGFloat)1))];
 	[self._window setTitle:[[NSProcessInfo processInfo] processName]];
@@ -141,8 +141,6 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	[self._window setBackgroundColor:[UIColor blackColor]];
 	[self._window setRootViewController:[_MyViewController new]];
 	[self._window makeKeyAndVisible];
-	
-	
 	
 	// Run the startup callbacks after everything is turned on
 	GSystem::RunStartupCallbacks();
@@ -251,7 +249,7 @@ static NSString* _SHADER = @""
 	[self setColorPixelFormat:MTLPixelFormatBGRA8Unorm];
 	[self setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
 	[self setPreferredFramesPerSecond:(NSInteger)_FPS];
-	[self mtkView:self drawableSizeWillChange:frameRect.size];
+	//[self mtkView:self drawableSizeWillChange:frameRect.size];
 	
 	NSError* error = NULL;
 	id<MTLLibrary> defaultLibrary = [self.device newLibraryWithSource:_SHADER options:nil error:&error];
@@ -299,8 +297,8 @@ static NSString* _SHADER = @""
 	_viewport.x = size.width;
 	_viewport.y = size.height;
 	
-	// TODO: Currently this keeps a minimum _RECT of what is prefered, but should be adjusted
-	//		to first find the safe area, then contain the safe area
+	
+	
 	
 	// Adjust the main screen rect for screen size changes
 	_RECT.width = (int_t)((CGFloat)_PREFERRED_RECT.width *
@@ -316,15 +314,23 @@ static NSString* _SHADER = @""
 	if(_RECT.height < _PREFERRED_RECT.height)
 		_RECT.height = _PREFERRED_RECT.height;
 	
-	// Adjust the safe area rect depending on the new rect size
-	_SAFE_RECT = _RECT;
 	
 	
-	//float left = self.safeAreaInsets.left;
-	//float top = self.safeAreaInsets.top;
-	//float right = self.safeAreaInsets.right;
-	//float bottom = self.safeAreaInsets.bottom;
-	//printf("U: %f,%f,%f,%f\n", left, top, right, bottom);
+	
+	// Find the safe rect
+	_SAFE_RECT = _PREFERRED_RECT;
+	
+	
+#if PLATFORM_IOS
+	float left = UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left;
+	float top = UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top;
+	float right = UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right;
+	float bottom = UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom;
+	GConsole::Debug("V: %f,%f,%f,%f\n", left, top, right, bottom);
+#endif
+	
+	
+	
 }
 
 - (void) encodeWithCoder:(nonnull NSCoder*)aCoder { 
