@@ -1,12 +1,6 @@
 #import "GSystem.h"
 #if PLATFORM_MACOSX || PLATFORM_IOS
 
-//float left = self.view.safeAreaInsets.left;
-//float top = self.view.safeAreaInsets.top;
-//float right = self.view.safeAreaInsets.right;
-//float bottom = self.view.safeAreaInsets.bottom;
-//printf("%f,%f,%f,%f\n", left, top, right, bottom);
-
 static GRect			_RECT			(0, 0, 1280, 720);
 static GRect			_SAFE_RECT		(0, 0, 1280, 720);
 static GRect			_PREFERRED_RECT	(0, 0, 1280, 720);
@@ -53,6 +47,8 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 
 
 
+
+#if PLATFORM_IOS
 @implementation _MyViewController
 
 - (void) viewDidLoad {
@@ -60,8 +56,37 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	self.view = [[_MyMetalView alloc] initWithFrame:self.view.frame];
 }
 
-@end // _MyViewController
+- (BOOL) shouldAutorotate {
+	return YES;
+}
 
+//- (BOOL) shouldAutorotateToInterfaceOrientation: (UIInterfaceOrientation)toInterfaceOrientation {
+//	if(_paused) return YES;
+//	if(UIInterfaceOrientationIsLandscape(toInterfaceOrientation))
+//		return YES;
+	//if(UIInterfaceOrientationIsPortrait(toInterfaceOrientation) and UIInterfaceOrientationIsPortrait(_orientation)) return YES;
+	//if(UIInterfaceOrientationIsLandscape(toInterfaceOrientation) and UIInterfaceOrientationIsLandscape(_orientation)) return YES;
+	//if(UIInterfaceOrientationIsPortrait(toInterfaceOrientation) and UIInterfaceOrientationIsPortrait([[UIApplication sharedApplication] statusBarOrientation])) return YES;
+	//if(UIInterfaceOrientationIsLandscape(toInterfaceOrientation) and UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation])) return YES;
+//	return NO;
+//}
+
+- (UIInterfaceOrientationMask) supportedInterfaceOrientations {
+	return UIInterfaceOrientationMaskLandscape;
+}
+
+
+//- (NSUInteger) application: (UIApplication*)application supportedInterfaceOrientationsForWindow:(UIWindow*)window {
+//	return UIInterfaceOrientationMaskLandscapeLeft | UIInterfaceOrientationMaskLandscapeRight;
+//}
+
+
+- (BOOL) prefersStatusBarHidden {
+	return NO;
+}
+
+@end // _MyViewController
+#endif
 
 
 
@@ -82,10 +107,6 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	NSMenuItem* quitMenuItem = [[NSMenuItem alloc] initWithTitle:[@"Quit " stringByAppendingString:appName] action:@selector(terminate:) keyEquivalent:@"q"];
 	[appMenu addItem:quitMenuItem];
 	[NSApp setMainMenu:mainMenu];
-	
-	// Adjust Rects for actual window sizes
-	_RECT = _PREFERRED_RECT;
-	_SAFE_RECT = _PREFERRED_RECT;
 	
 	// Setup the window
 	NSRect windowRect = NSMakeRect(0, 0, _RECT.width, _RECT.height);
@@ -120,6 +141,8 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	[self._window setBackgroundColor:[UIColor blackColor]];
 	[self._window setRootViewController:[_MyViewController new]];
 	[self._window makeKeyAndVisible];
+	
+	
 	
 	// Run the startup callbacks after everything is turned on
 	GSystem::RunStartupCallbacks();
@@ -217,11 +240,17 @@ static NSString* _SHADER = @""
 	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect];
 #endif
 	
+#if PLATFORM_IOS
+	// Convert the view to use the full pixel coordinates of the screen (retina)
+	frameRect = [[UIScreen mainScreen] nativeBounds];
+#endif
+	
 	_DEVICE = MTLCreateSystemDefaultDevice();
 	self = [super initWithFrame:frameRect device:_DEVICE];
 	[self setDelegate:self];
 	[self setColorPixelFormat:MTLPixelFormatBGRA8Unorm];
 	[self setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
+	[self setPreferredFramesPerSecond:(NSInteger)_FPS];
 	[self mtkView:self drawableSizeWillChange:frameRect.size];
 	
 	NSError* error = NULL;
@@ -270,6 +299,9 @@ static NSString* _SHADER = @""
 	_viewport.x = size.width;
 	_viewport.y = size.height;
 	
+	// TODO: Currently this keeps a minimum _RECT of what is prefered, but should be adjusted
+	//		to first find the safe area, then contain the safe area
+	
 	// Adjust the main screen rect for screen size changes
 	_RECT.width = (int_t)((CGFloat)_PREFERRED_RECT.width *
 						   ((CGFloat)_viewport.x / (CGFloat)_viewport.y) /
@@ -283,6 +315,16 @@ static NSString* _SHADER = @""
 		_RECT.width = _PREFERRED_RECT.width;
 	if(_RECT.height < _PREFERRED_RECT.height)
 		_RECT.height = _PREFERRED_RECT.height;
+	
+	// Adjust the safe area rect depending on the new rect size
+	_SAFE_RECT = _RECT;
+	
+	
+	//float left = self.safeAreaInsets.left;
+	//float top = self.safeAreaInsets.top;
+	//float right = self.safeAreaInsets.right;
+	//float bottom = self.safeAreaInsets.bottom;
+	//printf("U: %f,%f,%f,%f\n", left, top, right, bottom);
 }
 
 - (void) encodeWithCoder:(nonnull NSCoder*)aCoder { 
@@ -441,29 +483,37 @@ static NSString* _SHADER = @""
 
 - (void) touchesBegan: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
-		CGPoint touchLocation = [touch locationInView:self];
-		GSystem::RunTouchCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
+		CGPoint location = [touch locationInView:self];
+		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+		GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
 	}
 }
 
 - (void) touchesMoved: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
-		CGPoint touchLocation = [touch locationInView:self];
-		GSystem::RunTouchMoveCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
+		CGPoint location = [touch locationInView:self];
+		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+		GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
 	}
 }
 
 - (void) touchesEnded: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
-		CGPoint touchLocation = [touch locationInView:self];
-		GSystem::RunTouchUpCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
+		CGPoint location = [touch locationInView:self];
+		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+		GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 	}
 }
 
 - (void) touchesCancelled: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
-		CGPoint touchLocation = [touch locationInView:self];
-		GSystem::RunTouchUpCallbacks((int_t)touchLocation.x, (int_t)touchLocation.y);
+		CGPoint location = [touch locationInView:self];
+		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+		GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
 	}
 }
 
