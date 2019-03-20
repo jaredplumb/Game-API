@@ -36,18 +36,13 @@ public:
 	static uint32 GetRandomSeed ();					// Returns the current global random seed
 	static void SetRandomSeed (uint32 seed = 0);	// Sets the global random seed, if seed is 0, then a random time value is used
 	
-	
-	
 	// TODO: Set settings access by string with a SetSetting, GetSetting option
-	
 	
 	void Run (const GString& name);				// Exits the current root UINode and runs the named UINode
 	void Exit ();								// Will delete this UINode as soon as possible
 	void ExitCancel ();							// Cancels an exit
-	
 	void Add (UINode& node);
 	void Remove (UINode& node);
-	
 	
 	virtual void OnDraw () {}
 	virtual void OnMouse (int_t x, int_t y, int_t button) {}
@@ -79,22 +74,16 @@ public:
 	void SendEvent (UINode* node);
 	bool SendExit ();
 	
-	
-	
 	inline bool operator== (const UINode& n) const                            { return _ref == n._ref; }
 	inline bool operator!= (const UINode& n) const                            { return _ref != n._ref; }
 	
-	
-	
-	
-	
 private:
-	
 	int_t				_ref;
 	GRect				_rect;		// This is the screen coordinates of this node initially set to the entire screen
 	bool				_visible;
 	bool				_active;
 	bool				_exit;		// Node will exit as soon as possible, _exit will block most events when true
+	GString				_next;		// This is the name of the node to run when this node is deleted, used from Run
 	UINode*				_parent;
 	std::list<UINode*>	_children;
 	
@@ -128,7 +117,6 @@ private:
 	static uint64								_ELAPSE;
 	
 public:
-	
 	template <class T>
 	struct Factory {
 		static UINode* New () { return new T; };
@@ -141,7 +129,6 @@ public:
 			(*_AUTORUN_LIST)[name] = true;
 		}
 	};
-	
 };
 
 #define		_UINODEPACKAGE_UNIQUE(n,u)		_UINODEPACKAGE_STATIC(n,u)

@@ -1,11 +1,6 @@
 #include "UINode.h"
 #include "GSystem.h"
 
-
-
-
-
-
 UINode::UINode ()
 :	_ref(GSystem::GetUniqueRef())
 ,	_rect(GSystem::GetRect())
@@ -19,11 +14,10 @@ UINode::UINode ()
 UINode::~UINode () {
 	if(_parent)
 		_parent->Remove(*this);
+	
+	if(!_next.IsEmpty())
+		_ROOT->RunOnRoot(_next);
 }
-
-
-
-
 
 int_t UINode::GetUniqueRef () const {
 	return _ref;
@@ -98,11 +92,10 @@ bool UINode::IsActive () const {
 	return _active;
 }
 
-
-
-
 UINode* UINode::NewNode (const GString& name) {
-	// TODO: This needs thought, should we allow creation of a node, or use UINodeFactory to create the node using a name
+	std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(name);
+	if(factory != _FACTORY_LIST->end())
+		return factory->second();
 	return NULL;
 }
 
@@ -134,34 +127,21 @@ void UINode::SetRandomSeed (uint32 seed) {
 	_RANDOM_SEED = (seed != 0) ? (seed) : ((uint32)GSystem::GetMilliseconds() + 1);
 }
 
-
-
-
-
-
-
 void UINode::Run (const GString& name) {
 	
-	// Running a new node will exit this line of nodes up to the root
+	// If this node is exiting, do nothing, this prevents RunOnRoot from being called many times during a transition
+	if(_exit)
+		return;
+	
+	// Running a new node will exit this line of nodes by exting to roon node
 	UINode* parent = this;
 	while(parent->_parent)
 		parent = parent->_parent;
 	parent->Exit();
 	
-	// Run the new node on the root list
-	_ROOT->RunOnRoot(name);
-	
+	// Run the new node when this node is deleted
+	_next = name;
 }
-
-//void UINode::RunAsChild (const GString& name) {
-	
-	// Uses a different default transition (none)
-	
-//}
-
-//void UINode::RunLast () {
-	
-//}
 
 void UINode::Exit () {
 	_exit = true;
@@ -169,9 +149,8 @@ void UINode::Exit () {
 
 void UINode::ExitCancel() {
 	_exit = false;
+	_next.Delete();
 }
-
-
 
 void UINode::Add (UINode& node) {
 	
@@ -186,14 +165,17 @@ void UINode::Add (UINode& node) {
 			return;
 		}
 	
-	_children.remove(&node); // Safety to avoid adding the same node multiple times
-	_children.push_back(&node);
+	// Safety to avoid adding the same node multiple times
+	_children.remove(&node);
+	_children.push_front(&node);
 	
-	if(node._parent != NULL) // A node can only be the child of one parent
+	// A node can only be the child of one parent
+	if(node._parent != NULL)
 		node._parent->Remove(node);
 	node._parent = this;
 	
-	node.SetRect(node._rect); // Adjust the child's rect to be relative to this node by calling SetRect with it's own rect
+	// Adjust the child's rect to be relative to this node by calling SetRect with it's own rect
+	node.SetRect(node._rect);
 }
 
 void UINode::Remove (UINode& node) {
@@ -202,23 +184,14 @@ void UINode::Remove (UINode& node) {
 		node._parent = NULL;
 }
 
-
-
-
-
 void UINode::SendDraw () {
 	if(_visible) {
-		
 		GSystem::MatrixSetProjectionDefault();
 		GSystem::MatrixTranslateProjection((float)_rect.x, (float)_rect.y);
 		GSystem::MatrixUpdate();
-		
 		OnDraw();
 		for(std::list<UINode*>::reverse_iterator i = _children.rbegin(); i != _children.rend(); i++)
-			if(!(*i)->_exit)
-				(*i)->SendDraw();
-			else
-				delete *i;
+			(*i)->SendDraw();
 	}
 }
 
@@ -325,13 +298,6 @@ bool UINode::SendExit () {
 	return OnExit();
 }
 
-
-
-
-
-
-
-
 UINode::_Root::_Root () {
 	GSystem::NewStartupCallback(StartupCallback);
 	GSystem::NewShutdownCallback(ShutdownCallback);
@@ -359,9 +325,8 @@ UINode::_Root::~_Root () {
 void UINode::_Root::RunOnRoot (const GString& name) {
 	GConsole::Debug("----------------------------------------------------------------\n");
 	GConsole::Debug("- %s\n", (const char*)name);
-	std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(name);
-	if(_ROOT != NULL && factory != _FACTORY_LIST->end())
-		_ROOT->nodes[name] = factory->second();
+	if(_ROOT != NULL)
+		_ROOT->nodes[name] = NewNode(name);
 	GConsole::Debug("----------------------------------------------------------------\n");
 }
 
@@ -410,7 +375,6 @@ void UINode::_Root::DrawCallback () {
 			}
 		}
 	}
-	
 }
 
 void UINode::_Root::MouseCallback (int_t x, int_t y, int_t button) {
@@ -479,17 +443,8 @@ void UINode::_Root::TouchMoveCallback (int_t x, int_t y) {
 			i->second->SendTouchMove(x - i->second->_rect.x, y - i->second->_rect.y);
 }
 
-
-
-
-
-
 std::map<GString, UINode* (*) ()>*		UINode::_FACTORY_LIST = NULL;
 std::map<GString, bool>*				UINode::_AUTORUN_LIST = NULL;
 UINode::_Root*							UINode::_ROOT = NULL;
 uint64									UINode::_MILLISECONDS = 0;
 uint64									UINode::_ELAPSE = 0;
-
-
-
-
