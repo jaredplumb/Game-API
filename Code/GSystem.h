@@ -17,7 +17,7 @@ public:
 	/// Returns the system rect in pixels
 	static GRect GetRect ();
 	
-	/// Returns the safe rect in pixels, which is the area with no obstructed visuals or interactions
+	/// Returns the safe rect in pixels, which is the area with no obstructed visuals or interactions containing a minimum of the preferred size
 	static GRect GetSafeRect ();
 	
 	/// Returns the the current FPS.
