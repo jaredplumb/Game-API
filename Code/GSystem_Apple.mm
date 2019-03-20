@@ -297,39 +297,36 @@ static NSString* _SHADER = @""
 	_viewport.x = size.width;
 	_viewport.y = size.height;
 	
-	
-	
-	
-	// Adjust the main screen rect for screen size changes
-	_RECT.width = (int_t)((CGFloat)_PREFERRED_RECT.width *
-						   ((CGFloat)_viewport.x / (CGFloat)_viewport.y) /
-						   ((CGFloat)_PREFERRED_RECT.width / (CGFloat)_PREFERRED_RECT.height)
-						   );
-	_RECT.height = (int_t)((CGFloat)_PREFERRED_RECT.height *
-						   ((CGFloat)_viewport.y / (CGFloat)_viewport.x) /
-						   ((CGFloat)_PREFERRED_RECT.height / (CGFloat)_PREFERRED_RECT.width)
-						   );
-	if(_RECT.width < _PREFERRED_RECT.width)
-		_RECT.width = _PREFERRED_RECT.width;
-	if(_RECT.height < _PREFERRED_RECT.height)
-		_RECT.height = _PREFERRED_RECT.height;
-	
-	
-	
-	
-	// Find the safe rect
-	_SAFE_RECT = _PREFERRED_RECT;
-	
-	
+	// Find the desired width and height, adjusting for safe areas
+	int_t width = _PREFERRED_RECT.width;
+	int_t height = _PREFERRED_RECT.height;
 #if PLATFORM_IOS
-	float left = UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left;
-	float top = UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top;
-	float right = UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right;
-	float bottom = UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom;
-	GConsole::Debug("V: %f,%f,%f,%f\n", left, top, right, bottom);
+	int_t left = (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left;
+	int_t top = (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top;
+	int_t right = (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right;
+	int_t bottom = (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom;
+	width += left + right;
+	height += top + bottom;
 #endif
 	
+	// Adjust the main screen rect for screen size changes
+	_RECT.width = (int_t)((CGFloat)width * ((CGFloat)_viewport.x / (CGFloat)_viewport.y) / ((CGFloat)width / (CGFloat)height));
+	_RECT.height = (int_t)((CGFloat)height * ((CGFloat)_viewport.y / (CGFloat)_viewport.x) / ((CGFloat)height / (CGFloat)width));
+	if(_RECT.width < width)
+		_RECT.width = width;
+	if(_RECT.height < height)
+		_RECT.height = height;
 	
+	// Find the safe rect using the updated rect and the safe areas
+	_SAFE_RECT = _RECT;
+#if PLATFORM_IOS
+	_SAFE_RECT.x += left;
+	_SAFE_RECT.width -= (left + right);
+	_SAFE_RECT.y += top;
+	_SAFE_RECT.height -= (top + bottom);
+#endif
+	
+	GConsole::Debug("viewport=%d,%d preffered=%d,%d,%d,%d rect=%d,%d,%d,%d safe=%d,%d,%d,%d\n", _viewport.x, _viewport.y, _PREFERRED_RECT.x, _PREFERRED_RECT.y, _PREFERRED_RECT.width, _PREFERRED_RECT.height, _RECT.x, _RECT.y, _RECT.width, _RECT.height, _SAFE_RECT.x, _SAFE_RECT.y, _SAFE_RECT.width, _SAFE_RECT.height);
 	
 }
 
