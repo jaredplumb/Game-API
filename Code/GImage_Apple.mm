@@ -32,8 +32,6 @@ struct GImage::_PrivateData {
 GImage::GImage ()
 :	_data(NULL)
 {
-	if(New(GColor::WHITE) == false)
-		GConsole::Debug("ERROR: Could not create image with color 0xffffffff!\n");
 }
 
 GImage::GImage (const Resource& resource)
@@ -71,7 +69,7 @@ bool GImage::New (const Resource& resource) {
 	_data = new _PrivateData;
 	_data->width = resource.width;
 	_data->height = resource.height;
-	 _data->texture = nil;
+	_data->texture = nil;
 	_data->vertices = NULL;
 	_data->verticesCount = 0;
 	_data->indicies = nil;
@@ -476,9 +474,7 @@ bool GImage::Resource::NewFromPackage (const GString& resource) {
 	
 	uint8* archiveBuffer = new uint8[archiveSize];
 	
-	
 	if(GPackage::Read(resource + ".image", archiveBuffer, archiveSize) == false) {
-		//ERROR("Failed to read from package resource \"%s\"!", resource.GetString());
 		delete [] archiveBuffer;
 		return false;
 	}
@@ -492,14 +488,11 @@ bool GImage::Resource::NewFromPackage (const GString& resource) {
 	archiveSize = GArchive::Decompress(archiveBuffer + headerSize, archiveSize - headerSize, buffer, bufferSize);
 	
 	if(archiveSize != bufferSize) {
-		//ERROR("Failed to decompress resource \"%s\"!", resource.GetString());
 		delete [] archiveBuffer;
 		return false;
 	}
 	
-	
 	delete [] archiveBuffer;
-	
 	return true;
 }
 
@@ -524,26 +517,17 @@ bool GImage::Resource::WriteToPackage (GPackage& package, const GString& name) {
 	archiveSize = GArchive::Compress(buffer, sizeof(uint8) * bufferSize, archiveBuffer + headerSize, archiveSize - headerSize);
 	
 	if(archiveSize == 0) {
-		//ERROR("Failed to compress image resource \"%s\"!", resource.GetString());
 		delete [] archiveBuffer;
 		return false;
 	}
 	
 	if(package.Write(name + ".image", archiveBuffer, archiveSize + headerSize) == false) {
-		//ERROR("Failed to write to package resource \"%s\"!", resource.GetString());
 		delete [] archiveBuffer;
 		return false;
 	}
 	
-	
 	delete [] archiveBuffer;
-	
 	return true;
 }
-
-
-
-
-
 
 #endif // PLATFORM_MACOSX || PLATFORM_IOS
