@@ -33,17 +33,15 @@ public:
 	
 	static uint64 GetMilliseconds ();				// Returns frame locked milliseconds
 	static uint64 GetElapse ();						// Returns frame locked elapse time
-	static uint32 GetRandom (uint32 range = 0);		// Returns a value from 0 to one minus range, unless range is 0, then the maximum uint32 size is used
+	static uint32 GetRandom (uint32 range = 0);		// Returns a value from 0 to one minus range, unless range is 0, then the maximum 2^31-1 size is used
 	static uint32 GetRandomSeed ();					// Returns the current global random seed
 	static void SetRandomSeed (uint32 seed = 0);	// Sets the global random seed, if seed is 0, then a random time value is used
 	
-	// TODO: Set settings access by string with a SetSetting, GetSetting option
-	
-	void Run (const GString& name);				// Exits the current root UINode and runs the named UINode
-	void Exit ();								// Will delete this UINode as soon as possible
-	void ExitCancel ();							// Cancels an exit
-	void Add (UINode& node);
-	void Remove (UINode& node);
+	void Run (const GString& name);					// Exits the current root UINode and runs the named UINode
+	void Exit ();									// Will delete this UINode as soon as possible
+	void ExitCancel ();								// Cancels an exit
+	void Add (UINode& node);						// Adds a node to the front of the this nodes children
+	void Remove (UINode& node);						// Removes a node from this nodes children
 	
 	virtual void OnDraw () {}
 	virtual void OnMouse (int_t x, int_t y, int_t button) {}
@@ -116,6 +114,7 @@ private:
 	static _Root*								_ROOT;
 	static uint64								_MILLISECONDS;
 	static uint64								_ELAPSE;
+	static uint32								_RANDOM_SEED;
 	
 public:
 	template <class T>

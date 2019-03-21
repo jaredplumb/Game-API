@@ -15,7 +15,7 @@ UINode::~UINode () {
 	if(_parent)
 		_parent->Remove(*this);
 	
-	if(!_next.IsEmpty())
+	if(!_next.IsEmpty() && _ROOT)
 		_ROOT->RunOnRoot(_next);
 }
 
@@ -112,8 +112,6 @@ uint64 UINode::GetElapse () {
 // This random generator is from the BSD random, which is from:
 // "Random number generators: good ones are hard to find"
 // Park and Miller, Communications of the ACM, vol. 31, no. 10, October 1988, p. 1195.
-static uint32 _RANDOM_SEED = 0;
-
 uint32 UINode::GetRandom (uint32 range) {
 	_RANDOM_SEED = (_RANDOM_SEED != 0) ? (16807 * (_RANDOM_SEED % 127773) - 2836 * (_RANDOM_SEED / 127773)) : ((uint32)GSystem::GetMilliseconds() + 1);
 	if((int32)_RANDOM_SEED <= 0)
@@ -448,5 +446,6 @@ void UINode::_Root::TouchMoveCallback (int_t x, int_t y) {
 std::map<GString, UINode* (*) ()>*		UINode::_FACTORY_LIST = NULL;
 std::map<GString, bool>*				UINode::_AUTORUN_LIST = NULL;
 UINode::_Root*							UINode::_ROOT = NULL;
-uint64									UINode::_MILLISECONDS = 0;
-uint64									UINode::_ELAPSE = 0;
+uint64									UINode::_MILLISECONDS = 1;
+uint64									UINode::_ELAPSE = 1;
+uint32									UINode::_RANDOM_SEED = 0;
