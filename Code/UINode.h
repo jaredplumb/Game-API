@@ -18,10 +18,11 @@ public:
 	int_t GetHeight () const;
 	GRect GetRect () const;							// Returns the rect of this UINode (0,0 location)
 	GRect GetRectInParent () const;					// Returns the rect of this UINode, relative to the parent
-	GRect GetScreenRect () const;					// Returns the rect of the screen relative self
+	GRect GetScreenRect () const;					// Returns the rect of the screen relative to self
+	GRect GetSafeRect () const;						// Returns the rect of the safe area relative to self
 	
 	void SetRect (const GRect& rect);				// Sets the rect of this node relative to the parent
-	void SetRectCenterInParent ();					// Centers this node in the parent, or screen if parent is null
+	void SetRectCenterInParent ();					// Centers this node in the parent, or safe area if parent is null
 	void SetVisible (bool visible);
 	void SetActive (bool active);
 	

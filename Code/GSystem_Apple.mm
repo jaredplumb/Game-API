@@ -60,29 +60,12 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	return YES;
 }
 
-//- (BOOL) shouldAutorotateToInterfaceOrientation: (UIInterfaceOrientation)toInterfaceOrientation {
-//	if(_paused) return YES;
-//	if(UIInterfaceOrientationIsLandscape(toInterfaceOrientation))
-//		return YES;
-	//if(UIInterfaceOrientationIsPortrait(toInterfaceOrientation) and UIInterfaceOrientationIsPortrait(_orientation)) return YES;
-	//if(UIInterfaceOrientationIsLandscape(toInterfaceOrientation) and UIInterfaceOrientationIsLandscape(_orientation)) return YES;
-	//if(UIInterfaceOrientationIsPortrait(toInterfaceOrientation) and UIInterfaceOrientationIsPortrait([[UIApplication sharedApplication] statusBarOrientation])) return YES;
-	//if(UIInterfaceOrientationIsLandscape(toInterfaceOrientation) and UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation])) return YES;
-//	return NO;
-//}
-
 - (UIInterfaceOrientationMask) supportedInterfaceOrientations {
 	return UIInterfaceOrientationMaskLandscape;
 }
 
-
-//- (NSUInteger) application: (UIApplication*)application supportedInterfaceOrientationsForWindow:(UIWindow*)window {
-//	return UIInterfaceOrientationMaskLandscapeLeft | UIInterfaceOrientationMaskLandscapeRight;
-//}
-
-
 - (BOOL) prefersStatusBarHidden {
-	return NO;
+	return YES;
 }
 
 @end // _MyViewController
@@ -325,9 +308,6 @@ static NSString* _SHADER = @""
 	_SAFE_RECT.y += top;
 	_SAFE_RECT.height -= (top + bottom);
 #endif
-	
-	GConsole::Debug("viewport=%d,%d preffered=%d,%d,%d,%d rect=%d,%d,%d,%d safe=%d,%d,%d,%d\n", _viewport.x, _viewport.y, _PREFERRED_RECT.x, _PREFERRED_RECT.y, _PREFERRED_RECT.width, _PREFERRED_RECT.height, _RECT.x, _RECT.y, _RECT.width, _RECT.height, _SAFE_RECT.x, _SAFE_RECT.y, _SAFE_RECT.width, _SAFE_RECT.height);
-	
 }
 
 - (void) encodeWithCoder:(nonnull NSCoder*)aCoder { 

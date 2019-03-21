@@ -47,6 +47,10 @@ GRect UINode::GetScreenRect () const {
 	return GSystem::GetRect().Offset(-_rect.x, -_rect.y);
 }
 
+GRect UINode::GetSafeRect () const {
+	return GSystem::GetSafeRect().Offset(-_rect.x, -_rect.y);
+}
+
 void UINode::SetRect (const GRect& rect) {
 	int_t x = _rect.x;
 	int_t y = _rect.y;
@@ -64,16 +68,14 @@ void UINode::SetRect (const GRect& rect) {
 }
 
 void UINode::SetRectCenterInParent () {
-	int_t width;
-	int_t height;
+	GRect rect;
 	if(_parent) {
-		width = _parent->_rect.width;
-		height = _parent->_rect.height;
+		rect.width = _parent->_rect.width;
+		rect.height = _parent->_rect.height;
 	} else {
-		width = GSystem::GetRect().width;
-		height = GSystem::GetRect().height;
+		rect = GSystem::GetSafeRect();
 	}
-	SetRect(GRect(width / 2 - GetWidth() / 2, height / 2 - GetHeight() / 2, GetWidth(), GetHeight()));
+	SetRect(GRect(rect.x + rect.width / 2 - GetWidth() / 2, rect.y + rect.height / 2 - GetHeight() / 2, GetWidth(), GetHeight()));
 }
 
 void UINode::SetVisible (bool visible) {
