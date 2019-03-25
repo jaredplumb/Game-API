@@ -296,6 +296,18 @@ public:
 
 
 
+class GSize {
+public:
+	int_t width, height;
+	
+	inline GSize ()                                                        : width(0), height(0) {}
+	inline GSize (const GSize& s)                                            : width(s.width), height(s.height) {}
+	inline GSize (int_t width_, int_t height_)                                        : width(width_), height(height_) {}
+	inline GSize& Set (const GSize& s)									{ width = s.width; height = s.height; return *this; }
+	inline GSize& Set (int_t width_, int_t height_)								{ width = width_; height = height_; return *this; }
+	inline bool operator== (const GSize& s) const                            { return width == s.width && height == s.height; }
+	inline bool operator!= (const GSize& s) const                            { return width != s.width || height != s.height; }
+};
 
 
 
