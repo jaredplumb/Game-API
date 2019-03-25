@@ -22,6 +22,9 @@ bool UITransition::New (eTransition transition, UINode* parent) {
 	switch(_transition) {
 		case TRANSITION_NODE:
 			break;
+		case TRANSITION_FADE_BLACK:
+			_image.New(GColor::BLACK);
+			break;
 		case TRANSITION_FADE_IN_BLACK:
 			_image.New(GColor::BLACK);
 			break;
@@ -44,6 +47,19 @@ void UITransition::OnDraw () {
 	switch(_transition) {
 		case TRANSITION_NODE:
 			return;
+		case TRANSITION_FADE_BLACK:
+			if(_timer == 0)
+				_timer = GetMilliseconds();
+			if(_timer > 0) {
+				float alpha = 1.0f - (float)(GetMilliseconds() - _timer) / 250.0f;
+				if(alpha < 0.0f) {
+					_timer = 0;
+					_transition = TRANSITION_FADE_OUT_BLACK;
+					return;
+				}
+				_image.Draw(GetScreenRect(), alpha);
+			}
+			break;
 		case TRANSITION_FADE_IN_BLACK:
 			if(_timer == 0)
 				_timer = GetMilliseconds();
@@ -71,6 +87,9 @@ bool UITransition::OnExit () {
 	switch(_transition) {
 		case TRANSITION_NODE:
 			return true;
+		case TRANSITION_FADE_BLACK:
+			// This transition is handled by TRANSITION_FADE_OUT_BLACK
+			break;
 		case TRANSITION_FADE_IN_BLACK:
 			return true;
 		case TRANSITION_FADE_OUT_BLACK:
