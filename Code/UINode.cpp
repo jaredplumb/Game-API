@@ -3,7 +3,7 @@
 
 UINode::UINode ()
 :	_ref(GSystem::GetUniqueRef())
-,	_rect(GSystem::GetRect())
+,	_rect(GSystem::GetSafeRect())
 ,	_visible(true)
 ,	_active(true)
 ,	_exit(false)

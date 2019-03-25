@@ -9,7 +9,7 @@
 
 class UINode {
 public:
-	UINode ();
+	UINode ();										// The default rect is the safe area
 	virtual ~UINode ();
 	
 	int_t GetUniqueRef () const;					// Returns this UINode's unique reference
