@@ -1,13 +1,13 @@
 #include "UITransition.h"
 
 UITransition::UITransition ()
-:	_transition(TRANSITION_NODE)
+:	_transition(NONE)
 ,	_timer(0)
 {
 }
 
 UITransition::UITransition (eTransition transition, UINode* parent)
-:	_transition(TRANSITION_NODE)
+:	_transition(NONE)
 ,	_timer(0)
 {
 	New(transition, parent);
@@ -20,15 +20,15 @@ UITransition::~UITransition () {
 bool UITransition::New (eTransition transition, UINode* parent) {
 	_transition = transition;
 	switch(_transition) {
-		case TRANSITION_NODE:
+		case NONE:
 			break;
-		case TRANSITION_FADE_BLACK:
+		case FADE_BLACK:
 			_image.New(GColor::BLACK);
 			break;
-		case TRANSITION_FADE_IN_BLACK:
+		case FADE_IN_BLACK:
 			_image.New(GColor::BLACK);
 			break;
-		case TRANSITION_FADE_OUT_BLACK:
+		case FADE_OUT_BLACK:
 			_image.New(GColor::BLACK);
 			break;
 	}
@@ -38,41 +38,41 @@ bool UITransition::New (eTransition transition, UINode* parent) {
 }
 
 void UITransition::Delete () {
-	_transition = TRANSITION_NODE;
+	_transition = NONE;
 	_timer = 0;
 	_image.Delete();
 }
 
 void UITransition::OnDraw () {
 	switch(_transition) {
-		case TRANSITION_NODE:
+		case NONE:
 			return;
-		case TRANSITION_FADE_BLACK:
+		case FADE_BLACK:
 			if(_timer == 0)
 				_timer = GetMilliseconds();
 			if(_timer > 0) {
 				float alpha = 1.0f - (float)(GetMilliseconds() - _timer) / 250.0f;
 				if(alpha < 0.0f) {
 					_timer = 0;
-					_transition = TRANSITION_FADE_OUT_BLACK;
+					_transition = FADE_OUT_BLACK;
 					return;
 				}
 				_image.Draw(GetScreenRect(), alpha);
 			}
 			break;
-		case TRANSITION_FADE_IN_BLACK:
+		case FADE_IN_BLACK:
 			if(_timer == 0)
 				_timer = GetMilliseconds();
 			if(_timer > 0) {
 				float alpha = 1.0f - (float)(GetMilliseconds() - _timer) / 250.0f;
 				if(alpha < 0.0f) {
-					_transition = TRANSITION_NODE;
+					_transition = NONE;
 					return;
 				}
 				_image.Draw(GetScreenRect(), alpha);
 			}
 			break;
-		case TRANSITION_FADE_OUT_BLACK:
+		case FADE_OUT_BLACK:
 			if(_timer > 0) {
 				float alpha = (float)(GetMilliseconds() - _timer) / 250.0f;
 				if(alpha > 1.0f)
@@ -85,14 +85,14 @@ void UITransition::OnDraw () {
 
 bool UITransition::OnExit () {
 	switch(_transition) {
-		case TRANSITION_NODE:
+		case NONE:
 			return true;
-		case TRANSITION_FADE_BLACK:
-			// This transition is handled by TRANSITION_FADE_OUT_BLACK
+		case FADE_BLACK:
+			// This transition is handled by FADE_OUT_BLACK
 			break;
-		case TRANSITION_FADE_IN_BLACK:
+		case FADE_IN_BLACK:
 			return true;
-		case TRANSITION_FADE_OUT_BLACK:
+		case FADE_OUT_BLACK:
 			if(_timer == 0)
 				_timer = GetMilliseconds();
 			return (GetMilliseconds() - _timer >= 250) ? true : false;

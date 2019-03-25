@@ -7,10 +7,10 @@
 class UITransition : public UINode {
 public:
 	enum eTransition {
-		TRANSITION_NODE,
-		TRANSITION_FADE_BLACK,
-		TRANSITION_FADE_IN_BLACK,
-		TRANSITION_FADE_OUT_BLACK,
+		NONE,
+		FADE_BLACK,
+		FADE_IN_BLACK,
+		FADE_OUT_BLACK,
 	};
 	
 	UITransition ();
