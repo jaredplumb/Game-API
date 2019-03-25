@@ -23,6 +23,7 @@ public:
 	
 	void SetRect (const GRect& rect);				// Sets the rect of this node relative to the parent
 	void SetRectCenterInParent ();					// Centers this node in the parent, or safe area if parent is null
+	void SetLocation (const GPoint& loc);			// Set this nodes location relative to parent
 	void SetVisible (bool visible);
 	void SetActive (bool active);
 	

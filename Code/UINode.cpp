@@ -78,6 +78,10 @@ void UINode::SetRectCenterInParent () {
 	SetRect(GRect(rect.x + rect.width / 2 - GetWidth() / 2, rect.y + rect.height / 2 - GetHeight() / 2, GetWidth(), GetHeight()));
 }
 
+void UINode::SetLocation (const GPoint& loc) {
+	SetRect(GRect(loc.x, loc.y, _rect.width, _rect.height));
+}
+
 void UINode::SetVisible (bool visible) {
 	_visible = visible;
 }
