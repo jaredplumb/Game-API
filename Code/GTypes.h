@@ -153,6 +153,7 @@ enum vkey_t {
 // Base data types
 typedef ssize_t				int_t;
 typedef size_t				uint_t;
+typedef float_t				float_t;
 typedef int8_t				int8;
 typedef uint8_t				uint8;
 typedef int16_t				int16;
@@ -206,6 +207,7 @@ enum vkey_t {
 // Base data types
 typedef SSIZE_T				int_t;
 typedef SIZE_T				uint_t;
+typedef float_t				float_t;
 typedef INT8				int8;
 typedef UINT8				uint8;
 typedef INT16				int16;
@@ -316,30 +318,30 @@ public:
 
 class GVector {
 public:
-    double x, y;
+    float_t x, y;
     
-    inline GVector ()                                                : x((double)0), y((double)0) {}
+    inline GVector ()                                                : x((float_t)0), y((float_t)0) {}
     inline GVector (const GVector& p)                                : x(p.x), y(p.y) {}
-    inline GVector (double x_, double y_)                            : x(x_), y(y_) {}
+    inline GVector (float_t x_, float_t y_)                            : x(x_), y(y_) {}
     inline bool operator== (const GVector& p) const                    { return x == p.x && y == p.y; }
     inline bool operator!= (const GVector& p) const                    { return x != p.x || y != p.y; }
     inline const GVector operator+ (const GVector& p) const            { return GVector(x + p.x, y + p.y); }
     inline const GVector operator- () const                            { return GVector(-x, -y); }
     inline const GVector operator- (const GVector& p) const            { return GVector(x - p.x, y - p.y); }
-    inline const GVector operator* (double t) const                    { return GVector(x * t, y * t); }
-    inline const GVector operator/ (double t) const                    { return GVector(x / t, y / t); }
+    inline const GVector operator* (float_t t) const                    { return GVector(x * t, y * t); }
+    inline const GVector operator/ (float_t t) const                    { return GVector(x / t, y / t); }
     inline GVector& operator= (const GVector& p)                    { x = p.x; y = p.y; return *this; }
     inline GVector& operator+= (const GVector& p)                    { x += p.x; y += p.y; return *this; }
     inline GVector& operator-= (const GVector& p)                    { x -= p.x; y -= p.y; return *this; }
-    inline GVector& operator*= (double t)                            { x *= t; y *= t; return *this; }
-    inline GVector& operator/= (double t)                            { x /= t; y /= t; return *this; }
-    inline double GetDistance (const GVector& v) const                { return sqrt((x - v.x) * (x - v.x) + (y - v.y) * (y - v.y)); }
-    inline double GetDot (const GVector& v) const                    { return x * v.x + y * v.y; }
-    inline double GetLength () const                                { return sqrt(x * x + y * y); } // GetMagnitude
+    inline GVector& operator*= (float_t t)                            { x *= t; y *= t; return *this; }
+    inline GVector& operator/= (float_t t)                            { x /= t; y /= t; return *this; }
+    inline float_t GetDistance (const GVector& v) const                { return sqrt((x - v.x) * (x - v.x) + (y - v.y) * (y - v.y)); }
+    inline float_t GetDot (const GVector& v) const                    { return x * v.x + y * v.y; }
+    inline float_t GetLength () const                                { return sqrt(x * x + y * y); } // GetMagnitude
     inline GVector& Offset (const GVector& p)                        { x += p.x; y += p.y; return *this; }
-    inline GVector& Offset (double x_, double y_)                    { x += x_; y += y_; return *this; }
-    inline GVector& Normalize ()                                    { double t = GetLength(); if(t) { x /= t; y /= t; } return *this; }
-    inline GVector& Reflect (const GVector& n)                        { *this -= (n * ((double)2 * GetDot(n))); return *this; }
+    inline GVector& Offset (float_t x_, float_t y_)                    { x += x_; y += y_; return *this; }
+    inline GVector& Normalize ()                                    { float_t t = GetLength(); if(t) { x /= t; y /= t; } return *this; }
+    inline GVector& Reflect (const GVector& n)                        { *this -= (n * ((float_t)2 * GetDot(n))); return *this; }
 };
 
 
