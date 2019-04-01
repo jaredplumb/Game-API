@@ -34,7 +34,8 @@ public:
 	
 	static uint64 GetMilliseconds ();				// Returns frame locked milliseconds
 	static uint64 GetElapse ();						// Returns frame locked elapse time
-	static uint32 GetRandom (uint32 range = 0);		// Returns a value from 0 to one minus range, unless range is 0, then the maximum 2^31-1 size is used
+	static uint32 GetRandom (uint32 range = 0);		// Returns a value from 0 to one minus range, unless range is 0, then the maximum 2^30 size is used (1073741824)
+	static float_t GetRandom (float_t min, float_t max);
 	static uint32 GetRandomSeed ();					// Returns the current global random seed
 	static void SetRandomSeed (uint32 seed = 0);	// Sets the global random seed, if seed is 0, then a random time value is used
 	

@@ -120,7 +120,11 @@ uint32 UINode::GetRandom (uint32 range) {
 	_RANDOM_SEED = (_RANDOM_SEED != 0) ? (16807 * (_RANDOM_SEED % 127773) - 2836 * (_RANDOM_SEED / 127773)) : ((uint32)GSystem::GetMilliseconds() + 1);
 	if((int32)_RANDOM_SEED <= 0)
 		_RANDOM_SEED += 0x7fffffff;
-	return range ? _RANDOM_SEED % range : _RANDOM_SEED;
+	return range ? _RANDOM_SEED % range : _RANDOM_SEED % 1073741824;
+}
+
+float_t UINode::GetRandom (float_t min, float_t max) {
+	return ((float_t)GetRandom(10000) / (float_t)9999) * (max - min) + min;
 }
 
 uint32 UINode::GetRandomSeed () {
