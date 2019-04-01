@@ -337,7 +337,8 @@ public:
     inline GVector& operator/= (float_t t)                            { x /= t; y /= t; return *this; }
     inline float_t GetDistance (const GVector& v) const                { return sqrt((x - v.x) * (x - v.x) + (y - v.y) * (y - v.y)); }
     inline float_t GetDot (const GVector& v) const                    { return x * v.x + y * v.y; }
-    inline float_t GetLength () const                                { return sqrt(x * x + y * y); } // GetMagnitude
+	inline float_t GetMagnitude () const                                { return sqrt(x * x + y * y); }
+    inline float_t GetLength () const                                { return sqrt(x * x + y * y); } // Yes, Magnitue and Distance are the same
     inline GVector& Offset (const GVector& p)                        { x += p.x; y += p.y; return *this; }
     inline GVector& Offset (float_t x_, float_t y_)                    { x += x_; y += y_; return *this; }
     inline GVector& Normalize ()                                    { float_t t = GetLength(); if(t) { x /= t; y /= t; } return *this; }
