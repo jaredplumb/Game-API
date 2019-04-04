@@ -66,63 +66,7 @@
 #if defined(_DEBUG) || defined(DEBUG)
 #define DEBUG 1
 #endif
-/*
-////////////////////////////////////////////////////////////////
-#if PLATFORM_IOS
-////////////////////////////////////////////////////////////////
-// Core Objective-C imports
-#ifdef __OBJC__
-//#import <Foundation/Foundation.h>
-//#import <UIKit/UIKit.h>
-#import <GLKit/GLKit.h>
-//#import <QuartzCore/QuartzCore.h>
-#import <OpenGLES/EAGL.h>
-#import <OpenGLES/ES2/glext.h>
-#import <OpenGLES/ES3/glext.h>
-#endif
 
-// Platform includes
-//#include <CoreFoundation/CoreFoundation.h>
-//#include <CFNetwork/CFNetwork.h>
-#include <OpenGLES/ES2/gl.h>
-//#include <OpenGLES/ES3/glext.h>
-#include <AudioToolbox/AudioToolbox.h>
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-//#include <OpenAL/oalStaticBufferExtension.h>
-
-// C includes
-#include <dirent.h>
-#include <pthread.h>
-
-// C++ includes
-#include <list>
-#include <map>
-#include <vector>
-
-// Base data types
-typedef ssize_t				int_t;
-typedef size_t				uint_t;
-typedef int8_t				int8;
-typedef uint8_t				uint8;
-typedef int16_t				int16;
-typedef uint16_t			uint16;
-typedef int32_t				int32;
-typedef uint32_t			uint32;
-typedef int64_t				int64;
-typedef uint64_t			uint64;
-
-enum vkey_t {
-	VKEY_NONE		= 0x0000,
-	VKEY_LEFT		= 0x0001,
-	VKEY_RIGHT		= 0x0002,
-	VKEY_UP			= 0x0003,
-	VKEY_DOWN		= 0x0004,
-	VKEY_UNKNOWN	= 0xffff,
-};
-
-#endif
-*/
 ////////////////////////////////////////////////////////////////
 #if PLATFORM_MACOSX || PLATFORM_IOS
 ////////////////////////////////////////////////////////////////
@@ -239,26 +183,26 @@ public:
 	/// RGBA format
 	uint32 color;
 	
-	inline GColor ()                                                        : color(0) {}
-	inline GColor (const GColor& c)                                            : color(c.color) {}
-	inline GColor (uint32 hex)                                                : color(hex) {}
-	inline GColor (uint8 r, uint8 g, uint8 b, uint8 a = 0xff)                : color((a) | (b << 8) | (g << 16) | (r << 24)) {}
-	inline GColor (float r, float g, float b, float a = 1.0f)                : color((uint8)(255.0f * a) | ((uint8)(255.0f * b) << 8) | ((uint8)(255.0f * g) << 16) | ((uint8)(255.0f * r) << 24)) {}
-	inline uint8 GetRed () const                                            { return (uint8)((color & 0xff000000) >> 24); }
-	inline uint8 GetGreen () const                                            { return (uint8)((color & 0x00ff0000) >> 16); }
-	inline uint8 GetBlue () const                                            { return (uint8)((color & 0x0000ff00) >> 8); }
-	inline uint8 GetAlpha () const                                            { return (uint8)(color & 0x000000ff); }
-	inline float GetRedF () const                                            { return (float)((uint8)((color & 0xff000000) >> 24) / 255.0f); }
-	inline float GetGreenF () const                                            { return (float)((uint8)((color & 0x00ff0000) >> 16) / 255.0f); }
-	inline float GetBlueF () const                                            { return (float)((uint8)((color & 0x0000ff00) >> 8) / 255.0f); }
-	inline float GetAlphaF () const                                            { return (float)((uint8)(color & 0x000000ff) / 255.0f); }
-	inline void SetRed (uint8 r)                                            { color = (color & 0x00ffffff) | (r << 24); }
-	inline void SetGreen (uint8 g)                                            { color = (color & 0xff00ffff) | (g << 16); }
-	inline void SetBlue (uint8 b)                                            { color = (color & 0xffff00ff) | (b << 8); }
-	inline void SetAlpha (uint8 a)                                            { color = (color & 0xffffff00) | (a); }
-	inline bool operator== (const GColor& c) const                            { return color == c.color; }
-	inline bool operator!= (const GColor& c) const                            { return color != c.color; }
-	inline GColor& operator= (uint32 hex)                                    { color = hex; return *this; }
+	inline GColor ()												: color(0) {}
+	inline GColor (const GColor& c)									: color(c.color) {}
+	inline GColor (uint32 hex)										: color(hex) {}
+	inline GColor (uint8 r, uint8 g, uint8 b, uint8 a = 0xff)		: color((a) | (b << 8) | (g << 16) | (r << 24)) {}
+	inline GColor (float r, float g, float b, float a = 1.0f)		: color((uint8)(255.0f * a) | ((uint8)(255.0f * b) << 8) | ((uint8)(255.0f * g) << 16) | ((uint8)(255.0f * r) << 24)) {}
+	inline uint8 GetRed () const									{ return (uint8)((color & 0xff000000) >> 24); }
+	inline uint8 GetGreen () const									{ return (uint8)((color & 0x00ff0000) >> 16); }
+	inline uint8 GetBlue () const									{ return (uint8)((color & 0x0000ff00) >> 8); }
+	inline uint8 GetAlpha () const									{ return (uint8)(color & 0x000000ff); }
+	inline float GetRedF () const									{ return (float)((uint8)((color & 0xff000000) >> 24) / 255.0f); }
+	inline float GetGreenF () const									{ return (float)((uint8)((color & 0x00ff0000) >> 16) / 255.0f); }
+	inline float GetBlueF () const									{ return (float)((uint8)((color & 0x0000ff00) >> 8) / 255.0f); }
+	inline float GetAlphaF () const									{ return (float)((uint8)(color & 0x000000ff) / 255.0f); }
+	inline void SetRed (uint8 r)									{ color = (color & 0x00ffffff) | (r << 24); }
+	inline void SetGreen (uint8 g)									{ color = (color & 0xff00ffff) | (g << 16); }
+	inline void SetBlue (uint8 b)									{ color = (color & 0xffff00ff) | (b << 8); }
+	inline void SetAlpha (uint8 a)									{ color = (color & 0xffffff00) | (a); }
+	inline bool operator== (const GColor& c) const					{ return color == c.color; }
+	inline bool operator!= (const GColor& c) const					{ return color != c.color; }
+	inline GColor& operator= (uint32 hex)							{ color = hex; return *this; }
 	
 	static const uint32 BLACK = 0x000000ff;
 	static const uint32 WHITE = 0xffffffff;
@@ -275,25 +219,25 @@ class GPoint {
 public:
 	int_t x, y;
 	
-	inline GPoint ()                                                        : x(0), y(0) {}
-	inline GPoint (const GPoint& p)                                            : x(p.x), y(p.y) {}
-	inline GPoint (int_t x_, int_t y_)                                        : x(x_), y(y_) {}
-	inline GPoint& Set (const GPoint& p)								{ x = p.x; y = p.y; return *this; }
-	inline GPoint& Set (int_t x_, int_t y_)								{ x = x_; y = y_; return *this; }
-	inline GPoint& Offset (const GPoint& p)                                    { x += p.x; y += p.y; return *this; }
-	inline GPoint& Offset (int_t x_, int_t y_)                                { x += x_; y += y_; return *this; }
-	inline bool operator== (const GPoint& p) const                            { return x == p.x && y == p.y; }
-	inline bool operator!= (const GPoint& p) const                            { return x != p.x || y != p.y; }
-	inline const GPoint operator+ (const GPoint& p) const                    { return GPoint(x + p.x, y + p.y); }
-	inline const GPoint operator- () const                                    { return GPoint(-x, -y); }
-	inline const GPoint operator- (const GPoint& p) const                    { return GPoint(x - p.x, y - p.y); }
-	inline const GPoint operator* (int_t t) const                            { return GPoint(x * t, y * t); }
-	inline const GPoint operator/ (int_t t) const                            { return GPoint(x / t, y / t); }
-	inline GPoint& operator= (const GPoint& p)                                { x = p.x; y = p.y; return *this; }
-	inline GPoint& operator+= (const GPoint& p)                                { x += p.x; y += p.y; return *this; }
-	inline GPoint& operator-= (const GPoint& p)                                { x -= p.x; y -= p.y; return *this; }
-	inline GPoint& operator*= (int_t t)                                        { x *= t; y *= t; return *this; }
-	inline GPoint& operator/= (int_t t)                                        { x /= t; y /= t; return *this; }
+	inline GPoint ()												: x(0), y(0) {}
+	inline GPoint (const GPoint& p)									: x(p.x), y(p.y) {}
+	inline GPoint (int_t x_, int_t y_)								: x(x_), y(y_) {}
+	inline GPoint& Set (const GPoint& p)							{ x = p.x; y = p.y; return *this; }
+	inline GPoint& Set (int_t x_, int_t y_)							{ x = x_; y = y_; return *this; }
+	inline GPoint& Offset (const GPoint& p)							{ x += p.x; y += p.y; return *this; }
+	inline GPoint& Offset (int_t x_, int_t y_)						{ x += x_; y += y_; return *this; }
+	inline bool operator== (const GPoint& p) const					{ return x == p.x && y == p.y; }
+	inline bool operator!= (const GPoint& p) const					{ return x != p.x || y != p.y; }
+	inline const GPoint operator+ (const GPoint& p) const			{ return GPoint(x + p.x, y + p.y); }
+	inline const GPoint operator- () const							{ return GPoint(-x, -y); }
+	inline const GPoint operator- (const GPoint& p) const			{ return GPoint(x - p.x, y - p.y); }
+	inline const GPoint operator* (int_t t) const					{ return GPoint(x * t, y * t); }
+	inline const GPoint operator/ (int_t t) const					{ return GPoint(x / t, y / t); }
+	inline GPoint& operator= (const GPoint& p)						{ x = p.x; y = p.y; return *this; }
+	inline GPoint& operator+= (const GPoint& p)						{ x += p.x; y += p.y; return *this; }
+	inline GPoint& operator-= (const GPoint& p)						{ x -= p.x; y -= p.y; return *this; }
+	inline GPoint& operator*= (int_t t)								{ x *= t; y *= t; return *this; }
+	inline GPoint& operator/= (int_t t)								{ x /= t; y /= t; return *this; }
 };
 
 
@@ -302,13 +246,13 @@ class GSize {
 public:
 	int_t width, height;
 	
-	inline GSize ()                                                        : width(0), height(0) {}
-	inline GSize (const GSize& s)                                            : width(s.width), height(s.height) {}
-	inline GSize (int_t width_, int_t height_)                                        : width(width_), height(height_) {}
-	inline GSize& Set (const GSize& s)									{ width = s.width; height = s.height; return *this; }
-	inline GSize& Set (int_t width_, int_t height_)								{ width = width_; height = height_; return *this; }
-	inline bool operator== (const GSize& s) const                            { return width == s.width && height == s.height; }
-	inline bool operator!= (const GSize& s) const                            { return width != s.width || height != s.height; }
+	inline GSize ()													: width(0), height(0) {}
+	inline GSize (const GSize& s)									: width(s.width), height(s.height) {}
+	inline GSize (int_t width_, int_t height_)						: width(width_), height(height_) {}
+	inline GSize& Set (const GSize& s)								{ width = s.width; height = s.height; return *this; }
+	inline GSize& Set (int_t width_, int_t height_)					{ width = width_; height = height_; return *this; }
+	inline bool operator== (const GSize& s) const					{ return width == s.width && height == s.height; }
+	inline bool operator!= (const GSize& s) const					{ return width != s.width || height != s.height; }
 };
 
 
@@ -353,29 +297,29 @@ public:
 
 class GRect {
 public:
-    int_t x, y, width, height;
-    
-    inline GRect ()                                                            : x(0), y(0), width(0), height(0) {}
-    inline GRect (const GRect& r)                                            : x(r.x) , y(r.y), width(r.width), height(r.height) {}
-    inline GRect (int_t x_, int_t y_, int_t w, int_t h)                        : x(x_), y(y_), width(w), height(h) {}
-    inline int_t GetLeft () const                                            { return x; }
-    inline int_t GetRight () const                                            { return x + width; }
-    inline int_t GetTop () const                                            { return y; }
-    inline int_t GetBottom () const                                            { return y + height; }
-    inline bool IsPointInRect (const GPoint& p) const                        { return p.x >= x && p.y >= y && p.x < (x + width) && p.y < (y + height); }
-    inline bool IsPointInRect (int_t x_, int_t y_) const                    { return x_ >= x && y_ >= y && x_ < (x + width) && y_ < (y + height); }
-    inline bool IsCollision (const GRect& r) const                            { return x < (r.x + r.width) && y < (r.y + r.height) && (x + width) > r.x && (y + height) > r.y; }
-    inline bool IsCollision (int_t x_, int_t y_, int_t w, int_t h) const    { return x < (x_ + w) && y < (y_ + h) && (x + width) > x_ && (y + height) > y_; }
-    inline GRect& SetLoc (const GPoint& p)                                    { x = p.x; y = p.y; return *this; }
-    inline GRect& SetLoc (int_t x_, int_t y_)                                { x = x_; y = y_; return *this; }
-    inline GRect& SetSize (const GPoint& s)                                    { width = s.x; height = s.y; return *this; }
-    inline GRect& SetSize (int_t w, int_t h)                                { width = w; height = h; return *this; }
-    inline GRect& Center (const GRect& r)                                    { x = r.x + (r.width - width) / 2; y = r.y + (r.height - height) / 2; return *this; }
-    inline GRect& Center (int_t x_, int_t y_, int_t w, int_t h)                { x = x_ + (w - width) / 2; y = y_ + (h - height) / 2; return *this; }
-    inline GRect& Offset (const GPoint& p)                                    { x += p.x; y += p.y; return *this; }
-    inline GRect& Offset (int_t x_, int_t y_)                                { x += x_; y += y_; return *this; }
-    inline bool operator== (const GRect& r) const                            { return x == r.x && y == r.y && width == r.width && height == r.height; }
-    inline bool operator!= (const GRect& r) const                            { return x != r.x || y != r.y || width != r.width || height != r.height; }
+	int_t x, y, width, height;
+	
+	inline GRect ()															: x(0), y(0), width(0), height(0) {}
+	inline GRect (const GRect& r)											: x(r.x) , y(r.y), width(r.width), height(r.height) {}
+	inline GRect (int_t x_, int_t y_, int_t w, int_t h)						: x(x_), y(y_), width(w), height(h) {}
+	inline int_t GetLeft () const											{ return x; }
+	inline int_t GetRight () const											{ return x + width; }
+	inline int_t GetTop () const											{ return y; }
+	inline int_t GetBottom () const											{ return y + height; }
+	inline bool IsPointInRect (const GPoint& p) const						{ return p.x >= x && p.y >= y && p.x < (x + width) && p.y < (y + height); }
+	inline bool IsPointInRect (int_t x_, int_t y_) const					{ return x_ >= x && y_ >= y && x_ < (x + width) && y_ < (y + height); }
+	inline bool IsCollision (const GRect& r) const							{ return x < (r.x + r.width) && y < (r.y + r.height) && (x + width) > r.x && (y + height) > r.y; }
+	inline bool IsCollision (int_t x_, int_t y_, int_t w, int_t h) const	{ return x < (x_ + w) && y < (y_ + h) && (x + width) > x_ && (y + height) > y_; }
+	inline GRect& SetLoc (const GPoint& p)									{ x = p.x; y = p.y; return *this; }
+	inline GRect& SetLoc (int_t x_, int_t y_)								{ x = x_; y = y_; return *this; }
+	inline GRect& SetSize (const GPoint& s)									{ width = s.x; height = s.y; return *this; }
+	inline GRect& SetSize (int_t w, int_t h)								{ width = w; height = h; return *this; }
+	inline GRect& Center (const GRect& r)									{ x = r.x + (r.width - width) / 2; y = r.y + (r.height - height) / 2; return *this; }
+	inline GRect& Center (int_t x_, int_t y_, int_t w, int_t h)				{ x = x_ + (w - width) / 2; y = y_ + (h - height) / 2; return *this; }
+	inline GRect& Offset (const GPoint& p)									{ x += p.x; y += p.y; return *this; }
+	inline GRect& Offset (int_t x_, int_t y_)								{ x += x_; y += y_; return *this; }
+	inline bool operator== (const GRect& r) const							{ return x == r.x && y == r.y && width == r.width && height == r.height; }
+	inline bool operator!= (const GRect& r) const							{ return x != r.x || y != r.y || width != r.width || height != r.height; }
 };
 
 
@@ -387,89 +331,89 @@ public:
 
 class GString {
 public:
-    GString ();
-    GString (const GString& string);
-    GString (const char* string);
-    ~GString ();
-    GString& New (const GString& string);
-    GString& New (const char* string);
-    void Delete ();
-    GString& Format (const char* string, ...);
-    int_t GetLength () const;
-    bool IsEmpty () const; // Returns true if the string is NULL or ""
-    GString& Add (const GString& string);
-    GString& Add (const char* string);
-    GString& ToLower ();
-    GString& ToUpper ();
-    GString& TrimSpaces ();
-    GString& TrimExtension (); // Removes the extension off of a file path
-    GString& TrimToDirectory (); // Removes the file off of a file path
-    
-    // Standard C string overrides with modifications
-    static bool isalnum (char c);
-    static bool isalpha (char c);
-    static bool isdigit (char c);
-    static bool isgraph (char c);
-    static bool islower (char c);
-    static bool isprint (char c);
-    static bool ispunct (char c);
-    static bool isspace (char c);
-    static bool isupper (char c);
-    static bool isxdigit (char c);
-    static char* strcat (char* dst, const char* src);
-    static int_t strcmp (const char* s1, const char* s2);
-    static char* strcpy (char* dst, const char* src);
-    static int_t stricmp (const char* s1, const char* s2);
-    static char* stristr (const char* s, const char* find);
-    static int_t strlen (const char* s);
-    static char* strncat (char* dst, const char* src, int_t len);
-    static int_t strncmp (const char* s1, const char* s2, int_t len);
-    static char* strncpy (char* dst, const char* src, int_t len);
-    static int_t strnicmp (const char* s1, const char* s2, int_t len);
-    static char* strnistr (const char* s, const char* find, int_t len);
-    static char* strnstr (const char* s, const char* find, int_t len);
-    static char* strstr (const char* s, const char* find);
-    
-    // Finds the first accurance of find in s, and returns a pointer to the first character after, or NULL if find failed
-    static char* strnnext (const char* s, const char* find, int_t len);
-    static char* strnext (const char* s, const char* find);
-    static char* strninext (const char* s, const char* find, int_t len);
-    static char* strinext (const char* s, const char* find);
-    
-    static int_t strtoi (const char* s, char** end, int_t base); // Returns an int_t of the string, with an optional end pointer and base
-    // strtod https://opensource.apple.com/source/tcl/tcl-10/tcl/compat/strtod.c
-    static char tolower (char c);
-    static char* tolower (char* s);
-    static char toupper (char c);
-    static char* toupper (char* s);
-    
-    // Operator overloads
-    inline operator char* (void)                                    { _length = 0; return _string; }
-    inline operator const char* (void) const                        { *(const_cast<int_t*>(&_length)) = 0; return _string; }
-    inline char& operator[] (int_t index)                            { _length = 0; return _string[index]; }
-    inline const char& operator[] (int_t index) const                { return _string[index]; }
-    inline GString& operator= (const GString& string)                { return New(string); }
-    inline GString& operator= (const char* string)                    { return New(string); }
-    inline const GString operator+ (const GString& string) const    { return GString(*this).Add(string); }
-    inline const GString operator+ (const char* string) const        { return GString(*this).Add(string); }
-    inline GString& operator+= (const GString& string)                { return Add(string); }
-    inline GString& operator+= (const char* string)                    { return Add(string); }
-    inline bool operator== (const GString& string) const            { return strcmp(_string, string._string) == 0; }
-    inline bool operator== (const char* string) const                { return strcmp(_string, string) == 0; }
-    inline bool operator!= (const GString& string) const            { return strcmp(_string, string._string) != 0; }
-    inline bool operator!= (const char* string) const                { return strcmp(_string, string) != 0; }
-    inline bool operator< (const GString& string) const                { return strcmp(_string, string._string) < 0; }
-    inline bool operator< (const char* string) const                { return strcmp(_string, string) < 0; }
-    inline bool operator<= (const GString& string) const            { return strcmp(_string, string._string) <= 0; }
-    inline bool operator<= (const char* string) const                { return strcmp(_string, string) <= 0; }
-    inline bool operator> (const GString& string) const                { return strcmp(_string, string._string) > 0; }
-    inline bool operator> (const char* string) const                { return strcmp(_string, string) > 0; }
-    inline bool operator>= (const GString& string) const            { return strcmp(_string, string._string) >= 0; }
-    inline bool operator>= (const char* string) const                { return strcmp(_string, string) >= 0; }
-    
+	GString ();
+	GString (const GString& string);
+	GString (const char* string);
+	~GString ();
+	GString& New (const GString& string);
+	GString& New (const char* string);
+	void Delete ();
+	GString& Format (const char* string, ...);
+	int_t GetLength () const;
+	bool IsEmpty () const; // Returns true if the string is NULL or ""
+	GString& Add (const GString& string);
+	GString& Add (const char* string);
+	GString& ToLower ();
+	GString& ToUpper ();
+	GString& TrimSpaces ();
+	GString& TrimExtension (); // Removes the extension off of a file path
+	GString& TrimToDirectory (); // Removes the file off of a file path
+	
+	// Standard C string overrides with modifications
+	static bool isalnum (char c);
+	static bool isalpha (char c);
+	static bool isdigit (char c);
+	static bool isgraph (char c);
+	static bool islower (char c);
+	static bool isprint (char c);
+	static bool ispunct (char c);
+	static bool isspace (char c);
+	static bool isupper (char c);
+	static bool isxdigit (char c);
+	static char* strcat (char* dst, const char* src);
+	static int_t strcmp (const char* s1, const char* s2);
+	static char* strcpy (char* dst, const char* src);
+	static int_t stricmp (const char* s1, const char* s2);
+	static char* stristr (const char* s, const char* find);
+	static int_t strlen (const char* s);
+	static char* strncat (char* dst, const char* src, int_t len);
+	static int_t strncmp (const char* s1, const char* s2, int_t len);
+	static char* strncpy (char* dst, const char* src, int_t len);
+	static int_t strnicmp (const char* s1, const char* s2, int_t len);
+	static char* strnistr (const char* s, const char* find, int_t len);
+	static char* strnstr (const char* s, const char* find, int_t len);
+	static char* strstr (const char* s, const char* find);
+	
+	// Finds the first accurance of find in s, and returns a pointer to the first character after, or NULL if find failed
+	static char* strnnext (const char* s, const char* find, int_t len);
+	static char* strnext (const char* s, const char* find);
+	static char* strninext (const char* s, const char* find, int_t len);
+	static char* strinext (const char* s, const char* find);
+	
+	static int_t strtoi (const char* s, char** end, int_t base); // Returns an int_t of the string, with an optional end pointer and base
+	// strtod https://opensource.apple.com/source/tcl/tcl-10/tcl/compat/strtod.c
+	static char tolower (char c);
+	static char* tolower (char* s);
+	static char toupper (char c);
+	static char* toupper (char* s);
+	
+	// Operator overloads
+	inline operator char* (void)									{ _length = 0; return _string; }
+	inline operator const char* (void) const						{ *(const_cast<int_t*>(&_length)) = 0; return _string; }
+	inline char& operator[] (int_t index)							{ _length = 0; return _string[index]; }
+	inline const char& operator[] (int_t index) const				{ return _string[index]; }
+	inline GString& operator= (const GString& string)				{ return New(string); }
+	inline GString& operator= (const char* string)					{ return New(string); }
+	inline const GString operator+ (const GString& string) const	{ return GString(*this).Add(string); }
+	inline const GString operator+ (const char* string) const		{ return GString(*this).Add(string); }
+	inline GString& operator+= (const GString& string)				{ return Add(string); }
+	inline GString& operator+= (const char* string)					{ return Add(string); }
+	inline bool operator== (const GString& string) const			{ return strcmp(_string, string._string) == 0; }
+	inline bool operator== (const char* string) const				{ return strcmp(_string, string) == 0; }
+	inline bool operator!= (const GString& string) const			{ return strcmp(_string, string._string) != 0; }
+	inline bool operator!= (const char* string) const				{ return strcmp(_string, string) != 0; }
+	inline bool operator< (const GString& string) const				{ return strcmp(_string, string._string) < 0; }
+	inline bool operator< (const char* string) const				{ return strcmp(_string, string) < 0; }
+	inline bool operator<= (const GString& string) const			{ return strcmp(_string, string._string) <= 0; }
+	inline bool operator<= (const char* string) const				{ return strcmp(_string, string) <= 0; }
+	inline bool operator> (const GString& string) const				{ return strcmp(_string, string._string) > 0; }
+	inline bool operator> (const char* string) const				{ return strcmp(_string, string) > 0; }
+	inline bool operator>= (const GString& string) const			{ return strcmp(_string, string._string) >= 0; }
+	inline bool operator>= (const char* string) const				{ return strcmp(_string, string) >= 0; }
+	
 private:
-    char* _string;
-    int_t _length;
+	char* _string;
+	int_t _length;
 };
 
 
@@ -536,20 +480,13 @@ private:
 
 class GDirectory {
 public:
-	
 	GDirectory ();
 	~GDirectory ();
-	
 	GDirectory (const GString& path);
-	
 	bool Open (const GString& path);
-	
 	void Close ();
-	
 	uint_t GetSize () const;
-	
 	GString GetFile (uint_t index) const;
-	
 private:
 	std::vector<GString> _files; // Files are relative to the path used with Open
 };
@@ -560,54 +497,50 @@ private:
 
 
 
-
+class GThread {
+public:
+	inline GThread ()											: _thread(NULL) {}
+	virtual ~GThread ()											{ Finish(); }
+	virtual void Run () = 0;
 #if PLATFORM_WINDOWS
-    class GThread {
-    public:
-        inline GThread ()                                           : _thread(NULL) {}
-        virtual ~GThread ()                                         { Finish(); }
-        inline void Start ()                                        { Finish(); _thread = CreateThread(NULL, 0, _ThreadProc, this, 0, NULL); }
-        inline void Finish ()                                       { if(_thread) { WaitForSingleObject(_thread, INFINITE); CloseHandle(_thread); _thread = NULL; } }
-        inline void Sleep (uint64 milliseconds)                     { Sleep(milliseconds); }
-        virtual void Run () = 0;
-    private:
-        HANDLE _thread;
-        static DWORD WINAPI _ThreadProc (LPVOID lpParam)            { ((GThread *)lpParam)->Run(); return 0; }
-    };
-
-    class GMutex {
-    public:
-        inline GMutex ()                                            : _mutex(CreateMutex(NULL, FALSE, NULL)) {}
-        inline ~GMutex ()                                           { if (_mutex) { CloseHandle(_mutex); _mutex = NULL; } }
-        inline bool Lock ()                                         { return WaitForSingleObject(_mutex, INFINITE) == WAIT_OBJECT_0; }
-        inline bool Unlock ()                                       { return ReleaseMutex(_mutex) == TRUE; }
-    private:
-        HANDLE _mutex;
-    };
+	inline void Start ()										{ Finish(); _thread = CreateThread(NULL, 0, _ThreadProc, this, 0, NULL); }
+	inline void Finish ()										{ if(_thread) { WaitForSingleObject(_thread, INFINITE); CloseHandle(_thread); _thread = NULL; } }
+	inline void Sleep (uint64 milliseconds)						{ Sleep(milliseconds); }
+private:
+	HANDLE _thread;
+	static DWORD WINAPI _ThreadProc (LPVOID lpParam)			{ ((GThread *)lpParam)->Run(); return 0; }
 #else
-    class GThread {
-    public:
-        inline GThread ()                                           : _thread(NULL) {}
-        virtual ~GThread ()                                         { Finish(); }
-        inline void Start ()                                        { Finish(); pthread_create(&_thread, NULL, _ThreadProc, this); }
-        inline void Finish ()                                       { if(_thread) { pthread_join(_thread, NULL); _thread = NULL; } }
-        inline void Sleep (uint64 milliseconds)                     { timespec time = { (long)(milliseconds / 1000), (long)(milliseconds % 1000 * 1000000) }; nanosleep(&time, NULL); }
-        virtual void Run () = 0;
-    private:
-        pthread_t _thread;
-        static void* _ThreadProc (void* data)                       { ((GThread *)data)->Run(); return NULL; }
-    };
-
-    class GMutex {
-    public:
-        inline GMutex ()                                            : _mutex(new pthread_mutex_t) { pthread_mutex_init(_mutex, NULL); }
-        inline ~GMutex ()                                           { if(_mutex) { pthread_mutex_destroy(_mutex); delete _mutex; _mutex = NULL; } }
-        inline bool Lock ()                                         { return pthread_mutex_lock(_mutex) == 0; }
-        inline bool Unlock ()                                       { return pthread_mutex_unlock(_mutex) == 0; }
-    private:
-        pthread_mutex_t* _mutex;
-    };
+	inline void Start ()										{ Finish(); pthread_create(&_thread, NULL, _ThreadProc, this); }
+	inline void Finish ()										{ if(_thread) { pthread_join(_thread, NULL); _thread = NULL; } }
+	inline void Sleep (uint64 milliseconds)						{ timespec time = { (long)(milliseconds / 1000), (long)(milliseconds % 1000 * 1000000) }; nanosleep(&time, NULL); }
+private:
+	pthread_t _thread;
+	static void* _ThreadProc (void* data)                       { ((GThread *)data)->Run(); return NULL; }
 #endif
+};
+
+
+
+
+class GMutex {
+public:
+#if PLATFORM_WINDOWS
+	inline GMutex ()											: _mutex(CreateMutex(NULL, FALSE, NULL)) {}
+	inline ~GMutex ()											{ if (_mutex) { CloseHandle(_mutex); _mutex = NULL; } }
+	inline bool Lock ()											{ return WaitForSingleObject(_mutex, INFINITE) == WAIT_OBJECT_0; }
+	inline bool Unlock ()										{ return ReleaseMutex(_mutex) == TRUE; }
+private:
+	HANDLE _mutex;
+#else
+	inline GMutex ()											: _mutex(new pthread_mutex_t) { pthread_mutex_init(_mutex, NULL); }
+	inline ~GMutex ()											{ if(_mutex) { pthread_mutex_destroy(_mutex); delete _mutex; _mutex = NULL; } }
+	inline bool Lock ()											{ return pthread_mutex_lock(_mutex) == 0; }
+	inline bool Unlock ()										{ return pthread_mutex_unlock(_mutex) == 0; }
+private:
+	pthread_mutex_t* _mutex;
+#endif
+};
+
 
 
 
