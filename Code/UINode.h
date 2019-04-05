@@ -3,8 +3,8 @@
 
 #include "GTypes.h"
 
-#define		UINODE_NAME(c,n)			static UINode::Factory<c> _UI_NODE_ ## c ## _NAME(n, false);
-#define		UINODE_AUTORUN(c,n)			static UINode::Factory<c> _UI_NODE_ ## c ## _NAME(n, true);
+#define		UINODE_NAME(c,n)			static const UINode::Factory<c> _UI_NODE_ ## c ## _NAME(n, false);
+#define		UINODE_AUTORUN(c,n)			static const UINode::Factory<c> _UI_NODE_ ## c ## _NAME(n, true);
 #define		UINODE_PACKAGE(n)			_UINODEPACKAGE_UNIQUE(n, __COUNTER__)
 
 class UINode {
@@ -134,6 +134,6 @@ public:
 };
 
 #define		_UINODEPACKAGE_UNIQUE(n,u)		_UINODEPACKAGE_STATIC(n,u)
-#define		_UINODEPACKAGE_STATIC(n,u)		static GPackage _GPACKAGE_ ## u ## _NAME(n, true);
+#define		_UINODEPACKAGE_STATIC(n,u)		static const GPackage _GPACKAGE_ ## u ## _NAME(n, true);
 
 #endif // _UINODE_H_
