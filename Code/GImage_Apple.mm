@@ -465,6 +465,41 @@ bool GImage::Resource::NewFromFile (const GString& resource) {
 	return true;
 }
 
+bool GImage::Resource::NewFromFileInMemory (void* resource, int_t size) {
+	Delete();
+	
+	CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8*)resource, (CFIndex)size, kCFAllocatorNull);
+	CGImageSourceRef imageSource = CGImageSourceCreateWithData(data, NULL);
+	CFRelease(data);
+	if(imageSource == NULL)
+		return false;
+	
+	CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
+	CFRelease(imageSource);
+	if(image == NULL)
+		return false;
+	
+	width = (uint32)CGImageGetWidth(image);
+	height = (uint32)CGImageGetHeight(image);
+	bufferSize = width * height * 4;
+	buffer = new uint8[bufferSize];
+	memset(buffer, 0, sizeof(uint8) * bufferSize);
+	
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	CGContextRef context = CGBitmapContextCreate(buffer, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast);
+	CGContextSetBlendMode(context, kCGBlendModeCopy);
+	
+	//CGContextTranslateCTM(context, (CGFloat)0, (CGFloat)height);
+	//CGContextScaleCTM(context, (CGFloat)1, (CGFloat)-1);
+	CGContextDrawImage(context, CGRectMake((CGFloat)0, (CGFloat)0, (CGFloat)width, (CGFloat)height), image);
+	
+	CGContextRelease(context);
+	CGColorSpaceRelease(colorSpace);
+	CGImageRelease(image);
+	
+	return true;
+}
+
 bool GImage::Resource::NewFromPackage (const GString& resource) {
 	Delete();
 	

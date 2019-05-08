@@ -51,6 +51,7 @@ public:
 		~Resource ();
 		bool New (const GString& resource);
 		bool NewFromFile (const GString& resource);
+		bool NewFromFileInMemory (void* resource, int_t size);
 		bool NewFromPackage (const GString& resource);
 		void Delete ();
 		bool WriteToPackage (GPackage& package, const GString& name);
