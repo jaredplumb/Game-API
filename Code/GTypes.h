@@ -106,6 +106,7 @@ typedef int32_t				int32;
 typedef uint32_t			uint32;
 typedef int64_t				int64;
 typedef uint64_t			uint64;
+typedef int8				bool8;
 
 enum vkey_t {
 	VKEY_NONE		= 0x0000,
@@ -160,6 +161,7 @@ typedef INT32				int32;
 typedef UINT32				uint32;
 typedef INT64				int64;
 typedef UINT64				uint64;
+typedef int8				bool8;
 
 enum vkey_t {
 	VKEY_NONE		= 0x0000,
@@ -428,7 +430,7 @@ private:
 
 
 
-/// A PFile is a wrapper class around a C-File function calls.  This class uses the
+/// A GFile is a wrapper class around a C-File function calls.  This class uses the
 /// native width versions of the file functions allowing for very large files.
 class GFile {
 public:
