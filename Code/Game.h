@@ -15,6 +15,8 @@
 
 #include "GFont.h"
 
+#include "GSave.h"
+
 #include "UINode.h"
 
 #include "UIButton.h"
