@@ -141,7 +141,7 @@ void UINode::Run (const GString& name) {
 	if(_exit)
 		return;
 	
-	// Running a new node will exit this line of nodes by exting to roon node
+	// Running a new node will exit this line of nodes by exting to root node
 	UINode* parent = this;
 	while(parent->_parent)
 		parent = parent->_parent;
