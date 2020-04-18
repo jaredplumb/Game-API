@@ -68,6 +68,10 @@ static matrix_float4x4		_PROJECTION_MATRIX;
 	return YES;
 }
 
+- (BOOL) prefersHomeIndicatorAutoHidden {
+	return YES;
+}
+
 @end // _MyViewController
 #endif
 
