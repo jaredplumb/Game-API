@@ -310,8 +310,8 @@ public:
 	inline int_t GetRight () const											{ return x + width; }
 	inline int_t GetTop () const											{ return y; }
 	inline int_t GetBottom () const											{ return y + height; }
-	inline bool IsPointInRect (const GPoint& p) const						{ return p.x >= x && p.y >= y && p.x < (x + width) && p.y < (y + height); }
-	inline bool IsPointInRect (int_t x_, int_t y_) const					{ return x_ >= x && y_ >= y && x_ < (x + width) && y_ < (y + height); }
+	inline bool IsPointInRect (const GPoint& p) const						{ return p.x >= x && p.y >= y && p.x <= (x + width) && p.y <= (y + height); }
+	inline bool IsPointInRect (int_t x_, int_t y_) const					{ return x_ >= x && y_ >= y && x_ <= (x + width) && y_ <= (y + height); }
 	inline bool IsCollision (const GRect& r) const							{ return x < (r.x + r.width) && y < (r.y + r.height) && (x + width) > r.x && (y + height) > r.y; }
 	inline bool IsCollision (int_t x_, int_t y_, int_t w, int_t h) const	{ return x < (x_ + w) && y < (y_ + h) && (x + width) > x_ && (y + height) > y_; }
 	inline GRect& SetLoc (const GPoint& p)									{ x = p.x; y = p.y; return *this; }
