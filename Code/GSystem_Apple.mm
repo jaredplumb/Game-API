@@ -327,6 +327,18 @@ static NSString* _SHADER = @""
 		_SAFE_RECT.width = _SAFE_RECT.width * _PREFERRED_RECT.height / _SAFE_RECT.height;
 		_SAFE_RECT.height = _PREFERRED_RECT.height; // This must be last because it is used for the aspect ratio
 	}
+	
+	// Center the preferred rect within the screen rect then adjust to fit within the safe rect
+	_PREFERRED_RECT.x = _RECT.width / 2 - _PREFERRED_RECT.width / 2;
+	_PREFERRED_RECT.y = _RECT.height / 2 - _PREFERRED_RECT.height / 2;
+	if(_PREFERRED_RECT.x < _SAFE_RECT.x)
+		_PREFERRED_RECT.x = _SAFE_RECT.x;
+	if(_PREFERRED_RECT.y < _SAFE_RECT.y)
+		_PREFERRED_RECT.y = _SAFE_RECT.y;
+	if(_PREFERRED_RECT.x + _PREFERRED_RECT.width > _SAFE_RECT.x + _SAFE_RECT.width)
+		_PREFERRED_RECT.x = _SAFE_RECT.x + _SAFE_RECT.width - _PREFERRED_RECT.width;
+	if(_PREFERRED_RECT.y + _PREFERRED_RECT.height > _SAFE_RECT.y + _SAFE_RECT.height)
+		_PREFERRED_RECT.y = _SAFE_RECT.y + _SAFE_RECT.height - _PREFERRED_RECT.height;
 }
 
 - (void) encodeWithCoder:(nonnull NSCoder*)aCoder { 
@@ -553,6 +565,10 @@ GRect GSystem::GetRect () {
 
 GRect GSystem::GetSafeRect () {
 	return _SAFE_RECT;
+}
+
+GRect GSystem::GetPreferredRect () {
+	return _PREFERRED_RECT;
 }
 
 int_t GSystem::GetFPS () {

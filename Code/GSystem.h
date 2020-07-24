@@ -20,6 +20,9 @@ public:
 	/// Returns the safe rect in pixels, which is the area with no obstructed visuals or interactions containing a minimum of the preferred size
 	static GRect GetSafeRect ();
 	
+	/// Returns the preferred rect  centered within the screen rect and then adjusted to fit within the safe rect
+	static GRect GetPreferredRect ();
+	
 	/// Returns the the current FPS.
 	static int_t GetFPS ();
 	
