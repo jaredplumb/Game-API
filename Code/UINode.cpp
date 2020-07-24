@@ -3,7 +3,7 @@
 
 UINode::UINode ()
 :	_ref(GSystem::GetUniqueRef())
-,	_rect(GSystem::GetSafeRect())
+,	_rect(GSystem::GetRect())
 ,	_visible(true)
 ,	_active(true)
 ,	_exit(false)
@@ -73,7 +73,7 @@ void UINode::SetRectCenterInParent () {
 		rect.width = _parent->_rect.width;
 		rect.height = _parent->_rect.height;
 	} else {
-		rect = GSystem::GetSafeRect();
+		rect = GSystem::GetRect();
 	}
 	SetRect(GRect(rect.x + rect.width / 2 - GetWidth() / 2, rect.y + rect.height / 2 - GetHeight() / 2, GetWidth(), GetHeight()));
 }

@@ -284,34 +284,49 @@ static NSString* _SHADER = @""
 	_viewport.x = size.width;
 	_viewport.y = size.height;
 	
-	// Find the desired width and height, adjusting for safe areas
-	int_t width = _PREFERRED_RECT.width;
-	int_t height = _PREFERRED_RECT.height;
-#if PLATFORM_IOS
-	int_t left = (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left;
-	int_t top = (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top;
-	int_t right = (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right;
-	int_t bottom = (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom;
-	width += left + right;
-	height += top + bottom;
-#endif
+	// Set the rect used for drawing, this includes the entire screen including hidden areas because of curved edges
+	_RECT.x = 0;
+	_RECT.y = 0;
+	_RECT.width = _viewport.x;
+	_RECT.height = _viewport.y;
 	
-	// Adjust the main screen rect for screen size changes
-	_RECT.width = (int_t)((CGFloat)width * ((CGFloat)_viewport.x / (CGFloat)_viewport.y) / ((CGFloat)width / (CGFloat)height));
-	_RECT.height = (int_t)((CGFloat)height * ((CGFloat)_viewport.y / (CGFloat)_viewport.x) / ((CGFloat)height / (CGFloat)width));
-	if(_RECT.width < width)
-		_RECT.width = width;
-	if(_RECT.height < height)
-		_RECT.height = height;
-	
-	// Find the safe rect using the updated rect and the safe areas
+	// Set the safe are for for interactions.  This is used to make sure UI elements and mouse/touch interaction is in the correct area
 	_SAFE_RECT = _RECT;
+	
 #if PLATFORM_IOS
+	// Get the safe area already part of iOS.  The UIWindow may not be retina, so adjust offsets accordingly
+	int_t left = _RECT.width * (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left / (int_t)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
+	int_t top = _RECT.height * (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top / (int_t)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
+	int_t right = _RECT.width * (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right / (int_t)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
+	int_t bottom = _RECT.height * (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom / (int_t)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
 	_SAFE_RECT.x += left;
-	_SAFE_RECT.width -= (left + right);
 	_SAFE_RECT.y += top;
+	_SAFE_RECT.width -= (left + right);
 	_SAFE_RECT.height -= (top + bottom);
 #endif
+	
+	// Adjust the rect and safe rect if they are not sized correctly for the preferred rect
+	// The preferred rect should entirely fit within the safe rect, and maximize the safe rect to that size
+	if(_SAFE_RECT.width != _PREFERRED_RECT.width) {
+		_RECT.x = _RECT.x * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_RECT.y = _RECT.y * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_RECT.width = _RECT.width * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_RECT.height = _RECT.height * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_SAFE_RECT.x = _SAFE_RECT.x * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_SAFE_RECT.y = _SAFE_RECT.y * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_SAFE_RECT.height = _SAFE_RECT.height * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_SAFE_RECT.width = _PREFERRED_RECT.width; // This must be last because it is used for the aspect ratio
+	}
+	if(_SAFE_RECT.height < _PREFERRED_RECT.height) {
+		_RECT.x = _RECT.x * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_RECT.y = _RECT.y * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_RECT.width = _RECT.width * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_RECT.height = _RECT.height * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_SAFE_RECT.x = _SAFE_RECT.x * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_SAFE_RECT.y = _SAFE_RECT.y * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_SAFE_RECT.width = _SAFE_RECT.width * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_SAFE_RECT.height = _PREFERRED_RECT.height; // This must be last because it is used for the aspect ratio
+	}
 }
 
 - (void) encodeWithCoder:(nonnull NSCoder*)aCoder { 
