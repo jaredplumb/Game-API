@@ -102,6 +102,7 @@ UINode* UINode::NewNode (const GString& name) {
 	std::map<GString, UINode* (*) ()>::const_iterator factory = _FACTORY_LIST->find(name);
 	if(factory != _FACTORY_LIST->end())
 		return factory->second();
+	GConsole::Debug("UINode factory \"%s\" does not exist!\n", (const char*)name);
 	return NULL;
 }
 
@@ -140,6 +141,12 @@ void UINode::Run (const GString& name) {
 	// If this node is exiting, do nothing, this prevents RunOnRoot from being called many times during a transition
 	if(_exit)
 		return;
+	
+	// If the UINode factory does not exist for the given name, do nothing
+	if(_FACTORY_LIST == NULL || _FACTORY_LIST->find(name) == _FACTORY_LIST->end()) {
+		GConsole::Debug("UINode factory \"%s\" does not exist!\n", (const char*)name);
+		return;
+	}
 	
 	// Running a new node will exit this line of nodes by exting to root node
 	UINode* parent = this;
@@ -333,8 +340,10 @@ UINode::_Root::~_Root () {
 void UINode::_Root::RunOnRoot (const GString& name) {
 	GConsole::Debug("----------------------------------------------------------------\n");
 	GConsole::Debug("- %s\n", (const char*)name);
-	if(_ROOT != NULL)
-		_ROOT->nodes[name] = NewNode(name);
+	if(_ROOT != NULL) {
+		UINode* node = NewNode(name);
+		if(node) _ROOT->nodes[name] = node;
+	}
 	GConsole::Debug("----------------------------------------------------------------\n");
 }
 
