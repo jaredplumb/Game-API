@@ -200,25 +200,6 @@ void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
-void GImage::Draw (int_t x, int_t y, float alpha) {
-	if(_data != NULL)
-		return Draw(GRect(0, 0, _data->width, _data->height), GRect(x, y, _data->width, _data->height), GColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
-}
-
-void GImage::Draw (const GRect& dst, float alpha) {
-	if(_data)
-		Draw(_data->src, dst, GColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
-}
-
-void GImage::Draw (const GRect& src, int_t x, int_t y, float alpha) {
-	Draw(src, GRect(x, y, src.width, src.height), GColor(0xff, 0xff, 0xff, (uint8)(alpha * 255.0f)));
-}
-
-void GImage::DrawRect (const GRect& dst, const GColor& color) {
-	if(_data)
-		Draw(GRect(0, 0, _data->width, _data->height), dst, color);
-}
-
 void GImage::DrawLine (const GPoint& a, const GPoint& b, int_t width, const GColor& color) {
 	if(_RENDER == nil || _data == NULL || _data->texture == nil)
 		return;
