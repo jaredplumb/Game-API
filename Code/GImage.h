@@ -35,6 +35,9 @@ public:
 	void DrawLine (const GPoint& a, const GPoint& b, int_t width, const GColor& color = GColor::WHITE);
 	void DrawEllipse (const GRect& dst, const GColor& color = GColor::WHITE, const int_t sides = 45);
 	
+	// These are inline overload functions to allow for more drawing options
+	inline void Draw (const GPoint& loc, float alpha = 1.0f) { Draw(loc.x, loc.y, alpha); }
+	
 	// DrawQuad will always reset the vertex data, and DrawVertices will always reset the vertex and index data
 	void DrawQuad (const float vertices[8], const float coords[8], const GColor& color = GColor::WHITE);
 	void DrawVertices (const Vertex verticies[], int_t verticesCount, const uint16 indicies[], int_t indiciesCount);
