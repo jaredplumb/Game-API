@@ -349,11 +349,12 @@ static NSString* _SHADER = @""
 }
 
 - (BOOL) becomeFirstResponder {
+	[super becomeFirstResponder];
 	return YES;
 }
 
 - (BOOL) resignFirstResponder {
-	return YES;
+	return [super resignFirstResponder];
 }
 
 #if PLATFORM_MACOSX
