@@ -4,13 +4,17 @@
 #include "UINode.h"
 #include "GImage.h"
 
+// NOTE: To allow the fade to completely cover all UI elements, the UITransition object must
+// added last after all other UI objects such as UIButton and UILabel.  This is done on purpose
+// to allow custom UITransition that might only fade parts of the screen.
+
 class UITransition : public UINode {
 public:
 	enum eTransition {
 		NONE,
-		FADE_BLACK,
-		FADE_IN_BLACK,
-		FADE_OUT_BLACK,
+		FADE_BLACK,			// 250 ms fade
+		FADE_IN_BLACK,		// 250 ms fade
+		FADE_OUT_BLACK,		// 250 ms fade
 	};
 	
 	UITransition ();

@@ -1,5 +1,7 @@
 #include "UITransition.h"
 
+static const uint64 _FADE_TIME = 1250;
+
 UITransition::UITransition ()
 :	_transition(NONE)
 ,	_timer(0)
@@ -51,7 +53,7 @@ void UITransition::OnDraw () {
 			if(_timer == 0)
 				_timer = GetMilliseconds();
 			if(_timer > 0) {
-				float alpha = 1.0f - (float)(GetMilliseconds() - _timer) / 250.0f;
+				float alpha = 1.0f - (float)(GetMilliseconds() - _timer) / (float)_FADE_TIME;
 				if(alpha < 0.0f) {
 					_timer = 0;
 					_transition = FADE_OUT_BLACK;
@@ -64,7 +66,7 @@ void UITransition::OnDraw () {
 			if(_timer == 0)
 				_timer = GetMilliseconds();
 			if(_timer > 0) {
-				float alpha = 1.0f - (float)(GetMilliseconds() - _timer) / 250.0f;
+				float alpha = 1.0f - (float)(GetMilliseconds() - _timer) / (float)_FADE_TIME;
 				if(alpha < 0.0f) {
 					_transition = NONE;
 					return;
@@ -74,7 +76,7 @@ void UITransition::OnDraw () {
 			break;
 		case FADE_OUT_BLACK:
 			if(_timer > 0) {
-				float alpha = (float)(GetMilliseconds() - _timer) / 250.0f;
+				float alpha = (float)(GetMilliseconds() - _timer) / (float)_FADE_TIME;
 				if(alpha > 1.0f)
 					alpha = 1.0f;
 				_image.Draw(GetScreenRect(), alpha);
@@ -95,7 +97,7 @@ bool UITransition::OnExit () {
 		case FADE_OUT_BLACK:
 			if(_timer == 0)
 				_timer = GetMilliseconds();
-			return (GetMilliseconds() - _timer >= 250) ? true : false;
+			return (GetMilliseconds() - _timer >= _FADE_TIME) ? true : false;
 	}
 	return true;
 }
