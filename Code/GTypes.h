@@ -31,6 +31,8 @@
 #endif
 #elif (defined(__GNUC__) && defined(__MINGW32__)) || defined(_MSC_VER) || defined(_WIN32)
 #define PLATFORM_WINDOWS 1
+#elif defined(__EMSCRIPTEN__)
+#define PLATFORM_WEB 1
 #else
 #error Unknown Platform
 #endif
@@ -54,6 +56,9 @@
 #define ENDIAN_LITTLE 1
 #elif defined(__i386__) || defined(i386) || defined(intel) || defined(_M_IX86)
 #define HARDWARE_X86 1
+#define ENDIAN_LITTLE 1
+#elif defined(PLATFORM_WEB)
+#define HARDWARE_UNDEFINED 1
 #define ENDIAN_LITTLE 1
 #else
 #error Unknown Hardware
@@ -174,6 +179,53 @@ enum vkey_t {
 
 #endif
 
+////////////////////////////////////////////////////////////////
+#if PLATFORM_WEB
+////////////////////////////////////////////////////////////////
+
+// C includes
+#include <stdio.h>
+#include <stdarg.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <pthread.h>
+#include <sys/types.h>
+
+// C++ includes
+#include <list>
+#include <map>
+#include <vector>
+
+// Core imports
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#include <GLES2/gl2.h>
+#include <EGL/egl.h>
+
+// Base data types
+typedef ssize_t				int_t;
+typedef size_t				uint_t;
+typedef float_t				float_t;
+typedef int8_t				int8;
+typedef uint8_t				uint8;
+typedef int16_t				int16;
+typedef uint16_t			uint16;
+typedef int32_t				int32;
+typedef uint32_t			uint32;
+typedef int64_t				int64;
+typedef uint64_t			uint64;
+typedef int8				bool8;
+
+enum vkey_t {
+	VKEY_NONE		= 0x0000,
+	VKEY_LEFT		= 0x007b, // kVK_LeftArrow
+	VKEY_RIGHT		= 0x007c, // kVK_RightArrow
+	VKEY_UP			= 0x007d, // kVK_DownArrow
+	VKEY_DOWN		= 0x007e, // kVK_UpArrow
+	VKEY_UNKNOWN	= 0xffff,
+};
+
+#endif
 
 
 
