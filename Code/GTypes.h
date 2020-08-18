@@ -81,7 +81,6 @@
 #if PLATFORM_IOS
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-//#import <GLKit/GLKit.h>
 #else
 #import <Cocoa/Cocoa.h>
 #endif
@@ -111,6 +110,8 @@ typedef int32_t				int32;
 typedef uint32_t			uint32;
 typedef int64_t				int64;
 typedef uint64_t			uint64;
+typedef float				float32;
+typedef double				float64;
 typedef int8				bool8;
 
 enum vkey_t {
@@ -166,6 +167,8 @@ typedef INT32				int32;
 typedef UINT32				uint32;
 typedef INT64				int64;
 typedef UINT64				uint64;
+typedef float				float32;
+typedef double				float64;
 typedef int8				bool8;
 
 enum vkey_t {
@@ -190,6 +193,7 @@ enum vkey_t {
 #include <dirent.h>
 #include <pthread.h>
 #include <sys/types.h>
+#include <time.h>
 
 // C++ includes
 #include <list>
@@ -214,6 +218,8 @@ typedef int32_t				int32;
 typedef uint32_t			uint32;
 typedef int64_t				int64;
 typedef uint64_t			uint64;
+typedef float				float32;
+typedef double				float64;
 typedef int8				bool8;
 
 enum vkey_t {
@@ -378,6 +384,23 @@ public:
 	inline bool operator!= (const GRect& r) const							{ return x != r.x || y != r.y || width != r.width || height != r.height; }
 };
 
+
+
+
+
+
+class GMatrix32_4x4 {
+public:
+	float32 numbers[4][4];
+	
+	// GMatrix deliberately does not have constructors to avoid speed hits
+	inline void SetIdentity ()																						{ *this = (GMatrix32_4x4){{{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 1.0f}}}; }
+	inline void SetOrtho2D (float32 left, float32 right, float32 bottom, float32 top, float32 nearZ, float32 farZ)	{ *this = (GMatrix32_4x4){{{2.0f / (right - left), 0.0f, 0.0f, 0.0f}, {0.0f, 2.0f / (top - bottom), 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f / (farZ - nearZ), 0.0f}, {(left + right) / (left - right), (top + bottom) / (bottom - top), nearZ / (nearZ - farZ), 1.0f}}}; }
+	inline void SetTranslation (float32 tx, float32 ty, float32 tz)													{ *this = (GMatrix32_4x4){{{numbers[0][0], numbers[0][1], numbers[0][2], numbers[0][3]}, {numbers[1][0], numbers[1][1], numbers[1][2], numbers[1][3]}, {numbers[2][0], numbers[2][1], numbers[2][2], numbers[2][3]}, {numbers[0][0] * tx + numbers[1][0] * ty + numbers[2][0] * tz + numbers[3][0], numbers[0][1] * tx + numbers[1][1] * ty + numbers[2][1] * tz + numbers[3][1], numbers[0][2] * tx + numbers[1][2] * ty + numbers[2][2] * tz + numbers[3][2], numbers[0][3] * tx + numbers[1][3] * ty + numbers[2][3] * tz + numbers[3][3]}}}; }
+	inline void SetScale (float32 sx, float32 sy, float32 sz)														{ *this = (GMatrix32_4x4){{{numbers[0][0] * sx + numbers[1][0] * sy + numbers[2][0] * sz + numbers[3][0], numbers[0][1], numbers[0][2], numbers[0][3]}, {numbers[1][0], numbers[0][1] * sx + numbers[1][1] * sy + numbers[2][1] * sz + numbers[3][1], numbers[1][2], numbers[1][3]}, {numbers[2][0], numbers[2][1], numbers[0][2] * sx + numbers[1][2] * sy + numbers[2][2] * sz + numbers[3][2], numbers[2][3]}, {numbers[3][0], numbers[3][1], numbers[3][2], numbers[3][3]}}}; }
+	inline void SetRotation (float32 radians)																		{ float32 s = (float32)sinf(radians); float32 c = (float32)cosf(radians); *this = (GMatrix32_4x4){{{numbers[0][0] * c + numbers[0][1] * (-s), numbers[0][0] * s + numbers[0][1] * c, numbers[0][2], numbers[0][3]}, {numbers[1][0] * c + numbers[1][1] * (-s), numbers[1][0] * s + numbers[1][1] * c, numbers[1][2], numbers[1][3]}, {numbers[2][0] * c + numbers[2][1] * (-s), numbers[2][0] * s + numbers[2][1] * c, numbers[2][2], numbers[2][3]}, {numbers[3][0] * c + numbers[3][1] * (-s), numbers[3][0] * s + numbers[3][1] * c, numbers[3][2], numbers[3][3]}}}; }
+	inline const GMatrix32_4x4 operator* (GMatrix32_4x4 t) const													{ GMatrix32_4x4 r; for(int_t i = 0; i < 4; i++) { r.numbers[i][0] = 0; r.numbers[i][1] = 0; r.numbers[i][2] = 0; r.numbers[i][3] = 0; for(int_t j = 0; j < 4; j++) { r.numbers[i][0] = numbers[j][0] * t.numbers[i][j] + r.numbers[i][0]; r.numbers[i][1] = numbers[j][1] * t.numbers[i][j] + r.numbers[i][1]; r.numbers[i][2] = numbers[j][2] * t.numbers[i][j] + r.numbers[i][2]; r.numbers[i][3] = numbers[j][3] * t.numbers[i][j] + r.numbers[i][3]; } } return r; }
+};
 
 
 
