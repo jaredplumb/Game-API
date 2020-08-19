@@ -808,11 +808,7 @@ void GConsole::Print (const char* message, ...) {
 			delete [] string;
 		}
 #endif
-#if PLATFORM_WEB
-		printf(message, args); // Webassembly seems to have problems with vprint* functions
-#else
 		vprintf(message, args);
-#endif
 		va_end(args);
 	}
 }
@@ -830,13 +826,8 @@ void GConsole::Debug (const char* message, ...) {
 			OutputDebugStringA(string);
 			delete [] string;
 		}
-#else
-#if PLATFORM_WEB
-		printf(message, args); // Webassembly seems to have problems with vprint* functions
-#else
+#endif
 		vprintf(message, args);
-#endif
-#endif
 		va_end(args);
 	}
 #endif
