@@ -7,8 +7,8 @@ static GRect					_PREFERRED_RECT	(0, 0, 1280, 720);
 static int_t					_FPS		    = 60;
 static int_t					_ARG_C			= 0;
 static char**					_ARG_V			= NULL;
-id<MTLDevice>					_DEVICE = nil;
-id<MTLRenderCommandEncoder>		_RENDER = nil;
+id<MTLDevice>					_DEVICE			= nil; // Non-static to allow for extern access from GImage
+id<MTLRenderCommandEncoder>		_RENDER			= nil; // Non-static to allow for extern access from GImage
 static GMatrix32_4x4			_MODEL_MATRIX;
 static GMatrix32_4x4			_PROJECTION_MATRIX;
 
