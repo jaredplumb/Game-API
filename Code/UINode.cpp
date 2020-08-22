@@ -386,6 +386,7 @@ void UINode::_Root::DrawCallback () {
 			if(i->second->_exit && i->second->SendExit()) {
 				delete i->second;
 				i = _ROOT->nodes.erase(i);
+				i--;
 			} else {
 				i->second->SendDraw();
 				i++;
