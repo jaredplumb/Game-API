@@ -188,12 +188,13 @@ enum vkey_t {
 
 // C includes
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
+#include <time.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <pthread.h>
 #include <sys/types.h>
-#include <time.h>
 
 // C++ includes
 #include <list>
