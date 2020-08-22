@@ -4,23 +4,33 @@
 static GRect			_RECT			(0, 0, 1280, 720);
 static GRect			_SAFE_RECT		(0, 0, 1280, 720);
 static GRect			_PREFERRED_RECT	(0, 0, 1280, 720);
-static int_t			_FPS		    = -1; // Call the draw function as fast as the browser prefers
+static int_t			_FPS		    = 60;
 static int_t			_ARG_C			= 0;
 static char**			_ARG_V			= NULL;
 static EGLDisplay		_DISPLAY		= NULL;
 static EGLSurface		_SURFACE		= NULL;
 static EGLContext		_CONTEXT		= NULL;
 static GLuint			_PROGRAM		= 0;
+static GLint			_SHADER_MATRIX	= 0;
+GLint					_SHADER_XY		= 0; // Non-static to allow for extern access from GImage
+GLint					_SHADER_RGBA	= 0; // Non-static to allow for extern access from GImage
+GLint					_SHADER_UV		= 0; // Non-static to allow for extern access from GImage
+static GLint			_SHADER_TEXTURE	= 0;
 static GMatrix32_4x4	_MODEL_MATRIX;
 static GMatrix32_4x4	_PROJECTION_MATRIX;
 
 
 
-
-
-
 static void _MAIN_LOOP (void* arg) {
 	eglMakeCurrent(_DISPLAY, _SURFACE, _SURFACE, _CONTEXT);
+	glViewport(0, 0, _RECT.width, _RECT.height);
+#if DEBUG
+	glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+#else
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+#endif
+	glClear(GL_COLOR_BUFFER_BIT);
+	glUseProgram(_PROGRAM);
 	GSystem::MatrixSetModelDefault();
 	GSystem::MatrixSetProjectionDefault();
 	GSystem::MatrixUpdate();
@@ -28,9 +38,72 @@ static void _MAIN_LOOP (void* arg) {
 	eglSwapBuffers(_DISPLAY, _SURFACE);
 }
 
+static EM_BOOL _MOUSE_DOWN_CALLBACK (int eventType, const EmscriptenMouseEvent* mouseEvent, void* userData) {
+	GSystem::RunMouseCallbacks((int_t)mouseEvent->targetX, (int_t)mouseEvent->targetY, (int_t)mouseEvent->buttons - 1);
+	GSystem::RunTouchCallbacks((int_t)mouseEvent->targetX, (int_t)mouseEvent->targetY);
+	return true;
+}
 
+static EM_BOOL _MOUSE_UP_CALLBACK (int eventType, const EmscriptenMouseEvent* mouseEvent, void* userData) {
+	GSystem::RunMouseUpCallbacks((int_t)mouseEvent->targetX, (int_t)mouseEvent->targetY, (int_t)mouseEvent->buttons - 1);
+	GSystem::RunTouchUpCallbacks((int_t)mouseEvent->targetX, (int_t)mouseEvent->targetY);
+	return true;
+}
 
+static EM_BOOL _MOUSE_MOVE_CALLBACK (int eventType, const EmscriptenMouseEvent* mouseEvent, void* userData) {
+	if(mouseEvent->buttons > 0) {
+		GSystem::RunMouseDragCallbacks((int_t)mouseEvent->targetX, (int_t)mouseEvent->targetY, (int_t)mouseEvent->buttons - 1);
+		GSystem::RunTouchMoveCallbacks((int_t)mouseEvent->targetX, (int_t)mouseEvent->targetY);
+	} else {
+		GSystem::RunMouseMoveCallbacks((int_t)mouseEvent->targetX, (int_t)mouseEvent->targetY);
+	}
+	return true;
+}
 
+static EM_BOOL _MOUSE_WHEEL_CALLBACK (int eventType, const EmscriptenWheelEvent* wheelEvent, void* userData) {
+	GSystem::RunMouseWheelCallbacks((float_t)wheelEvent->deltaX, (float_t)wheelEvent->deltaY);
+	return true;
+}
+
+static EM_BOOL _KEY_DOWN_CALLBACK (int eventType, const EmscriptenKeyboardEvent* keyEvent, void* userData) {
+	// TODO: These do not work yet, but should probably be evaluated with the Mac and Windows versions
+	if(keyEvent->repeat == false)
+		GSystem::RunKeyCallbacks((vkey_t)keyEvent->keyCode);
+	//if([[theEvent characters] length] > 0 && isprint((int)[[theEvent characters] UTF8String][0]))
+	//	GSystem::RunASCIICallbacks((char)[[theEvent characters] UTF8String][0]);
+	return false;
+}
+
+static EM_BOOL _KEY_UP_CALLBACK (int eventType, const EmscriptenKeyboardEvent* keyEvent, void* userData) {
+	// TODO: These do not work yet, but should probably be evaluated with the Mac and Windows versions
+	if(keyEvent->repeat == false)
+		GSystem::RunKeyUpCallbacks((vkey_t)keyEvent->keyCode);
+	return false;
+}
+
+static EM_BOOL _TOUCH_START_CALLBACK (int eventType, const EmscriptenTouchEvent* touchEvent, void* userData) {
+	for(int i = 0; i < touchEvent->numTouches; i++)
+		GSystem::RunTouchCallbacks((int_t)touchEvent->touches[i].targetX, (int_t)touchEvent->touches[i].targetY);
+	return true;
+}
+
+static EM_BOOL _TOUCH_MOVED_CALLBACK (int eventType, const EmscriptenTouchEvent* touchEvent, void* userData) {
+	for(int i = 0; i < touchEvent->numTouches; i++)
+		GSystem::RunTouchMoveCallbacks((int_t)touchEvent->touches[i].targetX, (int_t)touchEvent->touches[i].targetY);
+	return true;
+}
+
+static EM_BOOL _TOUCH_END_CALLBACK (int eventType, const EmscriptenTouchEvent* touchEvent, void* userData) {
+	for(int i = 0; i < touchEvent->numTouches; i++)
+		GSystem::RunTouchUpCallbacks((int_t)touchEvent->touches[i].targetX, (int_t)touchEvent->touches[i].targetY);
+	return true;
+}
+
+static EM_BOOL _TOUCH_CANCEL_CALLBACK (int eventType, const EmscriptenTouchEvent* touchEvent, void* userData) {
+	for(int i = 0; i < touchEvent->numTouches; i++)
+		GSystem::RunTouchUpCallbacks((int_t)touchEvent->touches[i].targetX, (int_t)touchEvent->touches[i].targetY);
+	return true;
+}
 
 
 
@@ -62,6 +135,7 @@ uint64 GSystem::GetMilliseconds () {
 	struct timespec ts;
     timespec_get(&ts, TIME_UTC);
     return (uint64)ts.tv_sec * 1000L + (uint64)ts.tv_nsec;
+	//return (uint64)emscripten_get_now(); // Not sure if timespec should be replaced with emscripten_get_now
 }
 
 uint64 GSystem::GetMicroseconds () {
@@ -77,7 +151,7 @@ uint64 GSystem::GetNanoseconds () {
 }
 
 void GSystem::SetDefaultWD () {
-	chdir("Resources/");
+	// This does nothing for web because the files must be preloaded
 }
 
 
@@ -101,14 +175,12 @@ void GSystem::RunPreferredArgs (int_t argc, char* argv[]) {
 
 
 
-static GLuint _LOAD_SHADER ( GLenum type, const char *shaderSrc )
-{
+static GLuint _LOAD_SHADER ( GLenum type, const char *shaderSrc ) {
    GLuint shader;
    GLint compiled;
    
    // Create the shader object
    shader = glCreateShader ( type );
-
    if ( shader == 0 )
    	return 0;
 
@@ -121,14 +193,12 @@ static GLuint _LOAD_SHADER ( GLenum type, const char *shaderSrc )
    // Check the compile status
    glGetShaderiv ( shader, GL_COMPILE_STATUS, &compiled );
 
-   if ( !compiled ) 
-   {
+   if ( !compiled ) {
       GLint infoLen = 0;
 
       glGetShaderiv ( shader, GL_INFO_LOG_LENGTH, &infoLen );
       
-      if ( infoLen > 1 )
-      {
+      if ( infoLen > 1 ) {
          char* infoLog = (char*)malloc (sizeof(char) * infoLen );
 
          glGetShaderInfoLog ( shader, infoLen, NULL, infoLog );
@@ -142,18 +212,12 @@ static GLuint _LOAD_SHADER ( GLenum type, const char *shaderSrc )
    }
 
    return shader;
-
 }
 
 
 
 
 int_t GSystem::Run () {
-	
-	GSystem::SetDefaultWD();
-	char cwd[PATH_MAX] = "";
-	getcwd(cwd, PATH_MAX);
-	GConsole::Debug("WD: %s\n", cwd);
 	
 	_DISPLAY = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	if(_DISPLAY == EGL_NO_DISPLAY) {
@@ -220,27 +284,44 @@ int_t GSystem::Run () {
 	EM_ASM(Module['canvas'].style.backgroundColor = 'green';);
 #endif
 	
+	// Add callbacks for mouse, keyboard, and touch events
+	emsResult = emscripten_set_mousedown_callback("#canvas", NULL, true, _MOUSE_DOWN_CALLBACK);
+	emsResult = emscripten_set_mouseup_callback("#canvas", NULL, true, _MOUSE_UP_CALLBACK);
+	emsResult = emscripten_set_mousemove_callback("#canvas", NULL, true, _MOUSE_MOVE_CALLBACK);
+	emsResult = emscripten_set_wheel_callback("#canvas", NULL, true, _MOUSE_WHEEL_CALLBACK);
+	emsResult = emscripten_set_keydown_callback("#canvas", NULL, true, _KEY_DOWN_CALLBACK);
+	emsResult = emscripten_set_keyup_callback("#canvas", NULL, true, _KEY_UP_CALLBACK);
+	emsResult = emscripten_set_touchstart_callback("#canvas", NULL, true, _TOUCH_START_CALLBACK);
+	emsResult = emscripten_set_touchmove_callback("#canvas", NULL, true, _TOUCH_MOVED_CALLBACK);
+	emsResult = emscripten_set_touchend_callback("#canvas", NULL, true, _TOUCH_END_CALLBACK);
+	emsResult = emscripten_set_touchcancel_callback("#canvas", NULL, true, _TOUCH_CANCEL_CALLBACK);
 	
-	//EMSCRIPTEN_RESULT ret = emscripten_set_click_callback("#canvas", 0, 1, mouse_callback);
-	//ret = emscripten_set_wheel_callback("#canvas", 0, 1, wheel_callback);
+	// These might be needed for the key events, but for now I am moving to other events
+	//EM_ASM(Module['canvas'].tabindex = '1';);
+	//EM_ASM(Module['canvas'].focus(););
 	
-	
-	
-	// https://learnopengl.com/Getting-started/Textures
 	
 	const char* vertexString = 
-	"attribute vec4 vPosition;    \n"
-	"void main()                  \n"
-	"{                            \n"
-	"	gl_Position = vPosition;  \n"
-	"}                            \n";
+	"uniform mat4 u_matrix;\n"
+	"attribute vec2 in_xy;\n"
+	"attribute vec4 in_rgba;\n"
+	"attribute vec2 in_uv;\n"
+	"varying vec4 out_rgba;\n"
+	"varying vec2 out_uv;\n"
+	"void main() {\n"
+	"	gl_Position = u_matrix * vec4(in_xy.xy, 0, 1);\n"
+	"	out_rgba = in_rgba;\n"
+	"	out_uv = in_uv;\n"
+	"}\n";
 	
 	const char* fragmentString = 
-	"precision mediump float;\n"\
-	"void main()                                  \n"
-	"{                                            \n"
-	"	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);  \n"
-	"}                                            \n";
+	"precision mediump float;\n"
+	"varying vec4 out_rgba;\n"
+	"varying vec2 out_uv;\n"
+	"uniform sampler2D u_texture;\n"
+	"void main() {\n"
+	"	gl_FragColor = out_rgba * texture2D(u_texture, out_uv);\n"
+	"}\n";
 	
 	_PROGRAM = glCreateProgram();
 	if(_PROGRAM == 0) {
@@ -254,29 +335,32 @@ int_t GSystem::Run () {
 	GLuint fragmentShader = _LOAD_SHADER(GL_FRAGMENT_SHADER, fragmentString);
 	glAttachShader(_PROGRAM, fragmentShader);
 	
-	glBindAttribLocation(_PROGRAM, 0, "vPosition");
+	//glBindAttribLocation(_PROGRAM, 0, "vPosition");
 	glLinkProgram(_PROGRAM);
-	
 	
 	// Setup remaining OpenGL functions
 	glViewport(0, 0, _RECT.width, _RECT.height);
-	//glEnableClientState(GL_VERTEX_ARRAY); // -s LEGACY_GL_EMULATION=1
-	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE0);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//glOrthof(0.0f, (float)_RECT.width, (float)_RECT.height, 0.0f, -32768.0f, 32768.0f);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
+	
+	// Setup OpenGL Shaders
 	glUseProgram(_PROGRAM);
+	_SHADER_MATRIX = glGetUniformLocation(_PROGRAM, "u_matrix");
+	_SHADER_XY = glGetAttribLocation(_PROGRAM, "in_xy");
+	_SHADER_RGBA = glGetAttribLocation(_PROGRAM, "in_rgba");
+	_SHADER_UV = glGetAttribLocation(_PROGRAM, "in_uv");
+	_SHADER_TEXTURE = glGetUniformLocation(_PROGRAM, "u_texture");
+	glUniform1i(_SHADER_TEXTURE, 0);
 	
 	// Run the main event loop
 	emscripten_set_main_loop_arg(_MAIN_LOOP, NULL, _FPS, 1);
 	
 	// These are actually never reached, but this is how cleanup is handled
+	glDeleteShader(vertexShader);
+	vertexShader(fragmentShader);
+	glDeleteProgram(_PROGRAM);
 	eglMakeCurrent(_DISPLAY, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	eglDestroyContext(_DISPLAY, _CONTEXT);
 	eglDestroySurface(_DISPLAY, _SURFACE);
@@ -331,11 +415,11 @@ void GSystem::MatrixRotateProjection (float_t degrees) {
 }
 
 void GSystem::MatrixUpdate () {
-	//if(_RENDER != nil) {
-	//	static GMatrix32_4x4 MATRIX;
-	//	MATRIX = _PROJECTION_MATRIX * _MODEL_MATRIX;
-	//	[_RENDER setVertexBytes:&MATRIX length:sizeof(MATRIX) atIndex:1];
-	//}
+	if(_PROGRAM != 0) {
+		static GMatrix32_4x4 MATRIX;
+		MATRIX = _PROJECTION_MATRIX * _MODEL_MATRIX;
+		glUniformMatrix4fv(_SHADER_MATRIX, 1, GL_FALSE, &MATRIX.numbers[0][0]);
+	}
 }
 
 #endif // PLATFORM_WEB
