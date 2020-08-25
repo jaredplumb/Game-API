@@ -359,7 +359,7 @@ int_t GSystem::Run () {
 	
 	// These are actually never reached, but this is how cleanup is handled
 	glDeleteShader(vertexShader);
-	vertexShader(fragmentShader);
+	glDeleteShader(fragmentShader);
 	glDeleteProgram(_PROGRAM);
 	eglMakeCurrent(_DISPLAY, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	eglDestroyContext(_DISPLAY, _CONTEXT);
