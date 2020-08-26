@@ -98,6 +98,9 @@
 #include <map>
 #include <vector>
 
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+
 // Base data types
 typedef ssize_t				int_t;
 typedef size_t				uint_t;
@@ -195,6 +198,7 @@ enum vkey_t {
 #include <dirent.h>
 #include <pthread.h>
 #include <sys/types.h>
+#include <assert.h>
 
 // C++ includes
 #include <list>
@@ -206,6 +210,8 @@ enum vkey_t {
 #include <emscripten/html5.h>
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 
 // Base data types
 typedef ssize_t				int_t;
