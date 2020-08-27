@@ -9,8 +9,13 @@
 // automatically upon exit of the application.  If there is a long pause accessing the first 
 // audio, just create a dummy audio to turn on the engine.
 
+// GSound only supports wav files.  Use the GMusic class for other file formats and streaming buffers
+
 class GSound {
 public:
+	static void Startup ();
+	static void Shutdown ();
+	
 	class Resource;
 	
 	GSound ();
@@ -25,9 +30,7 @@ public:
 	void Play ();
 	void Stop ();
 	void Pause ();
-	bool IsPlaying (); // Returns if the sound is playing, but may return false if called immediately after calling play due to the background thread
-	
-	static void Startup ();
+	bool IsPlaying ();
 	
 	class Resource {
 	public:

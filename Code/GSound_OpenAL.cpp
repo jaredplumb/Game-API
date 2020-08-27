@@ -2,131 +2,73 @@
 #if PLATFORM_MACOSX || PLATFORM_IOS || PLATFORM_WEB
 
 
+static ALCdevice *		_AL_DEVICE		= NULL;
+static ALCcontext *		_AL_CONTEXT		= NULL;
+
 
 struct GSound::_PrivateData {
-	// Commented out for future reference if OpenAL becomes deprecated
-	//AVAudioPlayer* player;
 	ALuint buffer;
 	ALuint source;
-	
 };
 
 
-
-static ALCdevice *			_alDevice						= NULL;
-static ALCcontext *			_alContext						= NULL;
-
-
-
-
-//static void _AudioSessionInterruptionListener (void * inClientData, UInt32 inInterruptionState) {
-//	switch(inInterruptionState) {
-//	case kAudioSessionBeginInterruption:
-//		if(_alContext) alcMakeContextCurrent(NULL);
-//		break;
-//	case kAudioSessionEndInterruption:
-//		AudioSessionSetActive(true);
-//		if(_alContext) alcMakeContextCurrent(_alContext);
-//		break;
-//	}
-//}
-
-
-
-
-
-class _GSoundEngine {
-public:
+// Startup and Shutdown could be re-used in other classes such as GMusic to allow for complete self-encapsulation
+void GSound::Startup () {
 	
+	// If already open and created do nothing
+	if(_AL_DEVICE && _AL_CONTEXT)
+		return;
 	
-	static void Startup () {
-		
-		// Startup the Audio Session //
-		
-		//AudioSessionInitialize(NULL, NULL, _AudioSessionInterruptionListener, NULL);
-		
-		//UInt32 iPodIsPlaying;
-		//UInt32 size = sizeof(iPodIsPlaying);
-		//AudioSessionGetProperty(kAudioSessionProperty_OtherAudioIsPlaying, &size, &iPodIsPlaying);
-		
-		//UInt32 category = (iPodIsPlaying) ? kAudioSessionCategory_AmbientSound : kAudioSessionCategory_SoloAmbientSound;
-		//AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(category), &category);
-		
-		//AudioSessionSetActive(true);
-		
-		static bool once = false;
-		if(once)
+	// Use a context and device if they already exist
+	_AL_CONTEXT = alcGetCurrentContext();
+	if(_AL_CONTEXT) {
+		_AL_DEVICE = alcGetContextsDevice(_AL_CONTEXT);
+		if(_AL_DEVICE)
 			return;
-		once = true;
-		
-		// Startup OpenAL //
-		
-		int major, minor;
-		alcGetIntegerv(NULL, ALC_MAJOR_VERSION, 1, &major);
-		alcGetIntegerv(NULL, ALC_MINOR_VERSION, 1, &minor);
-
-		//assert(major == 1);
-
-		printf("ALC version: %i.%i\n", major, minor);
-		printf("Default device: %s\n", alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER));
-		
-		
-		// Open the device using the defaults
-		_alDevice = alcOpenDevice(NULL);
-		if(_alDevice) {
-			// Create an audio context using the defaults
-			_alContext = alcCreateContext(_alDevice, NULL);
-			if(_alContext) {
-				// Set the current context, this can take a few seconds
-				alcMakeContextCurrent(_alContext);
-			} else {
-				GConsole::Print("Could not create OpenAL context! (%x)\n", alGetError());
-				alcCloseDevice(_alDevice);
-				_alDevice = NULL;
-			}
+	}
+	
+	// Open and create a new OpenAL devine and context
+	_AL_DEVICE = alcOpenDevice(NULL);
+	if(_AL_DEVICE) {
+		_AL_CONTEXT = alcCreateContext(_AL_DEVICE, NULL);
+		if(_AL_CONTEXT) {
+			alcMakeContextCurrent(_AL_CONTEXT);
 		} else {
-			GConsole::Print("Could not open OpenAL device! (%x)\n", alGetError());
+			GConsole::Print("Could not create OpenAL context! (%s)\n", alGetString(alGetError()));
+			alcCloseDevice(_AL_DEVICE);
+			_AL_DEVICE = NULL;
+			return;
 		}
-		
-		printf("OpenAL version: %s\n", alGetString(AL_VERSION));
-		printf("OpenAL vendor: %s\n", alGetString(AL_VENDOR));
-		printf("OpenAL renderer: %s\n", alGetString(AL_RENDERER));
-		
-		ALfloat listenerPos[] = {0.0, 0.0, 1.0};
-		ALfloat listenerVel[] = {0.0, 0.0, 0.0};
-		ALfloat listenerOri[] = {0.0, 0.0, -1.0, 0.0, 1.0, 0.0};
-
-		alListenerfv(AL_POSITION, listenerPos);
-		alListenerfv(AL_VELOCITY, listenerVel);
-		alListenerfv(AL_ORIENTATION, listenerOri);
-		
-		ALfloat volume;
-		alGetListenerf(AL_GAIN, &volume);
-		assert(volume == 1.0);
-		alListenerf(AL_GAIN, 0.0);
-		alGetListenerf(AL_GAIN, &volume);
-		assert(volume == 0.0);
-		alListenerf(AL_GAIN, 1.0f); // reset gain to default
-		
+	} else {
+		GConsole::Print("Could not open OpenAL device! (%s)\n", alGetString(alGetError()));
+		return;
 	}
 	
-	~_GSoundEngine () {
-		if(_alContext) {
-			alcDestroyContext(_alContext);
-			_alContext = NULL;
-		}
-		
-		if(_alDevice) {
-			alcCloseDevice(_alDevice);
-			_alDevice = NULL;
-		}
+	// Set the default listen position and volume
+	ALfloat listenerPos[] = {0.0, 0.0, 1.0};
+	ALfloat listenerVel[] = {0.0, 0.0, 0.0};
+	ALfloat listenerOri[] = {0.0, 0.0, -1.0, 0.0, 1.0, 0.0};
+	alListenerfv(AL_POSITION, listenerPos);
+	alListenerfv(AL_VELOCITY, listenerVel);
+	alListenerfv(AL_ORIENTATION, listenerOri);
+	alListenerf(AL_GAIN, 1.0f);
+	
+	// Add a shutdown callback to automatically shutdown at close
+	GSystem::NewShutdownCallback(Shutdown);
+}
+
+void GSound::Shutdown () {
+	
+	if(_AL_CONTEXT) {
+		alcDestroyContext(_AL_CONTEXT);
+		_AL_CONTEXT = NULL;
 	}
 	
-	
-};
-static _GSoundEngine _ENGINE;
-
-
+	if(_AL_DEVICE) {
+		alcCloseDevice(_AL_DEVICE);
+		_AL_DEVICE = NULL;
+	}
+}
 
 GSound::GSound ()
 :	_data(NULL)
@@ -152,97 +94,68 @@ GSound::~GSound () {
 }
 
 bool GSound::New (const Resource& resource) {
-	_GSoundEngine::Startup();
+	Startup();
 	
 	Delete();
+	
+	// Not a WAV file because there is no header
+	if(resource.bufferSize < 44)
+		return false;
 	
 	_data = new _PrivateData;
 	_data->buffer = 0;
 	_data->source = 0;
 	
-	// TODO: Make sure the resource.buffer has at least X amount of bytes before continuing
+	ALsizei offset = 22; // Ignore up to the channels
 	
-	alGetError();
-	
-	unsigned offset = 12; // ignore the RIFF header
-	offset += 8; // ignore the fmt header
-	offset += 2; // ignore the format type
-	
-	unsigned channels = resource.buffer[offset + 1] << 8;
+	ALint channels = (resource.buffer[offset + 1] << 8);
 	channels |= resource.buffer[offset];
 	offset += 2;
-	printf("Channels: %u\n", channels);
 	
 	ALsizei frequency = resource.buffer[offset + 3] << 24;
 	frequency |= resource.buffer[offset + 2] << 16;
 	frequency |= resource.buffer[offset + 1] << 8;
 	frequency |= resource.buffer[offset];
 	offset += 4;
-	printf("Frequency: %u\n", frequency);
 
-	offset += 6; // ignore block size and bps
+	offset += 6; // Ignore up to bit size
 
-	unsigned bits = resource.buffer[offset + 1] << 8;
+	ALint bits = resource.buffer[offset + 1] << 8;
 	bits |= resource.buffer[offset];
 	offset += 2;
-	printf("Bits: %u\n", bits);
 	
 	ALenum format = 0;
-	if(bits == 8)
-	{
-	  if(channels == 1)
-		format = AL_FORMAT_MONO8;
-	  else if(channels == 2)
-		format = AL_FORMAT_STEREO8;
-	}
-	else if(bits == 16)
-	{
-	  if(channels == 1)
-		format = AL_FORMAT_MONO16;
-	  else if(channels == 2)
-		format = AL_FORMAT_STEREO16;
+	if(bits == 8) {
+		if(channels == 1)
+			format = AL_FORMAT_MONO8;
+		else if(channels == 2)
+			format = AL_FORMAT_STEREO8;
+	} else if(bits == 16) {
+		if(channels == 1)
+			format = AL_FORMAT_MONO16;
+		else if(channels == 2)
+			format = AL_FORMAT_STEREO16;
 	}
 	
-	offset += 8; // ignore the data chunk
-
-	printf("Start offset: %d\n", offset);
-
+	offset = 44; // Offset to the actual data
+	
 	alGenBuffers(1, &_data->buffer);
-	assert(_data->buffer != 0);
-	alBufferData(_data->buffer, format, resource.buffer + offset, (ALsizei)resource.bufferSize - (ALsizei)offset, frequency);
-	ALenum error;
-	if ((error = alGetError()) != AL_NO_ERROR)
-		printf("%s\n", alGetString(error));
+	if(_data->buffer == 0) {
+		GConsole::Debug("Could not create OpenAL audio buffer! (%s)\n", alGetString(alGetError()));
+		return false;
+	}
 	
-	ALint val;
-	alGetBufferi(_data->buffer, AL_FREQUENCY, &val);
-	assert(val == frequency);
-	alGetBufferi(_data->buffer, AL_SIZE, &val);
-	assert(val == (ALsizei)resource.bufferSize - offset);
-	alGetBufferi(_data->buffer, AL_BITS, &val);
-	assert(val == bits);
-	alGetBufferi(_data->buffer, AL_CHANNELS, &val);
-	assert(val == channels);
+	alBufferData(_data->buffer, format, resource.buffer + offset, (ALsizei)resource.bufferSize - offset, frequency);
+	//if ((error = alGetError()) != AL_NO_ERROR)
+	//	printf("%s\n", alGetString(error));
 	
 	alGenSources(1, &_data->source);
-	assert(alIsSource(_data->source));
+	if(_data->source == 0) {
+		GConsole::Debug("Could not create OpenAL audio source! (%s)\n", alGetString(alGetError()));
+		return false;
+	}
 	
 	alSourcei(_data->source, AL_BUFFER, _data->buffer);
-	
-	ALint state;
-	alGetSourcei(_data->source, AL_SOURCE_STATE, &state);
-	assert(state == AL_INITIAL); // TODO: Use this to get the state of the current audio (playing, stopped, etc)
-	
-	//alSourcef(_data->source, AL_REFERENCE_DISTANCE, 50.0f);
-	//alSourcef(_source, AL_GAIN, (float)sound.volume / 255.0f);
-	
-	
-	// Commented out for future reference if OpenAL becomes deprecated
-	//NSError* error;
-	//data->player = [[AVAudioPlayer alloc] initWithData:[NSData dataWithBytes:resource.buffer length:resource.bufferSize] error:&error];
-	//if(error != nil || _data->player == nil)
-	//	return false;
-	//[_data->player prepareToPlay];
 	
 	return true;
 }
@@ -253,55 +166,37 @@ bool GSound::New (const GString& resource) {
 
 void GSound::Delete () {
 	if(_data) {
+		if(_data->source != 0)
+			alDeleteSources(1, &_data->source);
+		if(_data->buffer != 0)
+			alDeleteBuffers(1, &_data->buffer);
 		delete _data;
 		_data = NULL;
 	}
 }
 
 void GSound::Play () {
-	
-	alSourcePlay(_data->source);
-	ALint state;
-	alGetSourcei(_data->source, AL_SOURCE_STATE, &state);
-	assert(state == AL_PLAYING);
-	
-	
-	
-	// Commented out for future reference if OpenAL becomes deprecated
-	//if(_data != NULL && _data->player != nil)
-	//	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-	//		[_data->player play];
-	//		[_data->player prepareToPlay];
-	//	});
+	if(_data && _data->source != 0)
+		alSourcePlay(_data->source);
 }
 
 void GSound::Stop () {
-	// Commented out for future reference if OpenAL becomes deprecated
-	//if(_data != NULL && _data->player != nil)
-	//	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-	//		[_data->player stop];
-	//		[_data->player prepareToPlay];
-	//	});
+	if(_data && _data->source != 0)
+		alSourceRewind(_data->source);
 }
 
 void GSound::Pause () {
-	// Commented out for future reference if OpenAL becomes deprecated
-	//if(_data != NULL && _data->player != nil)
-	//	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-	//		[_data->player pause];
-	//		[_data->player prepareToPlay];
-	//	});
+	if(_data && _data->source != 0)
+		alSourcePause(_data->source);
 }
 
 bool GSound::IsPlaying () {
+	if(_data && _data->source != 0) {
+		ALint state;
+		alGetSourcei(_data->source, AL_SOURCE_STATE, &state);
+		return state == AL_PLAYING;
+	}
 	return false;
-	
-	// Commented out for future reference if OpenAL becomes deprecated
-	//return _data != NULL ? [_data->player isPlaying] : false;
-}
-
-void GSound::Startup () {
-	_GSoundEngine::Startup();
 }
 
 GSound::Resource::Resource ()
@@ -332,15 +227,6 @@ bool GSound::Resource::New (const GString& resource) {
 
 bool GSound::Resource::NewFromFile (const GString& resource) {
 	Delete();
-	//NSData* data = [NSData dataWithContentsOfFile:[NSString stringWithUTF8String:resource]];
-	//if(data == nil)
-	//	return false;
-	//bufferSize = [data length];
-	//buffer = new uint8[bufferSize];
-	//[data getBytes:buffer length:bufferSize];
-	//return true;
-	
-	// Maybe IMG_Load for Web
 	
 	GFile file(resource);
 	if(file.IsOpen() == false)
