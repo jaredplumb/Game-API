@@ -244,6 +244,12 @@ int_t GSystem::Run () {
 	EGLConfig config;
 	EGLint numConfigs;
 	
+	result = eglGetConfigs(_DISPLAY, NULL, 0, &numConfigs);
+	if(result != EGL_TRUE) {
+		GConsole::Print("Could not get number of OpenGL configurations!\n");
+		return EXIT_FAILURE;
+	}
+	
 	result = eglChooseConfig(_DISPLAY, attribs, &config, 1, &numConfigs);
 	if(result != EGL_TRUE) {
 		GConsole::Print("Could not choose OpenGL configuration!\n");
@@ -271,6 +277,10 @@ int_t GSystem::Run () {
 		GConsole::Print("Could not make OpenGL display, surface, and context current!\n");
 		return EXIT_FAILURE;
 	}
+	
+#if DEBUG
+	GConsole::Debug("OpenGL Vendor=%s Renderer=%s\n", (const char*)glGetString(GL_VENDOR), (const char*)glGetString(GL_RENDERER));
+#endif
 	
 	_RECT = _PREFERRED_RECT;
 	_SAFE_RECT = _PREFERRED_RECT;
