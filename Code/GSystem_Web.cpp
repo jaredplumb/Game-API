@@ -4,7 +4,7 @@
 static GRect			_RECT			(0, 0, 1280, 720);
 static GRect			_SAFE_RECT		(0, 0, 1280, 720);
 static GRect			_PREFERRED_RECT	(0, 0, 1280, 720);
-static int_t			_FPS		    = 60;
+static int_t			_FPS		    = 0; // Setting the default to 0 allows the engine to run at the browsers preference
 static int_t			_ARG_C			= 0;
 static char**			_ARG_V			= NULL;
 static EGLDisplay		_DISPLAY		= NULL;
@@ -21,7 +21,13 @@ static GMatrix32_4x4	_PROJECTION_MATRIX;
 
 
 
-static void _MAIN_LOOP (void* arg) {
+
+static void _MAIN_LOOP () {
+	
+	static double ELAPSE = 0;
+	_FPS = (int_t)(1000.0 / (emscripten_get_now() - ELAPSE));
+	ELAPSE = emscripten_get_now();
+	
 	eglMakeCurrent(_DISPLAY, _SURFACE, _SURFACE, _CONTEXT);
 	glViewport(0, 0, _RECT.width, _RECT.height);
 #if DEBUG
@@ -110,6 +116,8 @@ static EM_BOOL _TOUCH_CANCEL_CALLBACK (int eventType, const EmscriptenTouchEvent
 
 
 
+
+
 GRect GSystem::GetRect () {
 	return _RECT;
 }
@@ -123,7 +131,33 @@ GRect GSystem::GetPreferredRect () {
 }
 
 int_t GSystem::GetFPS () {
-	return _FPS;
+	
+	//_FPS = EM_ASM_INT({
+	//	let fps = 0;
+	//	let elapse = 0.0;
+		
+	//	function step(timestamp) {
+			
+	//		if(elapse == 0.0)
+	//			elapse = timestamp;
+			
+	//		if(timestamp - elapse > 0.0)
+	//			fps = 1000.0 / (timestamp - elapse);
+			
+	//		if(fps == 0)
+	//			window.requestAnimationFrame(step);
+	//		else
+				//console.log(fps);
+	//			return fps;
+	//	}
+		
+	//  window.requestAnimationFrame(step);
+	//});
+	
+	//printf("%ld\n", _FPS);
+	
+	return _FPS > 0 ? _FPS : 60;
+	//return _FPS;
 }
 
 int_t GSystem::GetUniqueRef () {
@@ -132,22 +166,24 @@ int_t GSystem::GetUniqueRef () {
 }
 
 uint64 GSystem::GetMilliseconds () {
-	struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
-    return (uint64)ts.tv_sec * 1000L + (uint64)ts.tv_nsec;
-	//return (uint64)emscripten_get_now(); // Not sure if timespec should be replaced with emscripten_get_now
+	//struct timespec ts;
+	//timespec_get(&ts, TIME_UTC);
+	//return (uint64)ts.tv_sec * 1000L + (uint64)ts.tv_nsec;
+	return (uint64)emscripten_get_now();
 }
 
 uint64 GSystem::GetMicroseconds () {
-	struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
-    return (uint64)ts.tv_sec * 1000000L + (uint64)ts.tv_nsec;
+	//struct timespec ts;
+	//timespec_get(&ts, TIME_UTC);
+	//return (uint64)ts.tv_sec * 1000000L + (uint64)ts.tv_nsec;
+	return (uint64)(emscripten_get_now() * 1000.0);
 }
 
 uint64 GSystem::GetNanoseconds () {
-	struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
-    return (uint64)ts.tv_sec * 1000000000L + (uint64)ts.tv_nsec;
+	//struct timespec ts;
+	//timespec_get(&ts, TIME_UTC);
+	//return (uint64)ts.tv_sec * 1000000000L + (uint64)ts.tv_nsec;
+	return (uint64)(emscripten_get_now() * 1000000.0);
 }
 
 void GSystem::SetDefaultWD () {
@@ -365,7 +401,7 @@ int_t GSystem::Run () {
 	glUniform1i(_SHADER_TEXTURE, 0);
 	
 	// Run the main event loop
-	emscripten_set_main_loop_arg(_MAIN_LOOP, NULL, _FPS, 1);
+	emscripten_set_main_loop(_MAIN_LOOP, _FPS, true);
 	
 	// These are actually never reached, but this is how cleanup is handled
 	glDeleteShader(vertexShader);

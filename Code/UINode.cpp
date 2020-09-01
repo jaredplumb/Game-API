@@ -368,9 +368,11 @@ void UINode::_Root::ShutdownCallback () {
 void UINode::_Root::DrawCallback () {
 	
 	static uint64 FRAMES = 0;
+	static uint64 FPS = 0;
 	FRAMES++;
-	_ELAPSE = FRAMES * 1000 / GSystem::GetFPS() - _MILLISECONDS;
-	_MILLISECONDS = FRAMES * 1000 / GSystem::GetFPS();
+	FPS += GSystem::GetFPS();
+	_ELAPSE = FRAMES * 1000 / FPS - _MILLISECONDS;
+	_MILLISECONDS += FRAMES * 1000 / FPS;
 	
 	if(_AUTORUN_LIST) {
 		while(_AUTORUN_LIST->begin() != _AUTORUN_LIST->end()) {
@@ -386,7 +388,8 @@ void UINode::_Root::DrawCallback () {
 			if(i->second->_exit && i->second->SendExit()) {
 				delete i->second;
 				i = _ROOT->nodes.erase(i);
-				i--;
+				if(i != _ROOT->nodes.begin())
+					i--;
 			} else {
 				i->second->SendDraw();
 				i++;
