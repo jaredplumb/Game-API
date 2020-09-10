@@ -117,8 +117,16 @@ uint64 UINode::GetElapse () {
 // This random generator is from the BSD random, which is from:
 // "Random number generators: good ones are hard to find"
 // Park and Miller, Communications of the ACM, vol. 31, no. 10, October 1988, p. 1195.
+static uint32 _GET_SEED_RANDOM () {
+#if PLATFORM_WEB
+	return (uint32)(emscripten_random() * 1000000000.0f);
+#else
+	return (uint32)GSystem::GetMilliseconds() + 1;
+#endif
+}
+
 uint32 UINode::GetRandom (uint32 range) {
-	_RANDOM_SEED = (_RANDOM_SEED != 0) ? (16807 * (_RANDOM_SEED % 127773) - 2836 * (_RANDOM_SEED / 127773)) : ((uint32)GSystem::GetMilliseconds() + 1);
+	_RANDOM_SEED = (_RANDOM_SEED != 0) ? (16807 * (_RANDOM_SEED % 127773) - 2836 * (_RANDOM_SEED / 127773)) : _GET_SEED_RANDOM();
 	if((int32)_RANDOM_SEED <= 0)
 		_RANDOM_SEED += 0x7fffffff;
 	return range ? _RANDOM_SEED % range : _RANDOM_SEED % 1073741824;
@@ -133,7 +141,7 @@ uint32 UINode::GetRandomSeed () {
 }
 
 void UINode::SetRandomSeed (uint32 seed) {
-	_RANDOM_SEED = (seed != 0) ? (seed) : ((uint32)GSystem::GetMilliseconds() + 1);
+	_RANDOM_SEED = (seed != 0) ? (seed) : _GET_SEED_RANDOM();
 }
 
 void UINode::Run (const GString& name) {
