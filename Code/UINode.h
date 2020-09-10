@@ -89,7 +89,7 @@ private:
 	std::list<UINode*>	_children;
 	
 	struct _Root {
-		std::map<GString, UINode*> nodes;
+		std::list<UINode*> nodes;
 		
 		_Root ();
 		~_Root ();

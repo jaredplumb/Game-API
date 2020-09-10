@@ -332,7 +332,7 @@ UINode::_Root::_Root () {
 
 UINode::_Root::~_Root () {
 	while(nodes.begin() != nodes.end()) {
-		delete nodes.begin()->second;
+		delete (*(nodes.begin()));
 		nodes.erase(nodes.begin());
 	}
 }
@@ -342,7 +342,7 @@ void UINode::_Root::RunOnRoot (const GString& name) {
 	GConsole::Debug("- %s\n", (const char*)name);
 	if(_ROOT != NULL) {
 		UINode* node = NewNode(name);
-		if(node) _ROOT->nodes[name] = node;
+		if(node) _ROOT->nodes.push_back(node);
 	}
 	GConsole::Debug("----------------------------------------------------------------\n");
 }
@@ -384,14 +384,14 @@ void UINode::_Root::DrawCallback () {
 	}
 	
 	if(_ROOT) {
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); ) {
-			if(i->second->_exit && i->second->SendExit()) {
-				delete i->second;
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); ) {
+			if((*i)->_exit && (*i)->SendExit()) {
+				delete (*i);
 				i = _ROOT->nodes.erase(i);
 				if(i != _ROOT->nodes.begin())
 					i--;
 			} else {
-				i->second->SendDraw();
+				(*i)->SendDraw();
 				i++;
 			}
 		}
@@ -400,68 +400,68 @@ void UINode::_Root::DrawCallback () {
 
 void UINode::_Root::MouseCallback (int_t x, int_t y, int_t button) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendMouse(x - i->second->_rect.x, y - i->second->_rect.y, button);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendMouse(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
 }
 
 void UINode::_Root::MouseUpCallback (int_t x, int_t y, int_t button) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendMouseUp(x - i->second->_rect.x, y - i->second->_rect.y, button);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendMouseUp(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
 }
 
 void UINode::_Root::MouseMoveCallback (int_t x, int_t y) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendMouseMove(x - i->second->_rect.x, y - i->second->_rect.y);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendMouseMove(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
 
 void UINode::_Root::MouseDragCallback (int_t x, int_t y, int_t button) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendMouseDrag(x - i->second->_rect.x, y - i->second->_rect.y, button);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendMouseDrag(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
 }
 
 void UINode::_Root::MouseWheelCallback (float xdelta, float ydelta) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendMouseWheel(xdelta, ydelta);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendMouseWheel(xdelta, ydelta);
 }
 
 void UINode::_Root::KeyCallback (vkey_t key) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendKey(key);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendKey(key);
 }
 
 void UINode::_Root::KeyUpCallback (vkey_t key) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendKeyUp(key);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendKeyUp(key);
 }
 
 void UINode::_Root::ASCIICallback (char key) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendASCII(key);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendASCII(key);
 }
 
 void UINode::_Root::TouchCallback (int_t x, int_t y) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendTouch(x - i->second->_rect.x, y - i->second->_rect.y);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendTouch(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
 
 void UINode::_Root::TouchUpCallback (int_t x, int_t y) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendTouchUp(x - i->second->_rect.x, y - i->second->_rect.y);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendTouchUp(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
 
 void UINode::_Root::TouchMoveCallback (int_t x, int_t y) {
 	if(_ROOT)
-		for(std::map<GString, UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			i->second->SendTouchMove(x - i->second->_rect.x, y - i->second->_rect.y);
+		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
+			(*i)->SendTouchMove(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
 
 std::map<GString, UINode* (*) ()>*		UINode::_FACTORY_LIST = NULL;
