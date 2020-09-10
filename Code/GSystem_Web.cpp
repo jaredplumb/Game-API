@@ -131,33 +131,7 @@ GRect GSystem::GetPreferredRect () {
 }
 
 int_t GSystem::GetFPS () {
-	
-	//_FPS = EM_ASM_INT({
-	//	let fps = 0;
-	//	let elapse = 0.0;
-		
-	//	function step(timestamp) {
-			
-	//		if(elapse == 0.0)
-	//			elapse = timestamp;
-			
-	//		if(timestamp - elapse > 0.0)
-	//			fps = 1000.0 / (timestamp - elapse);
-			
-	//		if(fps == 0)
-	//			window.requestAnimationFrame(step);
-	//		else
-				//console.log(fps);
-	//			return fps;
-	//	}
-		
-	//  window.requestAnimationFrame(step);
-	//});
-	
-	//printf("%ld\n", _FPS);
-	
 	return _FPS > 0 ? _FPS : 60;
-	//return _FPS;
 }
 
 int_t GSystem::GetUniqueRef () {
@@ -166,23 +140,14 @@ int_t GSystem::GetUniqueRef () {
 }
 
 uint64 GSystem::GetMilliseconds () {
-	//struct timespec ts;
-	//timespec_get(&ts, TIME_UTC);
-	//return (uint64)ts.tv_sec * 1000L + (uint64)ts.tv_nsec;
 	return (uint64)emscripten_get_now();
 }
 
 uint64 GSystem::GetMicroseconds () {
-	//struct timespec ts;
-	//timespec_get(&ts, TIME_UTC);
-	//return (uint64)ts.tv_sec * 1000000L + (uint64)ts.tv_nsec;
 	return (uint64)(emscripten_get_now() * 1000.0);
 }
 
 uint64 GSystem::GetNanoseconds () {
-	//struct timespec ts;
-	//timespec_get(&ts, TIME_UTC);
-	//return (uint64)ts.tv_sec * 1000000000L + (uint64)ts.tv_nsec;
 	return (uint64)(emscripten_get_now() * 1000000.0);
 }
 
