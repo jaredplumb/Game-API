@@ -379,8 +379,8 @@ void UINode::_Root::DrawCallback () {
 	static uint64 FPS = 0;
 	FRAMES++;
 	FPS += GSystem::GetFPS();
-	_ELAPSE = FRAMES * 1000 / FPS - _MILLISECONDS;
-	_MILLISECONDS += FRAMES * 1000 / FPS;
+	_ELAPSE = FRAMES * 1000 / FPS;
+	_MILLISECONDS += _ELAPSE;
 	
 	if(_AUTORUN_LIST) {
 		while(_AUTORUN_LIST->begin() != _AUTORUN_LIST->end()) {
