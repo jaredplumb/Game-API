@@ -20,9 +20,15 @@ public:
 	bool New (const GString& resource);
 	void Delete ();
 	
-	int_t GetLineHeight () const; // Returns the full line used when rendering a font line
-	int_t GetBaseHeight () const; // Returns the height from the top to the base, where the font characters sit, some characters will go below the base
-	GRect GetRect (const GString& text) const; // Returns a rect containing the actual rendered pixels, x and y are offsets to the top left
+	/// Returns the full line used when rendering a font line
+	int_t GetLineHeight () const;
+	
+	/// Returns the height from the top to the base, where the font characters sit, some characters will go below the base
+	int_t GetBaseHeight () const;
+	
+	/// Returns a rect containing the actual rendered pixels, x and y are offsets to the top left
+	GRect GetRect (const GString& text) const;
+	
 	bool IsEmpty () const;
 	
 	void Draw (const GString& text, int_t x, int_t y, float alpha = 1.0f);

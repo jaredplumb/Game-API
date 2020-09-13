@@ -287,7 +287,7 @@ GRect GFont::GetRect (const GString& text) const {
 		}
 	}
 	
-	return GRect(x1, y1, x2 - x1, y2 - y1);
+	return GRect(x1, y1, x2, y2);
 }
 
 
