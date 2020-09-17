@@ -453,6 +453,8 @@ bool GImage::Resource::New (const GString& resource) {
 bool GImage::Resource::NewFromFile (const GString& resource) {
 	Delete();
 	
+	GConsole::Print("Reading images from file is not yet implemented for Game API with Web!\n");
+	
 	//CFStringRef string = CFStringCreateWithCString(NULL, resource, kCFStringEncodingUTF8);
 	//CFURLRef url = CFURLCreateWithFileSystemPath(NULL, string, kCFURLPOSIXPathStyle, false);
 	//CGImageSourceRef imageSource = CGImageSourceCreateWithURL(url, NULL);
@@ -484,11 +486,13 @@ bool GImage::Resource::NewFromFile (const GString& resource) {
 	//CGColorSpaceRelease(colorSpace);
 	//CGImageRelease(image);
 	
-	return true;
+	return false;
 }
 
 bool GImage::Resource::NewFromFileInMemory (void* resource, int_t size) {
 	Delete();
+	
+	GConsole::Print("Reading images from memory is not yet implemented for Game API with Web!\n");
 	
 	//CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8*)resource, (CFIndex)size, kCFAllocatorNull);
 	//CGImageSourceRef imageSource = CGImageSourceCreateWithData(data, NULL);
@@ -519,7 +523,7 @@ bool GImage::Resource::NewFromFileInMemory (void* resource, int_t size) {
 	//CGColorSpaceRelease(colorSpace);
 	//CGImageRelease(image);
 	
-	return true;
+	return false;
 }
 
 bool GImage::Resource::NewFromPackage (const GString& resource) {
