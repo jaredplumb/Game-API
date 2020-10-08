@@ -51,6 +51,10 @@ GRect UINode::GetSafeRect () const {
 	return GSystem::GetSafeRect().Offset(-_rect.x, -_rect.y);
 }
 
+GRect UINode::GetPreferredRect () const {
+	return GSystem::GetPreferredRect().Offset(-_rect.x, -_rect.y);
+}
+
 void UINode::SetRect (const GRect& rect) {
 	int_t x = _rect.x;
 	int_t y = _rect.y;

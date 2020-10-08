@@ -20,6 +20,7 @@ public:
 	GRect GetRectInParent () const;					// Returns the rect of this UINode, relative to the parent
 	GRect GetScreenRect () const;					// Returns the rect of the screen relative to self
 	GRect GetSafeRect () const;						// Returns the rect of the safe area relative to self
+	GRect GetPreferredRect () const;				// Returns the preferred rect relative to self
 	
 	void SetRect (const GRect& rect);				// Sets the rect of this node relative to the parent
 	void SetRectCenterInParent ();					// Centers this node in the parent, or safe area if parent is null
