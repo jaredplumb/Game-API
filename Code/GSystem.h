@@ -14,13 +14,13 @@
 class GSystem {
 public:
 	
-	/// Returns the system rect in pixels
+	/// Returns the system rect in pixels, which is the entire screen, including hidden pixels behind curved corners and screen notches
 	static GRect GetRect ();
 	
 	/// Returns the safe rect in pixels, which is the area with no obstructed visuals or interactions containing a minimum of the preferred size
 	static GRect GetSafeRect ();
 	
-	/// Returns the preferred rect  centered within the screen rect and then adjusted to fit within the safe rect
+	/// Returns the preferred rect centered within the screen rect and then adjusted to fit within the safe rect, the preferred rect has a width and height always equal to the preferred size set in RunPreferredSize
 	static GRect GetPreferredRect ();
 	
 	/// Returns the the current FPS.
