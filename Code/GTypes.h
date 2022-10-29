@@ -274,6 +274,10 @@ public:
 	static const uint32 BLACK = 0x000000ff;
 	static const uint32 WHITE = 0xffffffff;
 	static const uint32 CLEAR = 0x00000000;
+	static const uint32 RED = 0xff000000;
+	static const uint32 GREEN = 0x00ff0000;
+	static const uint32 BLUE = 0x0000ff00;
+	static const uint32 ALPHA = 0x000000ff;
 };
 
 
@@ -379,6 +383,7 @@ public:
 	inline bool IsPointInRect (int_t x_, int_t y_) const					{ return x_ >= x && y_ >= y && x_ <= (x + width) && y_ <= (y + height); }
 	inline bool IsCollision (const GRect& r) const							{ return x < (r.x + r.width) && y < (r.y + r.height) && (x + width) > r.x && (y + height) > r.y; }
 	inline bool IsCollision (int_t x_, int_t y_, int_t w, int_t h) const	{ return x < (x_ + w) && y < (y_ + h) && (x + width) > x_ && (y + height) > y_; }
+	inline GRect& Set (int_t x_, int_t y_, int_t w, int_t h)				{ x = x_; y = y_; width = w; height = h; return *this; }
 	inline GRect& SetLoc (const GPoint& p)									{ x = p.x; y = p.y; return *this; }
 	inline GRect& SetLoc (int_t x_, int_t y_)								{ x = x_; y = y_; return *this; }
 	inline GRect& SetSize (const GPoint& s)									{ width = s.x; height = s.y; return *this; }
@@ -512,7 +517,7 @@ private:
 
 
 
-/// A GFile is a wrapper class around a C-File function calls.  This class uses the
+/// A GFile is a wrapper class around C-File function calls.  This class uses the
 /// native width versions of the file functions allowing for very large files.
 class GFile {
 public:

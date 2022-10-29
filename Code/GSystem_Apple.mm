@@ -221,6 +221,9 @@ static NSString* _SHADER = @""
 #if PLATFORM_MACOSX
 	// Convert the view to use the full pixel coordinates of the screen (retina)
 	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect];
+	
+	// Add a tracking area so that mouse move events work
+	[self addTrackingArea:[[NSTrackingArea alloc] initWithRect:frameRect options:(NSTrackingMouseMoved | NSTrackingActiveInActiveApp | NSTrackingInVisibleRect) owner:self userInfo:nil]];
 #endif
 	
 #if PLATFORM_IOS
@@ -425,6 +428,7 @@ static NSString* _SHADER = @""
 	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
 	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
+	GSystem::RunMouseMoveCallbacks((int_t)location.x, (int_t)location.y); // The mouseMoved callback stops when a drag starts, so this is needed to properly track mouse move events
 	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
 }
 
@@ -500,6 +504,7 @@ static NSString* _SHADER = @""
 		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 		GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
+		GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, 1);
 	}
 }
 
@@ -509,6 +514,8 @@ static NSString* _SHADER = @""
 		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 		GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
+		GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, 1);
+		GSystem::RunMouseMoveCallbacks((int_t)location.x, (int_t)location.y);
 	}
 }
 
@@ -518,6 +525,7 @@ static NSString* _SHADER = @""
 		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 		GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
+		GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, 1);
 	}
 }
 
@@ -527,6 +535,7 @@ static NSString* _SHADER = @""
 		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
 		GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
+		GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, 1);
 	}
 }
 
@@ -599,11 +608,26 @@ void GSystem::SetDefaultWD () {
 	chdir(resources);
 }
 
+const GString& GSystem::GetSaveDirectory () {
+	static GString _DIRECTORY;
+	if(_DIRECTORY.IsEmpty()) {
+#if PLATFORM_MACOSX
+		NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+#else
+		NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+#endif
+		if([paths count] > 0)
+			_DIRECTORY.New([[paths objectAtIndex:0] fileSystemRepresentation]);
+	}
+	return _DIRECTORY;
+}
 
 
 
 
 void GSystem::RunPreferredSize (int_t width, int_t height) {
+	_RECT = GRect(0, 0, width, height);
+	_SAFE_RECT = GRect(0, 0, width, height);
 	_PREFERRED_RECT = GRect(0, 0, width, height);
 }
 

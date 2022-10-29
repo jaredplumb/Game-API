@@ -27,9 +27,11 @@ public:
 	void SetPosition (const GPoint& pos);			// Set this nodes position relative to parent (NOTE: "location" would be absolute position)
 	void SetVisible (bool visible);
 	void SetActive (bool active);
+	void SetPassive (bool passive);					// A passive object only receives OnDraw and OnExit events (although events are still passed along to children), the default is false
 	
 	bool IsVisible () const;
 	bool IsActive () const;
+	bool IsPassive () const;
 	
 	static UINode* NewNode (const GString& name);	// Create a new node using the given name
 	
@@ -84,6 +86,7 @@ private:
 	GRect				_rect;		// This is the screen coordinates of this node initially set to the entire screen
 	bool				_visible;
 	bool				_active;
+	bool				_passive;
 	bool				_exit;		// Node will exit as soon as possible, _exit will block most events when true
 	GString				_next;		// This is the name of the node to run when this node is deleted, used from Run
 	UINode*				_parent;

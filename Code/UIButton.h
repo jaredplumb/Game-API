@@ -11,10 +11,14 @@ public:
 	UIButton ();
 	UIButton (const GString& text, int_t x, int_t y, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
 	UIButton (const GString& text, const GPoint& loc, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
+	UIButton (const GString& text, int_t x, int_t y, const GString& font, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
+	UIButton (int_t x, int_t y, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
 	virtual ~UIButton ();
 	
 	bool New (const GString& text, int_t x, int_t y, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
 	bool New (const GString& text, const GPoint& loc, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
+	bool New (const GString& text, int_t x, int_t y, const GString& font, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
+	bool New (int_t x, int_t y, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
 	void Delete ();
 	
 	bool IsDown () const;
@@ -32,6 +36,15 @@ private:
 	GImage*		_button;
 	GImage*		_down;
 	GSound*		_click;
+	
+	// This portion of data is only used when an object is created using string references and is auto deleted when the object is destroyed
+	struct _Alloc {
+		GFont*		_font;
+		GImage*		_button;
+		GImage*		_down;
+		GSound*		_click;
+	};
+	_Alloc*		_alloc;
 };
 
 #endif // _UIBUTTON_H_

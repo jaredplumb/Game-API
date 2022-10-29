@@ -6,6 +6,7 @@ UIButton::UIButton ()
 ,	_button(NULL)
 ,	_down(NULL)
 ,	_click(NULL)
+,	_alloc(NULL)
 {
 }
 
@@ -15,12 +16,29 @@ UIButton::UIButton (const GString& text, int_t x, int_t y, GFont* font, GImage* 
 ,	_button(NULL)
 ,	_down(NULL)
 ,	_click(NULL)
+,	_alloc(NULL)
 {
 	New(text, x, y, font, button, down, click, parent);
 }
 
 UIButton::UIButton (const GString& text, const GPoint& loc, GFont* font, GImage* button, GImage* down, GSound* click, UINode* parent)
 :	UIButton(text, loc.x, loc.y, font, button, down, click, parent)
+{
+}
+
+UIButton::UIButton (const GString& text, int_t x, int_t y, const GString& font, const GString& button, const GString& down, const GString& click, UINode* parent)
+:	_isDown(false)
+,	_font(NULL)
+,	_button(NULL)
+,	_down(NULL)
+,	_click(NULL)
+,	_alloc(NULL)
+{
+	New(text, x, y, font, button, down, click, parent);
+}
+
+UIButton::UIButton (int_t x, int_t y, const GString& button, const GString& down, const GString& click, UINode* parent)
+:	UIButton(NULL, x, y, NULL, button, down, click, parent)
 {
 }
 
@@ -37,6 +55,7 @@ bool UIButton::New (const GString& text, int_t x, int_t y, GFont* font, GImage* 
 	_button = button;
 	_down = down;
 	_click = click;
+	_alloc = NULL;
 	if(_button)
 		SetRect(GRect(x, y, _button->GetWidth(), _button->GetHeight()));
 	if(parent)
@@ -48,6 +67,19 @@ bool UIButton::New (const GString& text, const GPoint& loc, GFont* font, GImage*
 	return New(text, loc.x, loc.y, font, button, down, click, parent);
 }
 
+bool UIButton::New (const GString& text, int_t x, int_t y, const GString& font, const GString& button, const GString& down, const GString& click, UINode* parent) {
+	_alloc = new _Alloc;
+	_alloc->_font = font.IsEmpty() ? NULL : new GFont(font);
+	_alloc->_button = button.IsEmpty() ? NULL : new GImage(button);
+	_alloc->_down = down.IsEmpty() ? NULL : new GImage(down);
+	_alloc->_click = click.IsEmpty() ? NULL : new GSound(click);
+	return New(text, x, y, _alloc->_font, _alloc->_button, _alloc->_down, _alloc->_click, parent);
+}
+
+bool UIButton::New (int_t x, int_t y, const GString& button, const GString& down, const GString& click, UINode* parent) {
+	return New(NULL, x, y, NULL, button, down, click, parent);
+}
+
 void UIButton::Delete () {
 	_text.Delete();
 	_loc.x = 0;
@@ -57,6 +89,18 @@ void UIButton::Delete () {
 	_button = NULL;
 	_down = NULL;
 	_click = NULL;
+	if(_alloc) {
+		if(_alloc->_font)
+			delete _alloc->_font;
+		if(_alloc->_button)
+			delete _alloc->_button;
+		if(_alloc->_down)
+			delete _alloc->_down;
+		if(_alloc->_click)
+			delete _alloc->_click;
+		delete _alloc;
+		_alloc = NULL;
+	}
 }
 
 bool UIButton::IsDown () const {

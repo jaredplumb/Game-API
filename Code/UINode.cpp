@@ -3,9 +3,10 @@
 
 UINode::UINode ()
 :	_ref(GSystem::GetUniqueRef())
-,	_rect(GSystem::GetRect())
+,	_rect(GSystem::GetPreferredRect()) // UINode default is the prefered rect, which is centered in the safe area, this can always be changed later by setting the node to parent and such
 ,	_visible(true)
 ,	_active(true)
+,	_passive(false)
 ,	_exit(false)
 ,	_parent(NULL)
 {
@@ -36,7 +37,7 @@ int_t UINode::GetHeight () const {
 }
 
 GRect UINode::GetRect() const {
-	return GRect(0, 0, _rect.width, _rect.height);
+	return GRect(_rect.x, _rect.y, _rect.width, _rect.height);
 }
 
 GRect UINode::GetRectInParent() const {
@@ -94,12 +95,20 @@ void UINode::SetActive (bool active) {
 	_active = active;
 }
 
+void UINode::SetPassive (bool passive) {
+	_passive = passive;
+}
+
 bool UINode::IsVisible () const {
 	return _visible;
 }
 
 bool UINode::IsActive () const {
 	return _active;
+}
+
+bool UINode::IsPassive () const {
+	return _passive;
 }
 
 UINode* UINode::NewNode (const GString& name) {
@@ -226,7 +235,8 @@ void UINode::SendMouse (int_t x, int_t y, int_t button) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendMouse(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y, button);
-		OnMouse(x, y, button);
+		if(!_passive)
+			OnMouse(x, y, button);
 	}
 }
 
@@ -234,7 +244,8 @@ void UINode::SendMouseUp (int_t x, int_t y, int_t button) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendMouseUp(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y, button);
-		OnMouseUp(x, y, button);
+		if(!_passive)
+			OnMouseUp(x, y, button);
 	}
 }
 
@@ -242,7 +253,8 @@ void UINode::SendMouseMove (int_t x, int_t y) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendMouseMove(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y);
-		OnMouseMove(x, y);
+		if(!_passive)
+			OnMouseMove(x, y);
 	}
 }
 
@@ -250,7 +262,8 @@ void UINode::SendMouseDrag (int_t x, int_t y, int_t button) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendMouseDrag(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y, button);
-		OnMouseDrag(x, y, button);
+		if(!_passive)
+			OnMouseDrag(x, y, button);
 	}
 }
 
@@ -258,7 +271,8 @@ void UINode::SendMouseWheel (float xdelta, float ydelta) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendMouseWheel(xdelta, ydelta);
-		OnMouseWheel(xdelta, ydelta);
+		if(!_passive)
+			OnMouseWheel(xdelta, ydelta);
 	}
 }
 
@@ -266,7 +280,8 @@ void UINode::SendKey (vkey_t key) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendKey(key);
-		OnKey(key);
+		if(!_passive)
+			OnKey(key);
 	}
 }
 
@@ -274,7 +289,8 @@ void UINode::SendKeyUp (vkey_t key) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendKeyUp(key);
-		OnKeyUp(key);
+		if(!_passive)
+			OnKeyUp(key);
 	}
 }
 
@@ -282,7 +298,8 @@ void UINode::SendASCII (char key) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendASCII(key);
-		OnASCII(key);
+		if(!_passive)
+			OnASCII(key);
 	}
 }
 
@@ -290,7 +307,8 @@ void UINode::SendTouch (int_t x, int_t y) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendTouch(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y);
-		OnTouch(x, y);
+		if(!_passive)
+			OnTouch(x, y);
 	}
 }
 
@@ -298,7 +316,8 @@ void UINode::SendTouchUp (int_t x, int_t y) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendTouchUp(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y);
-		OnTouchUp(x, y);
+		if(!_passive)
+			OnTouchUp(x, y);
 	}
 }
 
@@ -306,7 +325,8 @@ void UINode::SendTouchMove (int_t x, int_t y) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendTouchMove(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y);
-		OnTouchMove(x, y);
+		if(!_passive)
+			OnTouchMove(x, y);
 	}
 }
 
@@ -314,7 +334,8 @@ void UINode::SendEvent (UINode* node) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendEvent(node);
-		OnEvent(node);
+		if(!_passive)
+			OnEvent(node);
 	}
 }
 

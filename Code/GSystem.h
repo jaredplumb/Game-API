@@ -41,6 +41,9 @@ public:
 	/// Sets the default working directory to the Resources directory.
 	static void SetDefaultWD ();
 	
+	/// Returns the full path to the location to save data.
+	static const GString& GetSaveDirectory ();
+	
 	/// Sets the preferred screen width and height, fps, or arg, must be called before calling Run(), some
 	/// options will not work on all platforms
 	static void RunPreferredSize (int_t width, int_t height);

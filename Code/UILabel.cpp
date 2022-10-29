@@ -19,7 +19,7 @@ bool UILabel::New (const GString& text, int_t x, int_t y, GFont* font, UINode* p
 	_text = text;
 	_font = font;
 	if(_font)
-		SetRect(_font->GetRect(_text));
+		SetRect(_font->GetRect(_text).Offset(x, y));
 	if(parent)
 		parent->Add(*this);
 	return true;
