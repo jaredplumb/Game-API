@@ -29,6 +29,9 @@ public:
 	/// Returns a rect containing the actual rendered pixels, x and y are offsets to the top left
 	GRect GetRect (const GString& text) const;
 	
+	/// Returns the width of the string
+	inline int_t GetWidth (const GString& text) const { return GetRect(text).width; }
+	
 	bool IsEmpty () const;
 	
 	void Draw (const GString& text, int_t x, int_t y, float alpha = 1.0f);
