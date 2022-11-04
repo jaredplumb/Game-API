@@ -169,7 +169,7 @@ void UINode::Run (const GString& name) {
 		return;
 	}
 	
-	// Running a new node will exit this line of nodes by exting to root node
+	// Running a new node will exit this line of nodes by exiting to the root node
 	UINode* parent = this;
 	while(parent->_parent)
 		parent = parent->_parent;
@@ -372,7 +372,7 @@ UINode::_Root::~_Root () {
 
 void UINode::_Root::RunOnRoot (const GString& name) {
 	GConsole::Debug("----------------------------------------------------------------\n");
-	GConsole::Debug("- %s\n", (const char*)name);
+	GConsole::Debug("%s\n", (const char*)name);
 	if(_ROOT != NULL) {
 		UINode* node = NewNode(name);
 		if(node) _ROOT->nodes.push_back(node);

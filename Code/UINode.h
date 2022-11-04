@@ -3,8 +3,8 @@
 
 #include "GTypes.h"
 
-#define		UINODE_NAME(c,n)			static const UINode::Factory<c> _UI_NODE_ ## c ## _NAME(n, false);
-#define		UINODE_AUTORUN(c,n)			static const UINode::Factory<c> _UI_NODE_ ## c ## _NAME(n, true);
+#define		UINODE_NAME(c,n)			static const UINode::UIFactory<c> _UI_NODE_ ## c ## _NAME(n, false);
+#define		UINODE_AUTORUN(c,n)			static const UINode::UIFactory<c> _UI_NODE_ ## c ## _NAME(n, true);
 #define		UINODE_PACKAGE(n)			_UINODEPACKAGE_UNIQUE(n, __COUNTER__)
 
 class UINode {
@@ -43,6 +43,7 @@ public:
 	static void SetRandomSeed (uint32 seed = 0);	// Sets the global random seed, if seed is 0, then a random time value is used
 	
 	void Run (const GString& name);					// Exits the current root UINode and runs the named UINode
+	void RunChild (const GString& name);			// Runs the named node on as a child of this node, and delete the node when this node is deleted
 	void Exit ();									// Will delete this UINode as soon as possible
 	void ExitCancel ();								// Cancels an exit
 	void Add (UINode& node);						// Adds a node to the front of the this nodes children
@@ -83,7 +84,7 @@ public:
 	
 private:
 	int_t				_ref;
-	GRect				_rect;		// This is the screen coordinates of this node initially set to the entire screen
+	GRect				_rect;		// This is the rect relative to the parent, initially set to the screen's preferred rect, the root node uses the actual screen locations from GSystem as it's parent
 	bool				_visible;
 	bool				_active;
 	bool				_passive;
@@ -124,9 +125,9 @@ private:
 	
 public:
 	template <class T>
-	struct Factory {
+	struct UIFactory {
 		static UINode* New () { return new T; };
-		Factory (const char* name, bool autorun) {
+		UIFactory (const char* name, bool autorun) {
 			if(_ROOT == NULL) _ROOT = new _Root;
 			if(_FACTORY_LIST == NULL) _FACTORY_LIST = new std::map<GString, UINode* (*) ()>;
 			(*_FACTORY_LIST)[name] = New;
