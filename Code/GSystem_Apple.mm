@@ -223,7 +223,8 @@ static NSString* _SHADER = @""
 	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect];
 	
 	// Add a tracking area so that mouse move events work
-	[self addTrackingArea:[[NSTrackingArea alloc] initWithRect:frameRect options:(NSTrackingMouseMoved | NSTrackingActiveInActiveApp | NSTrackingInVisibleRect) owner:self userInfo:nil]];
+	// TODO: I commented this out because it might not be needed and is causing problems.  Need to investigate more.
+	//[self addTrackingArea:[[NSTrackingArea alloc] initWithRect:frameRect options:(NSTrackingMouseMoved | NSTrackingActiveInActiveApp | NSTrackingInVisibleRect) owner:self userInfo:nil]];
 #endif
 	
 #if PLATFORM_IOS
