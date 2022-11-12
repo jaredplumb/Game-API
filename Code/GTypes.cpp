@@ -1,13 +1,23 @@
 #include "GTypes.h"
+#include <dirent.h>
+#include <zlib.h>
 
-// These are here to add static caching in the future
-static char* _CHAR_ALLOC (int_t size) {
+
+
+
+static char* _CHAR_ALLOC (int size) {
 	return new char[size];
 }
 
 static void _FREE (char* string) {
 	delete [] string;
 }
+
+
+
+
+
+
 
 GString::GString ()
 :	_string(NULL)
@@ -113,9 +123,9 @@ GString& GString::Format (const char* string, ...) {
 	return *this;
 }
 
-int_t GString::GetLength () const {
+int GString::GetLength () const {
 	if(_length <= 0)
-		*(const_cast<int_t*>(&_length)) = strlen(_string);
+		*(const_cast<int*>(&_length)) = strlen(_string);
 	return _length;
 }
 
@@ -170,7 +180,7 @@ GString& GString::TrimSpaces () {
 		return *this;
 	
 	// Remove end spaces
-	for(int_t i = GetLength() - 1; i >= 0 && isspace(_string[i]); i--)
+	for(int i = GetLength() - 1; i >= 0 && isspace(_string[i]); i--)
 		_string[i] = '\0';
 	
 	// Remove beginning spaces
@@ -190,7 +200,7 @@ GString& GString::TrimSpaces () {
 }
 
 GString& GString::TrimExtension () {
-	for(int_t i = GetLength() - 1; i >= 0; i--)
+	for(int i = GetLength() - 1; i >= 0; i--)
 		if(_string[i] == '.') {
 			_string[i] = '\0';
 			_length = 0;
@@ -200,7 +210,7 @@ GString& GString::TrimExtension () {
 }
 
 GString& GString::TrimToDirectory () {
-	for(int_t i = GetLength(); i > 0; i--)
+	for(int i = GetLength(); i > 0; i--)
 		if(_string[i - 1] == '/' || _string[i - 1] == '\\') {
 			_string[i] = '\0';
 			_length = 0;
@@ -209,9 +219,6 @@ GString& GString::TrimToDirectory () {
 	return *this;
 }
 
-////////////////////////////////////////////////////
-// Standard C string overrides with modifications //
-////////////////////////////////////////////////////
 bool GString::isalnum (char c) {
 	return (isalpha(c) || isdigit(c));
 }
@@ -263,7 +270,7 @@ char* GString::strcat (char* dst, const char* src) {
 	return dst;
 }
 
-int_t GString::strcmp (const char* s1, const char* s2) {
+int GString::strcmp (const char* s1, const char* s2) {
 	if(s1 == NULL)
 		return (s2 ? -s2[0] : 0);
 	if(s2 == NULL)
@@ -287,7 +294,7 @@ char* GString::strcpy (char* dst, const char* src) {
 	return dst;
 }
 
-int_t GString::stricmp (const char* s1, const char* s2) {
+int GString::stricmp (const char* s1, const char* s2) {
 	if(s1 == NULL)
 		return (s2 ? -tolower(s2[0]) : 0);
 	if(s2 == NULL)
@@ -299,22 +306,22 @@ int_t GString::stricmp (const char* s1, const char* s2) {
 }
 
 char* GString::stristr (const char* s, const char* find) {
-	for(int_t len = strlen(find); *s != 0; s++)
+	for(int len = strlen(find); *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
-			return (char*)s;
+			return const_cast<char*>(s);
 	return NULL;
 }
 
-int_t GString::strlen (const char* s) {
+int GString::strlen (const char* s) {
 	if(s == NULL)
 		return 0;
 	const char* i = s;
 	while(*i)
 		i++;
-	return (int_t)i - (int_t)s;
+	return static_cast<int>(reinterpret_cast<intptr_t>(i) - reinterpret_cast<intptr_t>(s));
 }
 
-char* GString::strncat (char* dst, const char* src, int_t len) {
+char* GString::strncat (char* dst, const char* src, int len) {
 	if(dst == NULL)
 		return NULL;
 	char* save = dst;
@@ -328,7 +335,7 @@ char* GString::strncat (char* dst, const char* src, int_t len) {
 	return dst;
 }
 
-int_t GString::strncmp (const char* s1, const char* s2, int_t len) {
+int GString::strncmp (const char* s1, const char* s2, int len) {
 	if(len == 0)
 		return 0;
 	if(s1 == NULL)
@@ -344,7 +351,7 @@ int_t GString::strncmp (const char* s1, const char* s2, int_t len) {
 	return 0;
 }
 
-char* GString::strncpy (char* dst, const char* src, int_t len) {
+char* GString::strncpy (char* dst, const char* src, int len) {
 	if(dst == NULL)
 		return NULL;
 	char* save = dst;
@@ -356,7 +363,7 @@ char* GString::strncpy (char* dst, const char* src, int_t len) {
 	return dst;
 }
 
-int_t GString::strnicmp (const char* s1, const char* s2, int_t len) {
+int GString::strnicmp (const char* s1, const char* s2, int len) {
 	if(len == 0)
 		return 0;
 	if(s1 == NULL)
@@ -372,14 +379,14 @@ int_t GString::strnicmp (const char* s1, const char* s2, int_t len) {
 	return 0;
 }
 
-char* GString::strnistr (const char* s, const char* find, int_t len) {
+char* GString::strnistr (const char* s, const char* find, int len) {
 	for(; *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return (char*)s;
 	return NULL;
 }
 
-char* GString::strnstr (const char* s, const char* find, int_t len) {
+char* GString::strnstr (const char* s, const char* find, int len) {
 	for(; *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)s;
@@ -387,17 +394,13 @@ char* GString::strnstr (const char* s, const char* find, int_t len) {
 }
 
 char* GString::strstr (const char* s, const char* find) {
-	for(int_t len = strlen(find); *s != 0; s++)
+	for(int len = strlen(find); *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)s;
 	return NULL;
 }
 
-
-
-
-
-char* GString::strnnext (const char* s, const char* find, int_t len) {
+char* GString::strnnext (const char* s, const char* find, int len) {
 	for(; *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)(s + len);
@@ -405,13 +408,13 @@ char* GString::strnnext (const char* s, const char* find, int_t len) {
 }
 
 char* GString::strnext (const char* s, const char* find) {
-	for(int_t len = strlen(find); *s != 0; s++)
+	for(int len = strlen(find); *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)(s + len);
 	return NULL;
 }
 
-char* GString::strninext (const char* s, const char* find, int_t len) {
+char* GString::strninext (const char* s, const char* find, int len) {
 	for(; *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return (char*)(s + len);
@@ -419,16 +422,13 @@ char* GString::strninext (const char* s, const char* find, int_t len) {
 }
 
 char* GString::strinext (const char* s, const char* find) {
-	for(int_t len = strlen(find); *s != 0; s++)
+	for(int len = strlen(find); *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return (char*)(s + len);
 	return NULL;
 }
 
-
-
-
-int_t GString::strtoi (const char* s, char** end, int_t base) {
+int GString::strtoi (const char* s, char** end, int base) {
 	if(s == NULL) {
 		if(end != NULL)
 			*end = NULL;
@@ -450,8 +450,8 @@ int_t GString::strtoi (const char* s, char** end, int_t base) {
 			base = 10;
 		}
 	}
-	int_t i = 0;
-	for(int_t c = *s; *s != 0; c = *++s) {
+	int i = 0;
+	for(int c = *s; *s != 0; c = *++s) {
 		if(isdigit(c))
 			c -= '0';
 		else if(isalpha(c))
@@ -536,11 +536,11 @@ void GFile::Close () {
 	}
 }
 
-bool GFile::Read (void* data, uint_t size) {
+bool GFile::Read (void* data, int64_t size) {
 	return _file ? (fread(data, size, 1, _file) == 1) : false;
 }
 
-bool GFile::Write (const void* data, uint_t size) {
+bool GFile::Write (const void* data, int64_t size) {
 	return _file ? (fwrite(data, size, 1, _file) == 1) : false;
 }
 
@@ -548,131 +548,59 @@ bool GFile::IsOpen () const {
 	return _file != NULL;
 }
 
-uint_t GFile::GetPosition () const {
-#if PLATFORM_WINDOWS
-	return _file ? (uint_t)_ftelli64(_file) : 0;
-#else
-	return _file ? (uint_t)ftello(_file) : 0;
-#endif
+int64_t GFile::GetPosition () const {
+	return _file ? (int)ftello(_file) : 0;
 }
 
-uint_t GFile::GetSize () const {
+int64_t GFile::GetSize () const {
 	if(_file == NULL)
 		return 0;
-#if PLATFORM_WINDOWS
-	uint_t current = (uint_t)_ftelli64(_file);
-	_fseeki64(_file, 0, SEEK_END);
-	uint_t size = (uint_t)_ftelli64(_file);
-	_fseeki64(_file, (long long)current, SEEK_SET);
-#else
-	uint_t current = (uint_t)ftello(_file);
+	int64_t current = (int)ftello(_file);
 	fseeko(_file, 0, SEEK_END);
-	uint_t size = (uint_t)ftello(_file);
+	int64_t size = (int)ftello(_file);
 	fseeko(_file, current, SEEK_SET);
-#endif
 	return size;
 }
 
-bool GFile::SetPosition (uint_t position) {
-#if PLATFORM_WINDOWS
-	return _file ? (_fseeki64(_file, (long long)position, SEEK_SET) == 0) : false;
-#else
+bool GFile::SetPosition (int64_t position) {
 	return _file ? (fseeko(_file, (off_t)position, SEEK_SET) == 0) : false;
-#endif
 }
 
-
-
-
-
-
-
-
-
-GDirectory::GDirectory () {
-}
-
-GDirectory::~GDirectory () {
-	Close();
-}
-
-GDirectory::GDirectory (const GString& path) {
-	Open(path);
-}
-
-bool GDirectory::Open (const GString& path) {
-	
-#if PLATFORM_WINDOWS
+std::vector<GString> GFile::GetFileNamesInDirectory (const GString& path) {
+	std::vector<GString> files;
 	
 	GString directory = path;
-	if (directory == NULL || directory[(int_t)0] == '\0')
-		directory = "";
-	
-	if (directory[directory.GetLength() - 1] != '\\')
-		directory += "\\";
-	
-	_finddata_t data;
-	intptr_t handle = _findfirst(path + "*", &data);
-	if(handle == -1)
-		return false;
-	
-	do {
-		if (data.attrib & _A_SUBDIR)
-			Open(data.name);
-		else
-			_files.push_back(directory + data.name);
-	} while(_findnext(handle, &data) != -1);
-	
-	_findclose(handle);
-	
-	
-#else
-	GString directory = path;
-	if(directory.IsEmpty())
+	if (directory.IsEmpty())
 		directory = "./";
 	
-	if(directory[directory.GetLength() - 1] != '/')
+	if (directory[directory.GetLength() - 1] != '/')
 		directory += "/";
 	
 	DIR* dir = opendir(directory);
-	if(dir == NULL) {
-		
+	if (dir == nullptr) {
 		FILE* file = fopen(path, "rb");
-		if(file != NULL) {
-			_files.push_back(path);
+		if (file != nullptr) {
+			files.push_back(path);
 			fclose(file);
-			return true;
+			return files;
 		}
-		
-		//ERROR("Failed to open file or directory \"%s\"!", directory.GetString());
-		return false;
+		return files;
 	}
 	
-	for(dirent* info = readdir(dir); info != NULL; info = readdir(dir)) {
-		if(info->d_type == DT_DIR) {
-			if(GString::strcmp(info->d_name, ".") != 0 && GString::strcmp(info->d_name, "..") != 0)
-				Open(directory + info->d_name);
+	for (dirent* info = readdir(dir); info != nullptr; info = readdir(dir)) {
+		if (info->d_type == DT_DIR) {
+			if (GString::strcmp(info->d_name, ".") != 0 && GString::strcmp(info->d_name, "..") != 0) {
+				std::vector<GString> sub = GetFileNamesInDirectory(directory + info->d_name);
+				files.reserve(files.size() + sub.size());
+				files.insert(files.end(), sub.begin(), sub.end());
+			}
 		} else {
-			_files.push_back(directory + info->d_name);
+			files.push_back(directory + info->d_name);
 		}
 	}
 	
 	closedir(dir);
-#endif
-	
-	return true;
-}
-
-void GDirectory::Close () {
-	_files.clear();
-}
-
-uint_t GDirectory::GetSize () const {
-	return _files.size();
-}
-
-GString GDirectory::GetFile (uint_t index) const {
-	return index < _files.size() ? _files[index] : NULL;
+	return files;
 }
 
 
@@ -686,109 +614,99 @@ GString GDirectory::GetFile (uint_t index) const {
 
 
 
-
-#include <zlib.h>
 
 enum _eCompressType {
 	_COMPRESS_TYPE_ZLIB = 0,
 };
 
-static uint_t _ZLIBCompress (uint8* srcBuffer, uint_t srcSize, uint8* dstBuffer, uint_t dstSize, int level) {
+static int64_t _ZLIBCompress (uint8_t* srcBuffer, int64_t srcSize, uint8_t* dstBuffer, int64_t dstSize, int64_t level) {
 	z_stream stream;
 	memset(&stream, 0, sizeof(stream));
 	stream.next_in = srcBuffer;
-	stream.avail_in = (unsigned int)srcSize;
+	stream.avail_in = static_cast<uInt>(srcSize);
 	stream.next_out = dstBuffer;
-	stream.avail_out = (unsigned int)dstSize;
+	stream.avail_out = static_cast<uInt>(dstSize);
 	
-	int error = deflateInit(&stream, level);
-	if(error != Z_OK) return 0;
+	if(deflateInit(&stream, level) != Z_OK)
+		return 0;
 	
-	error = deflate(&stream, Z_FINISH);
-	if(error != Z_STREAM_END) return 0;
+	if(deflate(&stream, Z_FINISH) != Z_STREAM_END)
+		return 0;
 	
-	dstSize = stream.total_out;
+	if(deflateEnd(&stream) != Z_OK)
+		return 0;
 	
-	error = deflateEnd(&stream);
-	if(error != Z_OK) return 0;
-	
-	return dstSize;
+	return stream.total_out;
 }
 
-static uint_t _ZLIBDecompress (uint8* srcBuffer, uint_t srcSize, uint8* dstBuffer, uint_t dstSize) {
+static int64_t _ZLIBDecompress (uint8_t* srcBuffer, int64_t srcSize, uint8_t* dstBuffer, int64_t dstSize) {
 	z_stream stream;
 	memset(&stream, 0, sizeof(stream));
 	stream.next_in = srcBuffer;
-	stream.avail_in = (unsigned int)srcSize;
+	stream.avail_in = static_cast<uInt>(srcSize);
 	stream.next_out = dstBuffer;
-	stream.avail_out = (unsigned int)dstSize;
+	stream.avail_out = static_cast<uInt>(dstSize);
 	
-	int error = inflateInit(&stream);
-	if(error != Z_OK) return 0;
+	if(inflateInit(&stream) != Z_OK)
+		return 0;
 	
-	error = inflate(&stream, Z_FINISH);
-	if(error != Z_STREAM_END) return 0;
+	if(inflate(&stream, Z_FINISH) != Z_STREAM_END)
+		return 0;
 	
-	dstSize = stream.total_out;
 	
-	error = inflateEnd(&stream);
-	if(error != Z_OK) return 0;
+	if(inflateEnd(&stream) != Z_OK)
+		return 0;
 	
-	return dstSize;
+	return stream.total_out;
 }
 
-uint_t GArchive::Compress (const void* srcBuffer, uint_t srcSize, void* dstBuffer, uint_t dstSize) {
+int64_t GArchive::Compress (const void* srcBuffer, int64_t srcSize, void* dstBuffer, int64_t dstSize) {
 	if(dstSize < 2)
 		return 0;
 	
 	// Set the header data
-	((uint8*)dstBuffer)[0] = VERSION;
-	((uint8*)dstBuffer)[1] = (uint8)_COMPRESS_TYPE_ZLIB;
-	dstBuffer = ((uint8*)dstBuffer) + 2;
+	((uint8_t*)dstBuffer)[0] = VERSION;
+	((uint8_t*)dstBuffer)[1] = static_cast<uint8_t>(_COMPRESS_TYPE_ZLIB);
+	dstBuffer = ((uint8_t*)dstBuffer) + 2;
 	dstSize -= 2;
 	
 	// Max zlib compression
-	dstSize = _ZLIBCompress((uint8*)srcBuffer, srcSize, (uint8*)dstBuffer, dstSize, 9);
+	dstSize = _ZLIBCompress((uint8_t*)srcBuffer, srcSize, (uint8_t*)dstBuffer, dstSize, 9);
 	
 	// Return the actual size of the compressed data
-	if(dstSize == 0)
-		return 0;
-	return dstSize + 2;
+	return dstSize != 0 ? dstSize + 2 : 0;
 }
 
-uint_t GArchive::Decompress (const void* srcBuffer, uint_t srcSize, void* dstBuffer, uint_t dstSize) {
+int64_t GArchive::Decompress (const void* srcBuffer, int64_t srcSize, void* dstBuffer, int64_t dstSize) {
 	if(srcSize < 2)
 		return 0;
 	
 	// Check the version
-	if(((uint8*)srcBuffer)[0] != VERSION) {
-		//ERROR("Could not decompress archive of version %d!", ((uint8*)srcBuffer)[0]);
+	if(((uint8_t*)srcBuffer)[0] != VERSION)
 		return 0;
-	}
 	
 	// Get the remainder of the header data
-	_eCompressType compressType = (_eCompressType)((uint8*)srcBuffer)[1];
-	srcBuffer = ((uint8*)srcBuffer) + 2;
+	_eCompressType compressType = static_cast<_eCompressType>(((uint8_t*)srcBuffer)[1]);
+	srcBuffer = ((uint8_t*)srcBuffer) + 2;
 	srcSize -= 2;
 	
 	// Decompress depending on the type
 	switch(compressType) {
 		case _COMPRESS_TYPE_ZLIB:
-			return _ZLIBDecompress((uint8*)srcBuffer, srcSize, (uint8*)dstBuffer, dstSize);
+			return _ZLIBDecompress((uint8_t*)srcBuffer, srcSize, (uint8_t*)dstBuffer, dstSize);
 		default:
-			//ERROR("Could not decompress unknown compression type (%d)!", (int)compressType);
 			return 0;
 	}
 	
 	return 0;
 }
 
-uint_t GArchive::GetBufferBounds (uint_t srcSize) {
-	// This is the size a dstBuffer needs to be to hold the headers when no compression happens.
-	// This is taken from the function compressBound in the zlib library.
-	// The last + number is what is needed for header values from GArchive.
-	return srcSize + (srcSize >> 12) + (srcSize >> 14) + 11 + 2;
+int64_t GArchive::GetBufferBounds (int64_t srcSize) {
+	// Returns the worst case buffer size for compression, plus the size of the needed
+	// header information for this library (version number and compression type)
+	return compressBound(srcSize) + 2;
 }
+
 
 
 
@@ -799,15 +717,6 @@ void GConsole::Print (const char* message, ...) {
 	if (message) {
 		va_list args;
 		va_start(args, message);
-#if PLATFORM_WINDOWS && DEBUG
-		int size = vsnprintf(NULL, 0, message, args);
-		if(size > 0) {
-			char* string = new char[size + 1];
-			vsnprintf(string, size + 1, message, args);
-			OutputDebugStringA(string);
-			delete [] string;
-		}
-#endif
 		vprintf(message, args);
 		va_end(args);
 	}
@@ -818,20 +727,8 @@ void GConsole::Debug (const char* message, ...) {
 	if (message) {
 		va_list args;
 		va_start(args, message);
-#if PLATFORM_WINDOWS
-		int size = vsnprintf(NULL, 0, message, args);
-		if(size > 0) {
-			char* string = new char[size + 1];
-			vsnprintf(string, size + 1, message, args);
-			OutputDebugStringA(string);
-			delete [] string;
-		}
-#endif
 		vprintf(message, args);
 		va_end(args);
 	}
 #endif
 }
-
-
-

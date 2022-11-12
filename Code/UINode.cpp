@@ -20,7 +20,7 @@ UINode::~UINode () {
 		_ROOT->RunOnRoot(_next);
 }
 
-int_t UINode::GetUniqueRef () const {
+int UINode::GetUniqueRef () const {
 	return _ref;
 }
 
@@ -28,11 +28,11 @@ UINode* UINode::GetParent() const {
 	return _parent;
 }
 
-int_t UINode::GetWidth () const {
+int UINode::GetWidth () const {
 	return _rect.width;
 }
 
-int_t UINode::GetHeight () const {
+int UINode::GetHeight () const {
 	return _rect.height;
 }
 
@@ -57,8 +57,8 @@ GRect UINode::GetPreferredRect () const {
 }
 
 void UINode::SetRect (const GRect& rect) {
-	int_t x = _rect.x;
-	int_t y = _rect.y;
+	int x = _rect.x;
+	int y = _rect.y;
 	if(_parent) {
 		_rect.x = _parent->_rect.x + rect.x;
 		_rect.y = _parent->_rect.y + rect.y;
@@ -119,28 +119,24 @@ UINode* UINode::NewNode (const GString& name) {
 	return NULL;
 }
 
-uint64 UINode::GetMilliseconds () {
+int64_t UINode::GetMilliseconds () {
 	return _MILLISECONDS;
 }
 
-uint64 UINode::GetElapse () {
+int64_t UINode::GetElapse () {
 	return _ELAPSE;
 }
 
 // This random generator is from the BSD random, which is from:
 // "Random number generators: good ones are hard to find"
 // Park and Miller, Communications of the ACM, vol. 31, no. 10, October 1988, p. 1195.
-static uint32 _GET_SEED_RANDOM () {
-#if PLATFORM_WEB
-	return (uint32)(emscripten_random() * 1000000000.0f);
-#else
-	return (uint32)GSystem::GetMilliseconds() + 1;
-#endif
+static uint32_t _GET_SEED_RANDOM () {
+	return (uint32_t)GSystem::GetMilliseconds() + 1;
 }
 
-uint32 UINode::GetRandom (uint32 range) {
+uint32_t UINode::GetRandom (uint32_t range) {
 	_RANDOM_SEED = (_RANDOM_SEED != 0) ? (16807 * (_RANDOM_SEED % 127773) - 2836 * (_RANDOM_SEED / 127773)) : _GET_SEED_RANDOM();
-	if((int32)_RANDOM_SEED <= 0)
+	if((int32_t)_RANDOM_SEED <= 0)
 		_RANDOM_SEED += 0x7fffffff;
 	return range ? _RANDOM_SEED % range : _RANDOM_SEED % 1073741824;
 }
@@ -149,11 +145,11 @@ float_t UINode::GetRandom (float_t min, float_t max) {
 	return ((float_t)GetRandom(10000) / (float_t)9999) * (max - min) + min;
 }
 
-uint32 UINode::GetRandomSeed () {
+uint32_t UINode::GetRandomSeed () {
 	return _RANDOM_SEED;
 }
 
-void UINode::SetRandomSeed (uint32 seed) {
+void UINode::SetRandomSeed (uint32_t seed) {
 	_RANDOM_SEED = (seed != 0) ? (seed) : _GET_SEED_RANDOM();
 }
 
@@ -231,79 +227,7 @@ void UINode::SendDraw () {
 	}
 }
 
-void UINode::SendMouse (int_t x, int_t y, int_t button) {
-	if(_visible && _active) {
-		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
-			(*i)->SendMouse(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y, button);
-		if(!_passive)
-			OnMouse(x, y, button);
-	}
-}
-
-void UINode::SendMouseUp (int_t x, int_t y, int_t button) {
-	if(_visible && _active) {
-		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
-			(*i)->SendMouseUp(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y, button);
-		if(!_passive)
-			OnMouseUp(x, y, button);
-	}
-}
-
-void UINode::SendMouseMove (int_t x, int_t y) {
-	if(_visible && _active) {
-		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
-			(*i)->SendMouseMove(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y);
-		if(!_passive)
-			OnMouseMove(x, y);
-	}
-}
-
-void UINode::SendMouseDrag (int_t x, int_t y, int_t button) {
-	if(_visible && _active) {
-		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
-			(*i)->SendMouseDrag(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y, button);
-		if(!_passive)
-			OnMouseDrag(x, y, button);
-	}
-}
-
-void UINode::SendMouseWheel (float xdelta, float ydelta) {
-	if(_visible && _active) {
-		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
-			(*i)->SendMouseWheel(xdelta, ydelta);
-		if(!_passive)
-			OnMouseWheel(xdelta, ydelta);
-	}
-}
-
-void UINode::SendKey (vkey_t key) {
-	if(_visible && _active) {
-		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
-			(*i)->SendKey(key);
-		if(!_passive)
-			OnKey(key);
-	}
-}
-
-void UINode::SendKeyUp (vkey_t key) {
-	if(_visible && _active) {
-		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
-			(*i)->SendKeyUp(key);
-		if(!_passive)
-			OnKeyUp(key);
-	}
-}
-
-void UINode::SendASCII (char key) {
-	if(_visible && _active) {
-		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
-			(*i)->SendASCII(key);
-		if(!_passive)
-			OnASCII(key);
-	}
-}
-
-void UINode::SendTouch (int_t x, int_t y) {
+void UINode::SendTouch (int x, int y) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendTouch(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y);
@@ -312,7 +236,7 @@ void UINode::SendTouch (int_t x, int_t y) {
 	}
 }
 
-void UINode::SendTouchUp (int_t x, int_t y) {
+void UINode::SendTouchUp (int x, int y) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendTouchUp(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y);
@@ -321,7 +245,7 @@ void UINode::SendTouchUp (int_t x, int_t y) {
 	}
 }
 
-void UINode::SendTouchMove (int_t x, int_t y) {
+void UINode::SendTouchMove (int x, int y) {
 	if(_visible && _active) {
 		for(std::list<UINode*>::iterator i = _children.begin(); i != _children.end(); i++)
 			(*i)->SendTouchMove(x + _rect.x - (*i)->_rect.x, y + _rect.y - (*i)->_rect.y);
@@ -350,14 +274,6 @@ UINode::_Root::_Root () {
 	GSystem::NewStartupCallback(StartupCallback);
 	GSystem::NewShutdownCallback(ShutdownCallback);
 	GSystem::NewDrawCallback(DrawCallback);
-	GSystem::NewMouseCallback(MouseCallback);
-	GSystem::NewMouseUpCallback(MouseUpCallback);
-	GSystem::NewMouseMoveCallback(MouseMoveCallback);
-	GSystem::NewMouseDragCallback(MouseDragCallback);
-	GSystem::NewMouseWheelCallback(MouseWheelCallback);
-	GSystem::NewKeyCallback(KeyCallback);
-	GSystem::NewKeyUpCallback(KeyUpCallback);
-	GSystem::NewASCIICallback(ASCIICallback);
 	GSystem::NewTouchCallback(TouchCallback);
 	GSystem::NewTouchUpCallback(TouchUpCallback);
 	GSystem::NewTouchMoveCallback(TouchMoveCallback);
@@ -400,8 +316,8 @@ void UINode::_Root::ShutdownCallback () {
 
 void UINode::_Root::DrawCallback () {
 	
-	static uint64 FRAMES = 0;
-	static uint64 FPS = 0;
+	static uint64_t FRAMES = 0;
+	static uint64_t FPS = 0;
 	FRAMES++;
 	FPS += GSystem::GetFPS();
 	_ELAPSE = FRAMES * 1000 / FPS;
@@ -431,67 +347,19 @@ void UINode::_Root::DrawCallback () {
 	}
 }
 
-void UINode::_Root::MouseCallback (int_t x, int_t y, int_t button) {
-	if(_ROOT)
-		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			(*i)->SendMouse(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
-}
-
-void UINode::_Root::MouseUpCallback (int_t x, int_t y, int_t button) {
-	if(_ROOT)
-		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			(*i)->SendMouseUp(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
-}
-
-void UINode::_Root::MouseMoveCallback (int_t x, int_t y) {
-	if(_ROOT)
-		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			(*i)->SendMouseMove(x - (*i)->_rect.x, y - (*i)->_rect.y);
-}
-
-void UINode::_Root::MouseDragCallback (int_t x, int_t y, int_t button) {
-	if(_ROOT)
-		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			(*i)->SendMouseDrag(x - (*i)->_rect.x, y - (*i)->_rect.y, button);
-}
-
-void UINode::_Root::MouseWheelCallback (float xdelta, float ydelta) {
-	if(_ROOT)
-		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			(*i)->SendMouseWheel(xdelta, ydelta);
-}
-
-void UINode::_Root::KeyCallback (vkey_t key) {
-	if(_ROOT)
-		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			(*i)->SendKey(key);
-}
-
-void UINode::_Root::KeyUpCallback (vkey_t key) {
-	if(_ROOT)
-		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			(*i)->SendKeyUp(key);
-}
-
-void UINode::_Root::ASCIICallback (char key) {
-	if(_ROOT)
-		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
-			(*i)->SendASCII(key);
-}
-
-void UINode::_Root::TouchCallback (int_t x, int_t y) {
+void UINode::_Root::TouchCallback (int x, int y) {
 	if(_ROOT)
 		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendTouch(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
 
-void UINode::_Root::TouchUpCallback (int_t x, int_t y) {
+void UINode::_Root::TouchUpCallback (int x, int y) {
 	if(_ROOT)
 		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendTouchUp(x - (*i)->_rect.x, y - (*i)->_rect.y);
 }
 
-void UINode::_Root::TouchMoveCallback (int_t x, int_t y) {
+void UINode::_Root::TouchMoveCallback (int x, int y) {
 	if(_ROOT)
 		for(std::list<UINode*>::iterator i = _ROOT->nodes.begin(); _ROOT && i != _ROOT->nodes.end(); i++)
 			(*i)->SendTouchMove(x - (*i)->_rect.x, y - (*i)->_rect.y);
@@ -500,6 +368,6 @@ void UINode::_Root::TouchMoveCallback (int_t x, int_t y) {
 std::map<GString, UINode* (*) ()>*		UINode::_FACTORY_LIST = NULL;
 std::map<GString, bool>*				UINode::_AUTORUN_LIST = NULL;
 UINode::_Root*							UINode::_ROOT = NULL;
-uint64									UINode::_MILLISECONDS = 1;
-uint64									UINode::_ELAPSE = 1;
-uint32									UINode::_RANDOM_SEED = 0;
+int64_t									UINode::_MILLISECONDS = 1;
+int64_t									UINode::_ELAPSE = 1;
+uint32_t								UINode::_RANDOM_SEED = 0;

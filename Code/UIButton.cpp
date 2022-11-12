@@ -10,7 +10,7 @@ UIButton::UIButton ()
 {
 }
 
-UIButton::UIButton (const GString& text, int_t x, int_t y, GFont* font, GImage* button, GImage* down, GSound* click, UINode* parent)
+UIButton::UIButton (const GString& text, int x, int y, GFont* font, GImage* button, GImage* down, GSound* click, UINode* parent)
 :	_isDown(false)
 ,	_font(NULL)
 ,	_button(NULL)
@@ -26,7 +26,7 @@ UIButton::UIButton (const GString& text, const GPoint& loc, GFont* font, GImage*
 {
 }
 
-UIButton::UIButton (const GString& text, int_t x, int_t y, const GString& font, const GString& button, const GString& down, const GString& click, UINode* parent)
+UIButton::UIButton (const GString& text, int x, int y, const GString& font, const GString& button, const GString& down, const GString& click, UINode* parent)
 :	_isDown(false)
 ,	_font(NULL)
 ,	_button(NULL)
@@ -37,7 +37,7 @@ UIButton::UIButton (const GString& text, int_t x, int_t y, const GString& font, 
 	New(text, x, y, font, button, down, click, parent);
 }
 
-UIButton::UIButton (int_t x, int_t y, const GString& button, const GString& down, const GString& click, UINode* parent)
+UIButton::UIButton (int x, int y, const GString& button, const GString& down, const GString& click, UINode* parent)
 :	UIButton(NULL, x, y, NULL, button, down, click, parent)
 {
 }
@@ -46,7 +46,7 @@ UIButton::~UIButton () {
 	Delete();
 }
 
-bool UIButton::New (const GString& text, int_t x, int_t y, GFont* font, GImage* button, GImage* down, GSound* click, UINode* parent) {
+bool UIButton::New (const GString& text, int x, int y, GFont* font, GImage* button, GImage* down, GSound* click, UINode* parent) {
 	_text = text;
 	_loc.x = 0;
 	_loc.y = 0;
@@ -67,7 +67,7 @@ bool UIButton::New (const GString& text, const GPoint& loc, GFont* font, GImage*
 	return New(text, loc.x, loc.y, font, button, down, click, parent);
 }
 
-bool UIButton::New (const GString& text, int_t x, int_t y, const GString& font, const GString& button, const GString& down, const GString& click, UINode* parent) {
+bool UIButton::New (const GString& text, int x, int y, const GString& font, const GString& button, const GString& down, const GString& click, UINode* parent) {
 	_alloc = new _Alloc;
 	_alloc->_font = font.IsEmpty() ? NULL : new GFont(font);
 	_alloc->_button = button.IsEmpty() ? NULL : new GImage(button);
@@ -76,7 +76,7 @@ bool UIButton::New (const GString& text, int_t x, int_t y, const GString& font, 
 	return New(text, x, y, _alloc->_font, _alloc->_button, _alloc->_down, _alloc->_click, parent);
 }
 
-bool UIButton::New (int_t x, int_t y, const GString& button, const GString& down, const GString& click, UINode* parent) {
+bool UIButton::New (int x, int y, const GString& button, const GString& down, const GString& click, UINode* parent) {
 	return New(NULL, x, y, NULL, button, down, click, parent);
 }
 
@@ -120,7 +120,7 @@ void UIButton::OnDraw () {
 	}
 }
 
-void UIButton::OnTouch (int_t x, int_t y) {
+void UIButton::OnTouch (int x, int y) {
 	if(x >= 0 && x < GetWidth() && y >= 0 && y < GetHeight()) {
 		_loc.x = x;
 		_loc.y = y;
@@ -130,7 +130,7 @@ void UIButton::OnTouch (int_t x, int_t y) {
 	}
 }
 
-void UIButton::OnTouchUp (int_t x, int_t y) {
+void UIButton::OnTouchUp (int x, int y) {
 	if(_isDown == true && x >= 0 && x < GetWidth() && y >= 0 && y < GetHeight()) {
 		_loc.x = x;
 		_loc.y = y;
@@ -142,7 +142,7 @@ void UIButton::OnTouchUp (int_t x, int_t y) {
 	_isDown = false;
 }
 
-void UIButton::OnTouchMove (int_t x, int_t y) {
+void UIButton::OnTouchMove (int x, int y) {
 	_loc.x = x;
 	_loc.y = y;
 }

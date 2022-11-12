@@ -1,7 +1,7 @@
-#ifndef _HERMES_H_
-#define _HERMES_H_
+#ifndef HERMES_H_
+#define HERMES_H_
 
-#include "Game.h"
+#include "GTypes.h"
 
 static const char* VERSION_STRING = "1.0.2";
 
@@ -11,4 +11,4 @@ public:
 	static bool Build (const GString& path);
 };
 
-#endif // _HERMES_H_
+#endif // HERMES_H_

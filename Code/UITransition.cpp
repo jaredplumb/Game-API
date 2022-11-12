@@ -1,6 +1,6 @@
 #include "UITransition.h"
 
-static const uint64 _FADE_TIME = 250;
+static const int64_t _FADE_TIME = 250;
 
 UITransition::UITransition ()
 :	_transition(NONE)

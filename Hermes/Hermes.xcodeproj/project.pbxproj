@@ -10,19 +10,15 @@
 		2F0AC30C1F807E34009B5A1E /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F0AC30A1F807E27009B5A1E /* Metal.framework */; };
 		2F0AC30D1F807E39009B5A1E /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F0AC30B1F807E27009B5A1E /* MetalKit.framework */; };
 		2F1DC26E2282925400246153 /* GPackage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2552282925400246153 /* GPackage.cpp */; };
-		2F1DC2702282925400246153 /* GSystem_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2572282925400246153 /* GSystem_Apple.mm */; };
-		2F1DC2712282925400246153 /* GSystem_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2592282925400246153 /* GSystem_Windows.cpp */; };
-		2F1DC2742282925400246153 /* GXML_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC25F2282925400246153 /* GXML_Windows.cpp */; };
 		2F1DC2752282925400246153 /* GImage_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2602282925400246153 /* GImage_Apple.mm */; };
 		2F1DC2772282925400246153 /* GFont.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2622282925400246153 /* GFont.cpp */; };
-		2F1DC2792282925400246153 /* GSound_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2652282925400246153 /* GSound_Apple.mm */; };
 		2F1DC27A2282925400246153 /* GXML_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2662282925400246153 /* GXML_Apple.mm */; };
-		2F1DC27B2282925400246153 /* GSystem_Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2672282925400246153 /* GSystem_Common.cpp */; };
-		2F1DC27C2282925400246153 /* GImage_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC26B2282925400246153 /* GImage_Windows.cpp */; };
 		2F1DC27D2282925400246153 /* GTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC26D2282925400246153 /* GTypes.cpp */; };
-		2F47A73E18DB803F0054053B /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F47A73D18DB803F0054053B /* OpenGL.framework */; };
-		2F47A74018DB804E0054053B /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F47A73F18DB804E0054053B /* GLKit.framework */; };
 		2F47A74218DB80620054053B /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F47A74118DB80620054053B /* Cocoa.framework */; };
+		2F56F1E8291EEAAA00B30349 /* GSound_OpenAL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F56F1E7291EEAAA00B30349 /* GSound_OpenAL.cpp */; };
+		2F56F1EC291EEADB00B30349 /* GSystem_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F56F1E9291EEADB00B30349 /* GSystem_Apple.mm */; };
+		2F56F1ED291EEADB00B30349 /* GSystem_Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F56F1EA291EEADB00B30349 /* GSystem_Common.cpp */; };
+		2F56F1EF291EEB1600B30349 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F56F1EE291EEB1600B30349 /* OpenAL.framework */; };
 		2F772BEE168E0D4600A6864F /* Hermes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F772BEB168E0D4600A6864F /* Hermes.cpp */; };
 		2F772BEF168E0D4600A6864F /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F772BED168E0D4600A6864F /* Main.cpp */; };
 		2F9C467B2224688500CB7CDC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F9C467A2224688500CB7CDC /* AVFoundation.framework */; };
@@ -44,28 +40,26 @@
 /* Begin PBXFileReference section */
 		2F0AC30A1F807E27009B5A1E /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Metal.framework; sourceTree = DEVELOPER_DIR; };
 		2F0AC30B1F807E27009B5A1E /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
-		2F1DC2542282925400246153 /* Game.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Game.h; path = ../Code/Game.h; sourceTree = "<group>"; };
 		2F1DC2552282925400246153 /* GPackage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GPackage.cpp; path = ../Code/GPackage.cpp; sourceTree = "<group>"; };
 		2F1DC2572282925400246153 /* GSystem_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GSystem_Apple.mm; path = ../Code/GSystem_Apple.mm; sourceTree = "<group>"; };
 		2F1DC2582282925400246153 /* GTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GTypes.h; path = ../Code/GTypes.h; sourceTree = "<group>"; };
-		2F1DC2592282925400246153 /* GSystem_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GSystem_Windows.cpp; path = ../Code/GSystem_Windows.cpp; sourceTree = "<group>"; };
 		2F1DC25B2282925400246153 /* GPackage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GPackage.h; path = ../Code/GPackage.h; sourceTree = "<group>"; };
 		2F1DC25C2282925400246153 /* GSound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GSound.h; path = ../Code/GSound.h; sourceTree = "<group>"; };
-		2F1DC25E2282925400246153 /* GSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GSystem.h; path = ../Code/GSystem.h; sourceTree = "<group>"; };
-		2F1DC25F2282925400246153 /* GXML_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GXML_Windows.cpp; path = ../Code/GXML_Windows.cpp; sourceTree = "<group>"; };
 		2F1DC2602282925400246153 /* GImage_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GImage_Apple.mm; path = ../Code/GImage_Apple.mm; sourceTree = "<group>"; };
 		2F1DC2622282925400246153 /* GFont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFont.cpp; path = ../Code/GFont.cpp; sourceTree = "<group>"; };
 		2F1DC2632282925400246153 /* GFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFont.h; path = ../Code/GFont.h; sourceTree = "<group>"; };
-		2F1DC2652282925400246153 /* GSound_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GSound_Apple.mm; path = ../Code/GSound_Apple.mm; sourceTree = "<group>"; };
 		2F1DC2662282925400246153 /* GXML_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GXML_Apple.mm; path = ../Code/GXML_Apple.mm; sourceTree = "<group>"; };
-		2F1DC2672282925400246153 /* GSystem_Common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GSystem_Common.cpp; path = ../Code/GSystem_Common.cpp; sourceTree = "<group>"; };
 		2F1DC2682282925400246153 /* GImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GImage.h; path = ../Code/GImage.h; sourceTree = "<group>"; };
 		2F1DC26A2282925400246153 /* GXML.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GXML.h; path = ../Code/GXML.h; sourceTree = "<group>"; };
-		2F1DC26B2282925400246153 /* GImage_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GImage_Windows.cpp; path = ../Code/GImage_Windows.cpp; sourceTree = "<group>"; };
 		2F1DC26D2282925400246153 /* GTypes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GTypes.cpp; path = ../Code/GTypes.cpp; sourceTree = "<group>"; };
 		2F47A73D18DB803F0054053B /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		2F47A73F18DB804E0054053B /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
 		2F47A74118DB80620054053B /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		2F56F1E7291EEAAA00B30349 /* GSound_OpenAL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GSound_OpenAL.cpp; path = ../Code/GSound_OpenAL.cpp; sourceTree = "<group>"; };
+		2F56F1E9291EEADB00B30349 /* GSystem_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GSystem_Apple.mm; path = ../Code/GSystem_Apple.mm; sourceTree = "<group>"; };
+		2F56F1EA291EEADB00B30349 /* GSystem_Common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GSystem_Common.cpp; path = ../Code/GSystem_Common.cpp; sourceTree = "<group>"; };
+		2F56F1EB291EEADB00B30349 /* GSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GSystem.h; path = ../Code/GSystem.h; sourceTree = "<group>"; };
+		2F56F1EE291EEB1600B30349 /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
 		2F772BEB168E0D4600A6864F /* Hermes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Hermes.cpp; sourceTree = "<group>"; };
 		2F772BEC168E0D4600A6864F /* Hermes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Hermes.h; sourceTree = "<group>"; };
 		2F772BED168E0D4600A6864F /* Main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Main.cpp; sourceTree = "<group>"; };
@@ -82,8 +76,7 @@
 				2F9C467D2224688E00CB7CDC /* libz.tbd in Frameworks */,
 				2F9C467B2224688500CB7CDC /* AVFoundation.framework in Frameworks */,
 				2F47A74218DB80620054053B /* Cocoa.framework in Frameworks */,
-				2F47A74018DB804E0054053B /* GLKit.framework in Frameworks */,
-				2F47A73E18DB803F0054053B /* OpenGL.framework in Frameworks */,
+				2F56F1EF291EEB1600B30349 /* OpenAL.framework in Frameworks */,
 				2F0AC30D1F807E39009B5A1E /* MetalKit.framework in Frameworks */,
 				2F0AC30C1F807E34009B5A1E /* Metal.framework in Frameworks */,
 			);
@@ -95,25 +88,22 @@
 		2F47A6F018DB7B530054053B /* Game API */ = {
 			isa = PBXGroup;
 			children = (
-				2F1DC2542282925400246153 /* Game.h */,
 				2F1DC2622282925400246153 /* GFont.cpp */,
 				2F1DC2632282925400246153 /* GFont.h */,
 				2F1DC2602282925400246153 /* GImage_Apple.mm */,
-				2F1DC26B2282925400246153 /* GImage_Windows.cpp */,
 				2F1DC2682282925400246153 /* GImage.h */,
 				2F1DC2552282925400246153 /* GPackage.cpp */,
 				2F1DC25B2282925400246153 /* GPackage.h */,
-				2F1DC2652282925400246153 /* GSound_Apple.mm */,
+				2F56F1E7291EEAAA00B30349 /* GSound_OpenAL.cpp */,
 				2F1DC25C2282925400246153 /* GSound.h */,
 				2F1DC2572282925400246153 /* GSystem_Apple.mm */,
-				2F1DC2672282925400246153 /* GSystem_Common.cpp */,
-				2F1DC2592282925400246153 /* GSystem_Windows.cpp */,
-				2F1DC25E2282925400246153 /* GSystem.h */,
+				2F56F1EA291EEADB00B30349 /* GSystem_Common.cpp */,
+				2F56F1EB291EEADB00B30349 /* GSystem.h */,
 				2F1DC26D2282925400246153 /* GTypes.cpp */,
 				2F1DC2582282925400246153 /* GTypes.h */,
 				2F1DC2662282925400246153 /* GXML_Apple.mm */,
-				2F1DC25F2282925400246153 /* GXML_Windows.cpp */,
 				2F1DC26A2282925400246153 /* GXML.h */,
+				2F56F1E9291EEADB00B30349 /* GSystem_Apple.mm */,
 			);
 			name = "Game API";
 			sourceTree = "<group>";
@@ -141,6 +131,7 @@
 		2FD7A56615B91D3D00F424E8 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2F56F1EE291EEB1600B30349 /* OpenAL.framework */,
 				2F9C467C2224688E00CB7CDC /* libz.tbd */,
 				2F9C467A2224688500CB7CDC /* AVFoundation.framework */,
 				2F47A74118DB80620054053B /* Cocoa.framework */,
@@ -178,7 +169,7 @@
 		2FD7A4B315B914E500F424E8 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1410;
 			};
 			buildConfigurationList = 2FD7A4B615B914E500F424E8 /* Build configuration list for PBXProject "Hermes" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -203,19 +194,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2F1DC2792282925400246153 /* GSound_Apple.mm in Sources */,
 				2F1DC2772282925400246153 /* GFont.cpp in Sources */,
+				2F56F1EC291EEADB00B30349 /* GSystem_Apple.mm in Sources */,
 				2F1DC2752282925400246153 /* GImage_Apple.mm in Sources */,
-				2F1DC2712282925400246153 /* GSystem_Windows.cpp in Sources */,
 				2F772BEE168E0D4600A6864F /* Hermes.cpp in Sources */,
-				2F1DC2702282925400246153 /* GSystem_Apple.mm in Sources */,
-				2F1DC27C2282925400246153 /* GImage_Windows.cpp in Sources */,
-				2F1DC27B2282925400246153 /* GSystem_Common.cpp in Sources */,
+				2F56F1E8291EEAAA00B30349 /* GSound_OpenAL.cpp in Sources */,
 				2F1DC26E2282925400246153 /* GPackage.cpp in Sources */,
 				2F1DC27D2282925400246153 /* GTypes.cpp in Sources */,
 				2F1DC27A2282925400246153 /* GXML_Apple.mm in Sources */,
-				2F1DC2742282925400246153 /* GXML_Windows.cpp in Sources */,
 				2F772BEF168E0D4600A6864F /* Main.cpp in Sources */,
+				2F56F1ED291EEADB00B30349 /* GSystem_Common.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,12 +227,14 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -264,7 +254,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -287,12 +277,14 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -305,7 +297,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -314,6 +306,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -322,6 +317,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "-";
+				DEAD_CODE_STRIPPING = YES;
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

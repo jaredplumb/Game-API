@@ -29,7 +29,7 @@ public:
 	
 private:
 	eTransition		_transition;
-	uint64			_timer;
+	int64_t			_timer;
 	GImage			_image;
 };
 

@@ -1,11 +1,14 @@
 #import "GSystem.h"
-#if PLATFORM_MACOSX || PLATFORM_IOS
+#ifdef __APPLE__
+#import <Foundation/Foundation.h>
+#import <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
 
 static GRect					_RECT			(0, 0, 1280, 720);
 static GRect					_SAFE_RECT		(0, 0, 1280, 720);
 static GRect					_PREFERRED_RECT	(0, 0, 1280, 720);
-static int_t					_FPS		    = 60;
-static int_t					_ARG_C			= 0;
+static int						_FPS		    = 60;
+static int						_ARG_C			= 0;
 static char**					_ARG_V			= NULL;
 id<MTLDevice>					_DEVICE			= nil; // Non-static to allow for extern access from GImage
 id<MTLRenderCommandEncoder>		_RENDER			= nil; // Non-static to allow for extern access from GImage
@@ -16,18 +19,8 @@ static GMatrix32_4x4			_PROJECTION_MATRIX;
 
 
 
+#if TARGET_OS_IPHONE
 
-
-#if PLATFORM_MACOSX
-@interface _MyViewController : NSViewController
-@end
-
-@interface _MyAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate>
-@property (strong, nonatomic) NSWindow* _window;
-@end
-#endif
-
-#if PLATFORM_IOS
 @interface _MyViewController : UIViewController
 @end
 
@@ -35,7 +28,19 @@ static GMatrix32_4x4			_PROJECTION_MATRIX;
 @property (strong, nonatomic) UIWindow* _window;
 @property (strong, nonatomic) _MyViewController* _controller;
 @end
-#endif
+
+#else // TARGET_OS_MAC
+
+@interface _MyViewController : NSViewController
+@end
+
+@interface _MyAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate>
+@property (strong, nonatomic) NSWindow* _window;
+@end
+
+#endif // TARGET_OS_IPHONE // TARGET_OS_MAC
+
+
 
 
 
@@ -43,10 +48,8 @@ static GMatrix32_4x4			_PROJECTION_MATRIX;
 @interface _MyMetalView : MTKView <MTKViewDelegate>
 @end
 
+#if TARGET_OS_IPHONE
 
-
-
-#if PLATFORM_IOS
 @implementation _MyViewController
 
 - (void) viewDidLoad {
@@ -71,53 +74,18 @@ static GMatrix32_4x4			_PROJECTION_MATRIX;
 }
 
 @end // _MyViewController
-#endif
+
+#endif // TARGET_OS_IPHONE
+
+
+
 
 
 
 
 @implementation _MyAppDelegate
 
-#if PLATFORM_MACOSX
-
-- (void) applicationDidFinishLaunching: (NSNotification*)aNotification {
-	
-	// Setup the menus
-	NSString* appName = [[NSProcessInfo processInfo] processName];
-	NSMenu* mainMenu = [NSMenu new];
-	NSMenuItem* appMenuItem = [NSMenuItem new];
-	[mainMenu addItem:appMenuItem];
-	NSMenu* appMenu = [NSMenu new];
-	[appMenuItem setSubmenu:appMenu];
-	NSMenuItem* quitMenuItem = [[NSMenuItem alloc] initWithTitle:[@"Quit " stringByAppendingString:appName] action:@selector(terminate:) keyEquivalent:@"q"];
-	[appMenu addItem:quitMenuItem];
-	[NSApp setMainMenu:mainMenu];
-	
-	// Setup the window
-	NSRect windowRect = NSMakeRect(0, 0, _PREFERRED_RECT.width, _PREFERRED_RECT.height);
-	self._window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable) backing:NSBackingStoreBuffered defer:YES];
-	[self._window setContentAspectRatio:NSMakeSize((CGFloat)_PREFERRED_RECT.width / (CGFloat)_PREFERRED_RECT.height, ((CGFloat)1))];
-	[self._window setTitle:[[NSProcessInfo processInfo] processName]];
-	[self._window setContentView:[[_MyMetalView alloc] initWithFrame:windowRect]];
-	[self._window makeKeyAndOrderFront:self];
-	[self._window center];
-	
-	// Run the startup callbacks after everything is turned on
-	GSystem::RunStartupCallbacks();
-}
-
-- (void) applicationWillTerminate: (NSNotification*)notification {
-	// Run the shutdown callbacks before everything is turned off
-	GSystem::RunShutdownCallbacks();
-}
-
-- (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication *)sender {
-	return YES;
-}
-
-#endif // PLATFORM_MACOSX
-
-#if PLATFORM_IOS
+#if TARGET_OS_IPHONE
 
 - (BOOL) application: (UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
 	
@@ -156,7 +124,44 @@ static GMatrix32_4x4			_PROJECTION_MATRIX;
 	GSystem::RunShutdownCallbacks();
 }
 
-#endif // PLATFORM_IOS
+#else // TARGET_OS_MAC
+
+- (void) applicationDidFinishLaunching: (NSNotification*)aNotification {
+	
+	// Setup the menus
+	NSString* appName = [[NSProcessInfo processInfo] processName];
+	NSMenu* mainMenu = [NSMenu new];
+	NSMenuItem* appMenuItem = [NSMenuItem new];
+	[mainMenu addItem:appMenuItem];
+	NSMenu* appMenu = [NSMenu new];
+	[appMenuItem setSubmenu:appMenu];
+	NSMenuItem* quitMenuItem = [[NSMenuItem alloc] initWithTitle:[@"Quit " stringByAppendingString:appName] action:@selector(terminate:) keyEquivalent:@"q"];
+	[appMenu addItem:quitMenuItem];
+	[NSApp setMainMenu:mainMenu];
+	
+	// Setup the window
+	NSRect windowRect = NSMakeRect(0, 0, _PREFERRED_RECT.width, _PREFERRED_RECT.height);
+	self._window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable) backing:NSBackingStoreBuffered defer:YES];
+	[self._window setContentAspectRatio:NSMakeSize((CGFloat)_PREFERRED_RECT.width / (CGFloat)_PREFERRED_RECT.height, ((CGFloat)1))];
+	[self._window setTitle:[[NSProcessInfo processInfo] processName]];
+	[self._window setContentView:[[_MyMetalView alloc] initWithFrame:windowRect]];
+	[self._window makeKeyAndOrderFront:self];
+	[self._window center];
+	
+	// Run the startup callbacks after everything is turned on
+	GSystem::RunStartupCallbacks();
+}
+
+- (void) applicationWillTerminate: (NSNotification*)notification {
+	// Run the shutdown callbacks before everything is turned off
+	GSystem::RunShutdownCallbacks();
+}
+
+- (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication *)sender {
+	return YES;
+}
+
+#endif // TARGET_OS_IPHONE // TARGET_OS_MAC
 
 @end // _MyAppDelegate
 
@@ -218,19 +223,11 @@ static NSString* _SHADER = @""
 
 - (id) initWithFrame: (CGRect)frameRect {
 	
-#if PLATFORM_MACOSX
-	// Convert the view to use the full pixel coordinates of the screen (retina)
-	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect];
-	
-	// Add a tracking area so that mouse move events work
-	// TODO: I commented this out because it might not be needed and is causing problems.  Need to investigate more.
-	//[self addTrackingArea:[[NSTrackingArea alloc] initWithRect:frameRect options:(NSTrackingMouseMoved | NSTrackingActiveInActiveApp | NSTrackingInVisibleRect) owner:self userInfo:nil]];
-#endif
-	
-#if PLATFORM_IOS
-	// Convert the view to use the full pixel coordinates of the screen (retina)
-	frameRect = [[UIScreen mainScreen] nativeBounds];
-#endif
+#if TARGET_OS_IPHONE
+	frameRect = [[UIScreen mainScreen] nativeBounds]; // Convert the view to use the full pixel coordinates of the screen (retina)
+#else // TARGET_OS_MAC
+	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect]; // Convert the view to use the full pixel coordinates of the screen (retina)
+#endif // TARGET_OS_IPHONE //TARGET_OS_MAC
 	
 	_DEVICE = MTLCreateSystemDefaultDevice();
 	self = [super initWithFrame:frameRect device:_DEVICE];
@@ -295,12 +292,12 @@ static NSString* _SHADER = @""
 	// Set the safe are for for interactions.  This is used to make sure UI elements and mouse/touch interaction is in the correct area
 	_SAFE_RECT = _RECT;
 	
-#if PLATFORM_IOS
+#if TARGET_OS_IPHONE
 	// Get the safe area already part of iOS.  The UIWindow may not be retina, so adjust offsets accordingly
-	int_t left = _RECT.width * (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left / (int_t)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
-	int_t top = _RECT.height * (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top / (int_t)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
-	int_t right = _RECT.width * (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right / (int_t)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
-	int_t bottom = _RECT.height * (int_t)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom / (int_t)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
+	int left = _RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
+	int top = _RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
+	int right = _RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
+	int bottom = _RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
 	_SAFE_RECT.x += left;
 	_SAFE_RECT.y += top;
 	_SAFE_RECT.width -= (left + right);
@@ -359,153 +356,14 @@ static NSString* _SHADER = @""
 	return [super resignFirstResponder];
 }
 
-#if PLATFORM_MACOSX
-
-- (void) mouseDown: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
-	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
-}
-
-- (void) rightMouseDown: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
-	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
-}
-
-- (void) otherMouseDown: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-	GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
-	GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
-}
-
-- (void) mouseUp: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
-	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
-}
-
-- (void) rightMouseUp: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
-	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
-}
-
-- (void) otherMouseUp: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-	GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
-	GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
-}
-
-- (void) mouseMoved: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-	GSystem::RunMouseMoveCallbacks((int_t)location.x, (int_t)location.y);
-}
-
-- (void) mouseDragged: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
-	GSystem::RunMouseMoveCallbacks((int_t)location.x, (int_t)location.y); // The mouseMoved callback stops when a drag starts, so this is needed to properly track mouse move events
-	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
-}
-
-- (void) rightMouseDragged: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
-	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
-}
-
-- (void) otherMouseDragged: (NSEvent*)theEvent {
-	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-	GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, (int_t)[theEvent buttonNumber]);
-	GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
-}
-
-- (void) scrollWheel: (NSEvent*)theEvent {
-	GSystem::RunMouseWheelCallbacks((float_t)[theEvent deltaX], (float_t)[theEvent deltaY]);
-}
-
-- (void) keyDown: (NSEvent*)theEvent {
-	if([theEvent isARepeat] == NO)
-		GSystem::RunKeyCallbacks((vkey_t)[theEvent keyCode]);
-	if([[theEvent characters] length] > 0 && isprint((int)[[theEvent characters] UTF8String][0]))
-		GSystem::RunASCIICallbacks((char)[[theEvent characters] UTF8String][0]);
-	//wchar_t key = [[theEvent characters] characterAtIndex:0];
-}
-
-- (void) keyUp: (NSEvent*)theEvent {
-	if([theEvent isARepeat] == NO)
-		GSystem::RunKeyUpCallbacks((vkey_t)[theEvent keyCode]);
-}
-
-- (void) flagsChanged: (NSEvent*)theEvent {
-	
-	//unsigned long cmods = [theEvent modifierFlags];
-	//if ((cmods & 0xffff0000) != _Modifiers)
-	//{
-	//   uint32_t mods = MapModifiers(cmods);
-	//  for (int i = 1; i <= 4; i++)
-	// {
-	//    unsigned long m = (1 << (16+i));
-	//     if ((cmods & m) != (_Modifiers & m))
-	//     {
-	//         if (cmods & m)
-	//             _App->OnKey(ModifierKeys[i], 0, true, mods); // Key Down
-	//         else
-	//             _App->OnKey(ModifierKeys[i], 0, false, mods); // Key Up
-	//     }
-	// }
-	//    _Modifiers = cmods & 0xffff0000;
-	//}
-	
-	//GetCurrentKeyModifiers
-	//GetCurrentEventKeyModifiers
-	//kVK_Shift
-	//kVK_RightShift
-	//printf("0x%x %d\n", [theEvent keyCode], (bool)([theEvent modifierFlags] & NSShiftKeyMask));
-}
-
-#endif // PLATFORM_MACOSX
-
-#if PLATFORM_IOS
+#if TARGET_OS_IPHONE
 
 - (void) touchesBegan: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
 		CGPoint location = [touch locationInView:self];
 		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-		GSystem::RunTouchCallbacks((int_t)location.x, (int_t)location.y);
-		GSystem::RunMouseCallbacks((int_t)location.x, (int_t)location.y, 1);
+		GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
 	}
 }
 
@@ -514,9 +372,7 @@ static NSString* _SHADER = @""
 		CGPoint location = [touch locationInView:self];
 		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-		GSystem::RunTouchMoveCallbacks((int_t)location.x, (int_t)location.y);
-		GSystem::RunMouseDragCallbacks((int_t)location.x, (int_t)location.y, 1);
-		GSystem::RunMouseMoveCallbacks((int_t)location.x, (int_t)location.y);
+		GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
 	}
 }
 
@@ -525,8 +381,7 @@ static NSString* _SHADER = @""
 		CGPoint location = [touch locationInView:self];
 		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-		GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
-		GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, 1);
+		GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 	}
 }
 
@@ -535,13 +390,85 @@ static NSString* _SHADER = @""
 		CGPoint location = [touch locationInView:self];
 		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
-		GSystem::RunTouchUpCallbacks((int_t)location.x, (int_t)location.y);
-		GSystem::RunMouseUpCallbacks((int_t)location.x, (int_t)location.y, 1);
+		GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 	}
 }
 
-#endif // PLATFORM_IOS
+#else // TARGET_OS_MAC
 
+- (void) mouseDown: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	GSystem::RunTouchCallbacks((int)location.x, (int)location.y); // [theEvent buttonNumber]
+}
+
+- (void) rightMouseDown: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
+}
+
+- (void) otherMouseDown: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
+}
+
+- (void) mouseUp: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
+}
+
+- (void) rightMouseUp: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
+}
+
+- (void) otherMouseUp: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
+}
+
+- (void) mouseDragged: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
+}
+
+- (void) rightMouseDragged: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
+}
+
+- (void) otherMouseDragged: (NSEvent*)theEvent {
+	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+	location.y = self.frame.size.height - location.y;
+	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
+}
+
+#endif // TARGET_OS_IPHONE // TARGET_OS_MAC
 
 @end // _MyMetalView
 
@@ -580,25 +507,25 @@ GRect GSystem::GetPreferredRect () {
 	return _PREFERRED_RECT;
 }
 
-int_t GSystem::GetFPS () {
+int GSystem::GetFPS () {
 	return _FPS;
 }
 
-int_t GSystem::GetUniqueRef () {
-	static int_t REF = 1;
+int GSystem::GetUniqueRef () {
+	static int REF = 1;
 	return REF++;
 }
 
-uint64 GSystem::GetMilliseconds () {
-	return (uint64)(CFAbsoluteTimeGetCurrent() * 1000.0);
+int64_t GSystem::GetMilliseconds () {
+	return static_cast<int64_t>(CFAbsoluteTimeGetCurrent() * 1000.0);
 }
 
-uint64 GSystem::GetMicroseconds () {
-	return (uint64)(CFAbsoluteTimeGetCurrent() * 1000000.0);
+int64_t GSystem::GetMicroseconds () {
+	return static_cast<int64_t>(CFAbsoluteTimeGetCurrent() * 1000000.0);
 }
 
-uint64 GSystem::GetNanoseconds () {
-	return (uint64)(CFAbsoluteTimeGetCurrent() * 1000000000.0);
+int64_t GSystem::GetNanoseconds () {
+	return static_cast<int64_t>(CFAbsoluteTimeGetCurrent() * 1000000000.0);
 }
 
 void GSystem::SetDefaultWD () {
@@ -612,10 +539,10 @@ void GSystem::SetDefaultWD () {
 const GString& GSystem::GetSaveDirectory () {
 	static GString _DIRECTORY;
 	if(_DIRECTORY.IsEmpty()) {
-#if PLATFORM_MACOSX
-		NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
-#else
+#if TARGET_OS_IPHONE
 		NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+#else
+		NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
 #endif
 		if([paths count] > 0)
 			_DIRECTORY.New([[paths objectAtIndex:0] fileSystemRepresentation]);
@@ -626,39 +553,37 @@ const GString& GSystem::GetSaveDirectory () {
 
 
 
-void GSystem::RunPreferredSize (int_t width, int_t height) {
+void GSystem::RunPreferredSize (int width, int height) {
 	_RECT = GRect(0, 0, width, height);
 	_SAFE_RECT = GRect(0, 0, width, height);
 	_PREFERRED_RECT = GRect(0, 0, width, height);
 }
 
-void GSystem::RunPreferredFPS (int_t fps) {
+void GSystem::RunPreferredFPS (int fps) {
 	_FPS = fps;
 }
 
-void GSystem::RunPreferredArgs (int_t argc, char* argv[]) {
+void GSystem::RunPreferredArgs (int argc, char* argv[]) {
 	_ARG_C = argc;
 	_ARG_V = argv;
 }
 
-int_t GSystem::Run () {
+int GSystem::Run () {
 	GSystem::SetDefaultWD();
 	GConsole::Debug("WD: %s\n", getwd(NULL));
 	
-#if PLATFORM_MACOSX
+#if TARGET_OS_IPHONE
+	@autoreleasepool {
+		return UIApplicationMain((int)_ARG_C, _ARG_V, nil, NSStringFromClass([_MyAppDelegate class]));
+	}
+#else // TARGET_OS_MAC
 	@autoreleasepool {
 		[NSApplication sharedApplication];
 		_MyAppDelegate* delegate = [[_MyAppDelegate alloc] init];
 		[[NSApplication sharedApplication] setDelegate:delegate];
 		[[NSApplication sharedApplication] run];
 	}
-#endif
-	
-#if PLATFORM_IOS
-	@autoreleasepool {
-		return UIApplicationMain((int)_ARG_C, _ARG_V, nil, NSStringFromClass([_MyAppDelegate class]));
-	}
-#endif
+#endif // TARGET_OS_IPHONE // TARGET_OS_MAC
 	
 	return EXIT_SUCCESS;
 }
@@ -683,31 +608,31 @@ void GSystem::MatrixSetModelDefault () {
 }
 
 void GSystem::MatrixSetProjectionDefault () {
-	_PROJECTION_MATRIX.SetOrtho2D((float32)_RECT.x, (float32)_RECT.width, (float32)_RECT.height, (float32)_RECT.y, (float32)-1, (float32)1);
+	_PROJECTION_MATRIX.SetOrtho2D((float)_RECT.x, (float)_RECT.width, (float)_RECT.height, (float)_RECT.y, (float)-1, (float)1);
 }
 
 void GSystem::MatrixTranslateModel (float_t x, float_t y) {
-	_MODEL_MATRIX.SetTranslation((float32)x, (float32)y, (float32)0);
+	_MODEL_MATRIX.SetTranslation((float)x, (float)y, (float)0);
 }
 
 void GSystem::MatrixTranslateProjection (float_t x, float_t y) {
-	_PROJECTION_MATRIX.SetTranslation((float32)x, (float32)y, (float32)0);
+	_PROJECTION_MATRIX.SetTranslation((float)x, (float)y, (float)0);
 }
 
 void GSystem::MatrixScaleModel (float_t x, float_t y) {
-	_MODEL_MATRIX.SetScale((float32)x, (float32)y, (float32)1);
+	_MODEL_MATRIX.SetScale((float)x, (float)y, (float)1);
 }
 
 void GSystem::MatrixScaleProjection (float_t x, float_t y) {
-	_PROJECTION_MATRIX.SetScale((float32)x, (float32)y, (float32)1);
+	_PROJECTION_MATRIX.SetScale((float)x, (float)y, (float)1);
 }
 
 void GSystem::MatrixRotateModel (float_t degrees) {
-	_MODEL_MATRIX.SetRotation((float32)degrees * ((float32)M_PI / (float32)180));
+	_MODEL_MATRIX.SetRotation((float)degrees * ((float)M_PI / (float)180));
 }
 
 void GSystem::MatrixRotateProjection (float_t degrees) {
-	_PROJECTION_MATRIX.SetRotation((float32)degrees * ((float32)M_PI / (float32)180));
+	_PROJECTION_MATRIX.SetRotation((float)degrees * ((float)M_PI / (float)180));
 }
 
 void GSystem::MatrixUpdate () {
@@ -718,4 +643,4 @@ void GSystem::MatrixUpdate () {
 	}
 }
 
-#endif // PLATFORM_MACOSX // PLATFORM_IOS
+#endif // __APPLE__

@@ -1,5 +1,6 @@
 #include "GXML.h"
-#if PLATFORM_MACOSX || PLATFORM_IOS
+#ifdef __APPLE__
+#import <Foundation/Foundation.h>
 
 @interface _XMLParser : NSXMLParser<NSXMLParserDelegate> {
 	GXML* _xml;		// Pointer to main xml object
@@ -109,7 +110,7 @@ const GString* GXML::GetAttribute (const GString& name) const {
 	return NULL;
 }
 
-const GXML* GXML::GetElement (const GString& element, int_t index) const {
+const GXML* GXML::GetElement (const GString& element, int index) const {
 	std::pair<std::multimap<GString, GXML*>::const_iterator, std::multimap<GString, GXML*>::const_iterator> find = elements.equal_range(GString(element).ToLower());
 	for(std::multimap<GString, GXML*>::const_iterator i = find.first; i != find.second; i++)
 		if(index-- <= 0)
@@ -153,4 +154,4 @@ GString GXML::GetString () const {
 	return GString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n") + _GetString(this, "");
 }
 
-#endif // PLATFORM_MACOSX || PLATFORM_IOS
+#endif // __APPLE__

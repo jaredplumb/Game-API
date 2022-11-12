@@ -34,8 +34,8 @@ public:
 	
 	class Resource {
 	public:
-		uint64 bufferSize;
-		uint8* buffer;
+		uint64_t bufferSize;
+		uint8_t* buffer;
 		Resource ();
 		Resource (const GString& resource);
 		~Resource ();

@@ -1,5 +1,7 @@
 #include "GSound.h"
-#if PLATFORM_MACOSX || PLATFORM_IOS || PLATFORM_WEB
+#if defined(__APPLE__)
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
 
 
 static ALCdevice *		_AL_DEVICE		= NULL;
@@ -232,27 +234,27 @@ bool GSound::Resource::NewFromFile (const GString& resource) {
 	if(file.IsOpen() == false)
 		return false;
 	bufferSize = file.GetSize();
-	buffer = new uint8[bufferSize];
+	buffer = new uint8_t[bufferSize];
 	return file.Read(buffer, bufferSize);
 }
 
 bool GSound::Resource::NewFromPackage (const GString& resource) {
 	Delete();
 	
-	uint64 archiveSize = GPackage::GetSize(resource + ".sound");
+	uint64_t archiveSize = GPackage::GetSize(resource + ".sound");
 	if(archiveSize == 0)
 		return false;
 	
-	uint8* archiveBuffer = new uint8[archiveSize];
+	uint8_t* archiveBuffer = new uint8_t[archiveSize];
 	if(GPackage::Read(resource + ".sound", archiveBuffer, archiveSize) == false) {
 		delete [] archiveBuffer;
 		return false;
 	}
 	
-	uint64 headerSize = sizeof(bufferSize);
+	uint64_t headerSize = sizeof(bufferSize);
 	memcpy(this, archiveBuffer, headerSize);
 	
-	buffer = new uint8[bufferSize];
+	buffer = new uint8_t[bufferSize];
 	archiveSize = GArchive::Decompress(archiveBuffer + headerSize, archiveSize - headerSize, buffer, bufferSize);
 	
 	if(archiveSize != bufferSize) {
@@ -273,13 +275,13 @@ void GSound::Resource::Delete () {
 }
 
 bool GSound::Resource::WriteToPackage (GPackage& package, const GString& name) {
-	uint64 headerSize = sizeof(bufferSize);
-	uint64 archiveSize = GArchive::GetBufferBounds(headerSize + sizeof(uint8) * bufferSize);
+	uint64_t headerSize = sizeof(bufferSize);
+	uint64_t archiveSize = GArchive::GetBufferBounds(headerSize + sizeof(uint8_t) * bufferSize);
 	
-	uint8* archiveBuffer = new uint8[archiveSize];
+	uint8_t* archiveBuffer = new uint8_t[archiveSize];
 	memcpy(archiveBuffer, this, headerSize);
 	
-	archiveSize = GArchive::Compress(buffer, sizeof(uint8) * bufferSize, archiveBuffer + headerSize, archiveSize - headerSize);
+	archiveSize = GArchive::Compress(buffer, sizeof(uint8_t) * bufferSize, archiveBuffer + headerSize, archiveSize - headerSize);
 	
 	if(archiveSize == 0) {
 		delete [] archiveBuffer;
@@ -295,4 +297,4 @@ bool GSound::Resource::WriteToPackage (GPackage& package, const GString& name) {
 	return true;
 }
 
-#endif // PLATFORM_MACOSX || PLATFORM_IOS || PLATFORM_WEB
+#endif // defined(__APPLE__)

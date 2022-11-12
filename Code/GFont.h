@@ -21,41 +21,41 @@ public:
 	void Delete ();
 	
 	/// Returns the full line used when rendering a font line
-	int_t GetLineHeight () const;
+	int GetLineHeight () const;
 	
 	/// Returns the height from the top to the base, where the font characters sit, some characters will go below the base
-	int_t GetBaseHeight () const;
+	int GetBaseHeight () const;
 	
 	/// Returns a rect containing the actual rendered pixels, x and y are offsets to the top left
 	GRect GetRect (const GString& text) const;
 	
 	/// Returns the width of the string
-	inline int_t GetWidth (const GString& text) const { return GetRect(text).width; }
+	inline int GetWidth (const GString& text) const { return GetRect(text).width; }
 	
 	bool IsEmpty () const;
 	
-	void Draw (const GString& text, int_t x, int_t y, float alpha = 1.0f);
+	void Draw (const GString& text, int x, int y, float alpha = 1.0f);
 	
 	class Resource {
 	public:
 		struct Char {
-			uint16		x;
-			uint16		y;
-			uint16		width;
-			uint16		height;
-			int16		xoffset;
-			int16		yoffset;
-			int16		xadvance;
+			uint16_t	x;
+			uint16_t	y;
+			uint16_t	width;
+			uint16_t	height;
+			int16_t		xoffset;
+			int16_t		yoffset;
+			int16_t		xadvance;
 		};
 		
-		uint16				height;
-		uint16				base;
-		uint32				charCount;
-		uint32				hashCount;
-		uint32				kernCount;
+		uint16_t			height;
+		uint16_t			base;
+		uint32_t			charCount;
+		uint32_t			hashCount;
+		uint32_t			kernCount;
 		Char*				chars;
-		uint32*				hash;
-		uint64*				kernings;
+		uint32_t*			hash;
+		uint64_t*			kernings;
 		GImage::Resource	image;			// The image data for this font
 		
 		Resource ();

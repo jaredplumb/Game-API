@@ -1,11 +1,12 @@
 #include "GPackage.h"
+#include <list>
 
-static const uint8				_VERSION = 5;
-static const uint8				_IDENTIFIER[] = "PACKAGE";
+static const uint8_t			_VERSION = 5;
+static const char				_IDENTIFIER[] = "PACKAGE";
 static std::list<GPackage*>*	_packages = NULL;
 static GString					_lastResource;
 static GPackage*				_lastPackage = NULL;
-static uint64					_lastSize = 0;
+static int64_t					_lastSize = 0;
 
 GPackage::GPackage ()
 :	_footer(0)
@@ -39,13 +40,13 @@ bool GPackage::OpenForRead (const GString& path) {
 		return false;
 	}
 	
-	uint8 version;
+	uint8_t version;
 	if(_file.Read(&version, sizeof(version)) == false) {
 		GConsole::Debug("ERROR: Failed to read version from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
-	uint8 identifier[sizeof(_IDENTIFIER)];
+	uint8_t identifier[sizeof(_IDENTIFIER)];
 	if(_file.Read(identifier, sizeof(_IDENTIFIER)) == false) {
 		GConsole::Debug("ERROR: Failed to read identifier from package \"%s\"!\n", (const char*)path);
 		return false;
@@ -56,12 +57,12 @@ bool GPackage::OpenForRead (const GString& path) {
 		return false;
 	}
 	
-	if(_file.SetPosition((uint_t)_footer) == false) {
+	if(_file.SetPosition((int)_footer) == false) {
 		GConsole::Debug("ERROR: Failed to set offset for package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
-	uint64 count;
+	int64_t count;
 	if(_file.Read(&count, sizeof(count)) == false) {
 		GConsole::Debug("ERROR: Failed to read number of resources from package \"%s\"!\n", (const char*)path);
 		return false;
@@ -70,25 +71,25 @@ bool GPackage::OpenForRead (const GString& path) {
 	if(count == 0)
 		return true;
 	
-	uint64 bufferSize;
+	int64_t bufferSize;
 	if(_file.Read(&bufferSize, sizeof(bufferSize)) == false) {
 		GConsole::Debug("ERROR: Failed to read buffer size from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
-	uint64 archiveSize;
+	int64_t archiveSize;
 	if(_file.Read(&archiveSize, sizeof(archiveSize)) == false) {
 		GConsole::Debug("ERROR: Failed to read archive size from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
-	uint8* archive = new uint8[archiveSize];
-	if(_file.Read(archive, sizeof(uint8) * archiveSize) == false) {
+	uint8_t* archive = new uint8_t[archiveSize];
+	if(_file.Read(archive, sizeof(uint8_t) * archiveSize) == false) {
 		GConsole::Debug("ERROR: Failed to read archive from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
-	uint8* buffer = new uint8[bufferSize];
+	uint8_t* buffer = new uint8_t[bufferSize];
 	archiveSize = GArchive::Decompress(archive, archiveSize, buffer, bufferSize);
 	if(archiveSize != bufferSize) {
 		GConsole::Debug("ERROR: Failed to decompress resource table for package \"%s\"!\n", (const char*)path);
@@ -98,12 +99,12 @@ bool GPackage::OpenForRead (const GString& path) {
 	
 	delete[] archive;
 
-	uint64 offset = 0;
-	for(uint64 i = 0; i < count; i++) {
+	int64_t offset = 0;
+	for(int64_t i = 0; i < count; i++) {
 		char* resourceName = (char*)(buffer + offset);
 		offset += GString::strlen(resourceName) + 1;
-		uint64 resourceOffset = *((uint64*)(buffer + offset));
-		offset += sizeof(uint64);
+		int64_t resourceOffset = *((int64_t*)(buffer + offset));
+		offset += sizeof(int64_t);
 		_resources.insert(std::make_pair(resourceName, resourceOffset));
 	}
 	
@@ -165,7 +166,7 @@ bool GPackage::Close () {
 	return true;
 }
 
-uint64 GPackage::GetSize (const GString& resource) {
+int64_t GPackage::GetSize (const GString& resource) {
 	_lastResource = resource;
 	_lastPackage = NULL;
 	_lastSize = 0;
@@ -174,7 +175,7 @@ uint64 GPackage::GetSize (const GString& resource) {
 		return 0;
 	
 	for(std::list<GPackage*>::iterator p = _packages->begin(); p != _packages->end(); p++) {
-		std::map<GString, uint64>::iterator r = (*p)->_resources.find(resource);
+		std::map<GString, int64_t>::iterator r = (*p)->_resources.find(resource);
 		if(r != (*p)->_resources.end()) {
 			
 			if((*p)->_file.SetPosition(r->second) == false) {
@@ -182,7 +183,7 @@ uint64 GPackage::GetSize (const GString& resource) {
 				return 0;
 			}
 			
-			uint64 size;
+			int64_t size;
 			if((*p)->_file.Read(&size, sizeof(size)) == false) {
 				GConsole::Debug("ERROR: Failed to read resource size for resource \"%s\"!\n", (const char*)resource);
 				return 0;
@@ -198,14 +199,14 @@ uint64 GPackage::GetSize (const GString& resource) {
 	return 0;
 }
 
-bool GPackage::Read (const GString& resource, void* data, uint64 size) {
+bool GPackage::Read (const GString& resource, void* data, int64_t size) {
 	if(resource != _lastResource || _lastPackage == NULL)
 		GetSize(resource);
 	
 	if(_lastSize == 0)
 		return false;
 	
-	if(_lastPackage->_file.Read(data, (uint_t)size) == false) {
+	if(_lastPackage->_file.Read(data, (int)size) == false) {
 		GConsole::Debug("ERROR: Failed to read from package resource \"%s\"!\n", (const char*)resource);
 		_lastPackage = NULL;
 		return false;
@@ -215,7 +216,7 @@ bool GPackage::Read (const GString& resource, void* data, uint64 size) {
 	return true;
 }
 
-bool GPackage::Write (const GString& resource, const void* data, uint64 size) {
+bool GPackage::Write (const GString& resource, const void* data, int64_t size) {
 	if(_file.SetPosition(_footer) == false) {
 		GConsole::Debug("ERROR: Failed to set package position for resource \"%s\"!\n", (const char*)resource);
 		return false;
@@ -259,7 +260,7 @@ bool GPackage::Write (const GString& resource, const void* data, uint64 size) {
 		return false;
 	}
 	
-	uint64 count = _resources.size();
+	int64_t count = _resources.size();
 	if(_file.Write(&count, sizeof(count)) == false) {
 		GConsole::Debug("ERROR: Failed to write number of resources to package!\n");
 		return false;
@@ -268,30 +269,30 @@ bool GPackage::Write (const GString& resource, const void* data, uint64 size) {
 	if(count == 0)
 		return true;
 	
-	uint64 bufferSize = 0;
-	for(std::map<GString, uint64>::iterator i = _resources.begin(); i != _resources.end(); i++)
-		bufferSize += i->first.GetLength() + 1 + sizeof(uint64);
+	int64_t bufferSize = 0;
+	for(std::map<GString, int64_t>::iterator i = _resources.begin(); i != _resources.end(); i++)
+		bufferSize += i->first.GetLength() + 1 + sizeof(int64_t);
 	
 	if(_file.Write(&bufferSize, sizeof(bufferSize)) == false) {
 		GConsole::Debug("ERROR: Failed to write footer buffer size to package!\n");
 		return false;
 	}
 	
-	uint8* buffer = new uint8[bufferSize];
-	uint64 offset = 0;
-	for(std::map<GString, uint64>::iterator i = _resources.begin(); i != _resources.end(); i++) {
+	uint8_t* buffer = new uint8_t[bufferSize];
+	int64_t offset = 0;
+	for(std::map<GString, int64_t>::iterator i = _resources.begin(); i != _resources.end(); i++) {
 		
 		// Copy the resource name
 		GString::strcpy((char*)(buffer + offset), i->first);
 		offset += i->first.GetLength() + 1;
 		
 		// Copy the resource offset
-		*((uint64*)(buffer + offset)) = i->second;
-		offset += sizeof(uint64);
+		*((int64_t*)(buffer + offset)) = i->second;
+		offset += sizeof(int64_t);
 	}
 	
-	uint64 archiveSize = GArchive::GetBufferBounds(bufferSize);
-	uint8* archive = new uint8[archiveSize];
+	int64_t archiveSize = GArchive::GetBufferBounds(bufferSize);
+	uint8_t* archive = new uint8_t[archiveSize];
 	archiveSize = GArchive::Compress(buffer, bufferSize, archive, archiveSize);
 	if(archive == 0) {
 		GConsole::Debug("ERROR: Failed to compress footer archive to package!\n");
@@ -306,7 +307,7 @@ bool GPackage::Write (const GString& resource, const void* data, uint64 size) {
 		return false;
 	}
 	
-	if(_file.Write(archive, sizeof(uint8) * archiveSize) == false) {
+	if(_file.Write(archive, sizeof(uint8_t) * archiveSize) == false) {
 		GConsole::Debug("ERROR: Failed to write footer archive to package!\n");
 		delete [] buffer;
 		delete [] archive;

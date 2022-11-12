@@ -3,6 +3,7 @@
 
 #include "GTypes.h"
 #include "GSystem.h"
+#include <map>
 
 #define		GPACKAGE_AUTOLOAD(n)		_GPACKAGE_UNIQUE(n,__COUNTER__)
 #define		_GPACKAGE_UNIQUE(n,u)		_GPACKAGE_STATIC(n,u)
@@ -30,18 +31,18 @@ public:
 	bool Close ();
 	
 	/// Write a resoruce to this package
-	bool Write (const GString& resource, const void* data, uint64 size);
+	bool Write (const GString& resource, const void* data, int64_t size);
 	
 	/// Returns the size of a resourse found in the global list of packages
-	static uint64 GetSize (const GString& resource);
+	static int64_t GetSize (const GString& resource);
 	
 	/// Reads data from a resource found in the global list of packages
-	static bool Read (const GString& resource, void* data, uint64 size);
+	static bool Read (const GString& resource, void* data, int64_t size);
 	
 private:
 	GFile						_file;
-	uint64						_footer;
-	std::map<GString, uint64>	_resources;
+	int64_t						_footer;
+	std::map<GString, int64_t>	_resources;
 };
 
 #endif // _GPACKAGE_H_

@@ -24,19 +24,19 @@ public:
 	static GRect GetPreferredRect ();
 	
 	/// Returns the the current FPS.
-	static int_t GetFPS ();
+	static int GetFPS ();
 	
 	/// Returns a new unique integer, per application session.
-	static int_t GetUniqueRef ();
+	static int GetUniqueRef ();
 	
 	/// Returns the startup time in milliseconds.
-	static uint64 GetMilliseconds ();
+	static int64_t GetMilliseconds ();
 	
 	/// Returns the startup time in microseconds.
-	static uint64 GetMicroseconds ();
+	static int64_t GetMicroseconds ();
 	
 	/// Returns the startup time in nanoseconds.
-	static uint64 GetNanoseconds ();
+	static int64_t GetNanoseconds ();
 	
 	/// Sets the default working directory to the Resources directory.
 	static void SetDefaultWD ();
@@ -46,12 +46,12 @@ public:
 	
 	/// Sets the preferred screen width and height, fps, or arg, must be called before calling Run(), some
 	/// options will not work on all platforms
-	static void RunPreferredSize (int_t width, int_t height);
-	static void RunPreferredFPS (int_t fps);
-	static void RunPreferredArgs (int_t argc, char* argv[]);
+	static void RunPreferredSize (int width, int height);
+	static void RunPreferredFPS (int fps);
+	static void RunPreferredArgs (int argc, char* argv[]);
 	
 	/// Runs the core game system until finished (or in some cases indefinitely) returning the exit code
-	static int_t Run ();
+	static int Run ();
 	
 	// Typical usage is to set the matrix to default, then scale, then rotate, then translate, then update the matrix
 	static void MatrixSetModelDefault ();		// Set model to identity
@@ -65,53 +65,29 @@ public:
 	static void MatrixUpdate ();
 	
 	// Never assume these callbacks are called in any specific order
-	static int_t NewStartupCallback (void (* callback) ());
-	static int_t NewShutdownCallback (void (* callback) ());
-	static int_t NewDrawCallback (void (* callback) ()); // This is called "Draw" and not "Timer", because it is always the speed of the framerate, and drawing is only allowed in these callbacks
-	static int_t NewMouseCallback (void (* callback) (int_t x, int_t y, int_t button));
-	static int_t NewMouseUpCallback (void (* callback) (int_t x, int_t y, int_t button));
-	static int_t NewMouseMoveCallback (void (* callback) (int_t x, int_t y));
-	static int_t NewMouseDragCallback (void (* callback) (int_t x, int_t y, int_t button));
-	static int_t NewMouseWheelCallback(void(*callback) (float xdelta, float ydelta)); // >=1 or <= -1 for mouse wheel scrolling
-	static int_t NewKeyCallback (void (* callback) (vkey_t key));
-	static int_t NewKeyUpCallback (void (* callback) (vkey_t key));
-	static int_t NewASCIICallback (void (* callback) (char key)); // ASCII events allow for autokey
-	static int_t NewTouchCallback (void (* callback) (int_t x, int_t y));
-	static int_t NewTouchUpCallback (void (* callback) (int_t x, int_t y));
-	static int_t NewTouchMoveCallback (void (* callback) (int_t x, int_t y));
+	static int NewStartupCallback (void (* callback) ());
+	static int NewShutdownCallback (void (* callback) ());
+	static int NewDrawCallback (void (* callback) ()); // This is called "Draw" and not "Timer", because it is always the speed of the framerate, and drawing is only allowed in these callbacks
+	static int NewTouchCallback (void (* callback) (int x, int y));
+	static int NewTouchUpCallback (void (* callback) (int x, int y));
+	static int NewTouchMoveCallback (void (* callback) (int x, int y));
 	
 	// Callbacks do not need to be deleted, they will automatically be deleted after shutdown
-	static void DeleteStartupCallback (int_t ref);
-	static void DeleteShutdownCallback (int_t ref);
-	static void DeleteDrawCallback (int_t ref);
-	static void DeleteMouseCallback (int_t ref);
-	static void DeleteMouseUpCallback (int_t ref);
-	static void DeleteMouseMoveCallback (int_t ref);
-	static void DeleteMouseDragCallback (int_t ref);
-	static void DeleteMouseWheelCallback (int_t ref);
-	static void DeleteKeyCallback (int_t ref);
-	static void DeleteKeyUpCallback (int_t ref);
-	static void DeleteASCIICallback (int_t ref);
-	static void DeleteTouchCallback (int_t ref);
-	static void DeleteTouchUpCallback (int_t ref);
-	static void DeleteTouchMoveCallback (int_t ref);
+	static void DeleteStartupCallback (int ref);
+	static void DeleteShutdownCallback (int ref);
+	static void DeleteDrawCallback (int ref);
+	static void DeleteTouchCallback (int ref);
+	static void DeleteTouchUpCallback (int ref);
+	static void DeleteTouchMoveCallback (int ref);
 	static void DeleteAllCallbacks (); // Very dangerous to call, used internally
 	
 	// These should not be called without a good reason (they are used internally)
 	static void RunStartupCallbacks ();
 	static void RunShutdownCallbacks ();
 	static void RunDrawCallbacks ();
-	static void RunMouseCallbacks (int_t x, int_t y, int_t button);
-	static void RunMouseUpCallbacks (int_t x, int_t y, int_t button);
-	static void RunMouseMoveCallbacks (int_t x, int_t y);
-	static void RunMouseDragCallbacks (int_t x, int_t y, int_t button);
-	static void RunMouseWheelCallbacks(float xdelta, float ydelta);
-	static void RunKeyCallbacks (vkey_t key);
-	static void RunKeyUpCallbacks (vkey_t key);
-	static void RunASCIICallbacks (char key);
-	static void RunTouchCallbacks (int_t x, int_t y);
-	static void RunTouchUpCallbacks (int_t x, int_t y);
-	static void RunTouchMoveCallbacks (int_t x, int_t y);
+	static void RunTouchCallbacks (int x, int y);
+	static void RunTouchUpCallbacks (int x, int y);
+	static void RunTouchMoveCallbacks (int x, int y);
 };
 
 #endif // _GSYSTEM_H_

@@ -9,24 +9,24 @@
 class UIButton : public UINode {
 public:
 	UIButton ();
-	UIButton (const GString& text, int_t x, int_t y, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
+	UIButton (const GString& text, int x, int y, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
 	UIButton (const GString& text, const GPoint& loc, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
-	UIButton (const GString& text, int_t x, int_t y, const GString& font, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
-	UIButton (int_t x, int_t y, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
+	UIButton (const GString& text, int x, int y, const GString& font, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
+	UIButton (int x, int y, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
 	virtual ~UIButton ();
 	
-	bool New (const GString& text, int_t x, int_t y, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
+	bool New (const GString& text, int x, int y, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
 	bool New (const GString& text, const GPoint& loc, GFont* font, GImage* button, GImage* down, GSound* click = NULL, UINode* parent = NULL);
-	bool New (const GString& text, int_t x, int_t y, const GString& font, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
-	bool New (int_t x, int_t y, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
+	bool New (const GString& text, int x, int y, const GString& font, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
+	bool New (int x, int y, const GString& button, const GString& down, const GString& click = NULL, UINode* parent = NULL);
 	void Delete ();
 	
 	bool IsDown () const;
 	
 	virtual void OnDraw () override;
-	virtual void OnTouch (int_t x, int_t y) override;
-	virtual void OnTouchUp (int_t x, int_t y) override;
-	virtual void OnTouchMove (int_t x, int_t y) override;
+	virtual void OnTouch (int x, int y) override;
+	virtual void OnTouchUp (int x, int y) override;
+	virtual void OnTouchMove (int x, int y) override;
 	
 private:
 	GString		_text;

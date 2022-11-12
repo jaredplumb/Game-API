@@ -2,6 +2,7 @@
 #define _GXML_H_
 
 #include "GTypes.h"
+#include <map>
 
 /// This class is used to read a XML file.  XML files are actually pretty slow and should be used
 /// sparingly.  Ideally a released game does not use them, however, there are situations that are
@@ -50,7 +51,7 @@ public:
 	const GString* GetAttribute (const GString& name) const;
 	
 	/// Return the nth element (index) with the given name
-	const GXML* GetElement (const GString& element, int_t index = 0) const;
+	const GXML* GetElement (const GString& element, int index = 0) const;
 	
 	/// Returns the parent of this element or NULL if this is the root
 	const GXML* GetParent () const;

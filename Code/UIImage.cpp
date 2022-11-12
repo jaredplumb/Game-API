@@ -5,7 +5,7 @@ UIImage::UIImage ()
 {
 }
 
-UIImage::UIImage (GImage* image, int_t x, int_t y, UINode* parent)
+UIImage::UIImage (GImage* image, int x, int y, UINode* parent)
 :	_image(NULL)
 {
 	New(image, x, y, parent);
@@ -21,7 +21,7 @@ UIImage::~UIImage () {
 	Delete();
 }
 
-bool UIImage::New (GImage* image, int_t x, int_t y, UINode* parent) {
+bool UIImage::New (GImage* image, int x, int y, UINode* parent) {
 	_image = image;
 	if(_image)
 		SetRect(_image->GetRect());

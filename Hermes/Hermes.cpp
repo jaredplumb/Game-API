@@ -1,4 +1,9 @@
 #include "Hermes.h"
+#include "GXML.h"
+#include "GPackage.h"
+#include "GSound.h"
+#include "GImage.h"
+#include "GFont.h"
 
 bool Hermes::Build (const GString& path) {
 	
@@ -44,9 +49,9 @@ bool Hermes::Build (const GString& path) {
 		}
 		
 		// Cycle through the directory building resources
-		GDirectory dir(src);
-		for(uint_t d = 0; d < dir.GetSize(); d++) {
-			GString file = dir.GetFile(d);
+		std::vector<GString> dir = GFile::GetFileNamesInDirectory(src);
+		for(int d = 0; d < dir.size(); d++) {
+			GString file = dir[d];
 			if((left.IsEmpty() && right.IsEmpty()) || (file.GetLength() >= left.GetLength() + right.GetLength() && GString::strncmp(file, left, left.GetLength()) == 0 && GString::strncmp(file + file.GetLength() - right.GetLength(), right, right.GetLength()) == 0)) {
 				GConsole::Print("Building \"%s\" as ", (const char*)file);
 				GString name = file + left.GetLength();				// Removes the path
@@ -79,9 +84,9 @@ bool Hermes::Build (const GString& path) {
 				} else if(GString::stricmp(i->second->tag, "data") == 0) {
 					GConsole::Print("data \"%s\"...\n", (const char*)(name + right));
 					GFile data;
-					uint8* buffer = NULL;
-					uint_t size = 0;
-					if(data.OpenForRead(file) == false || (size = data.GetSize()) == 0 || (buffer = new uint8[size]) == NULL || 
+					uint8_t* buffer = NULL;
+					int64_t size = 0;
+					if(data.OpenForRead(file) == false || (size = data.GetSize()) == 0 || (buffer = new uint8_t[size]) == NULL ||
 					   data.Read(buffer, size) == false || package.Write(name + right, buffer, size) == false)
 						GConsole::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
 					if(buffer != NULL)

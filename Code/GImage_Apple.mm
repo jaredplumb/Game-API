@@ -1,5 +1,8 @@
 #include "GImage.h"
-#if PLATFORM_MACOSX || PLATFORM_IOS
+#ifdef __APPLE__
+#import <Foundation/Foundation.h>
+#import <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
 
 // These are defined in GSystem_Apple.mm
 extern id<MTLDevice>				_DEVICE;
@@ -9,7 +12,7 @@ extern id<MTLRenderCommandEncoder>	_RENDER;
 
 struct GImage::_PrivateData {
 	
-	int_t width, height;
+	int width, height;
 	
 	// This is temp data set by the last draw call, use width and height instead of src and dst
 	// when getting information about the texture
@@ -100,8 +103,8 @@ bool GImage::New (const GColor& color) {
 	resource.width = 4;
 	resource.height = 4;
 	resource.bufferSize = resource.width * resource.height * 4;
-	resource.buffer = new uint8[resource.bufferSize];
-	for(int_t i = 0; i < resource.bufferSize; i += 4) {
+	resource.buffer = new uint8_t[resource.bufferSize];
+	for(int i = 0; i < resource.bufferSize; i += 4) {
 		resource.buffer[i + 0] = color.GetRed();
 		resource.buffer[i + 1] = color.GetGreen();
 		resource.buffer[i + 2] = color.GetBlue();
@@ -121,11 +124,11 @@ void GImage::Delete () {
 	}
 }
 
-int_t GImage::GetWidth () const {
+int GImage::GetWidth () const {
 	return _data ? _data->width : 0;
 }
 
-int_t GImage::GetHeight () const {
+int GImage::GetHeight () const {
 	return _data ? _data->height : 0;
 }
 
@@ -157,7 +160,7 @@ void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 	}
 	
 	if(_data->indiciesCount != 6) {
-		uint16 indicies[6] = {
+		uint16_t indicies[6] = {
 			0, 1, 2, 1, 2, 3
 		};
 		_data->indiciesCount = 6;
@@ -187,7 +190,7 @@ void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 	
 	if(_data->color != color) {
 		_data->color = color;
-		for(int_t i = 0; i < _data->verticesCount; i++) {
+		for(int i = 0; i < _data->verticesCount; i++) {
 			_data->vertices[i].rgba[0] = color.GetRed();
 			_data->vertices[i].rgba[1] = color.GetGreen();
 			_data->vertices[i].rgba[2] = color.GetBlue();
@@ -200,7 +203,7 @@ void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
-void GImage::DrawLine (const GPoint& a, const GPoint& b, int_t width, const GColor& color) {
+void GImage::DrawLine (const GPoint& a, const GPoint& b, int width, const GColor& color) {
 	if(_RENDER == nil || _data == NULL || _data->texture == nil)
 		return;
 	
@@ -215,7 +218,7 @@ void GImage::DrawLine (const GPoint& a, const GPoint& b, int_t width, const GCol
 	}
 	
 	if(_data->indiciesCount != 6) {
-		uint16 indicies[6] = {
+		uint16_t indicies[6] = {
 			0, 1, 2, 1, 2, 3
 		};
 		_data->indiciesCount = 6;
@@ -250,7 +253,7 @@ void GImage::DrawLine (const GPoint& a, const GPoint& b, int_t width, const GCol
 	
 	if(_data->color != color) {
 		_data->color = color;
-		for(int_t i = 0; i < _data->verticesCount; i++) {
+		for(int i = 0; i < _data->verticesCount; i++) {
 			_data->vertices[i].rgba[0] = color.GetRed();
 			_data->vertices[i].rgba[1] = color.GetGreen();
 			_data->vertices[i].rgba[2] = color.GetBlue();
@@ -263,7 +266,7 @@ void GImage::DrawLine (const GPoint& a, const GPoint& b, int_t width, const GCol
 	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
-void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int_t sides) {
+void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int sides) {
 	if(_RENDER == nil || _data == NULL || _data->texture == nil)
 		return;
 	
@@ -280,9 +283,9 @@ void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int_t sid
 	
 	if(_data->indiciesCount != sides * 3 - 2) {
 		_data->indiciesCount = sides * 3 - 2;
-		_data->indicies = [_DEVICE newBufferWithLength:(sizeof(uint16) * _data->indiciesCount) options:MTLResourceStorageModeShared];
-		uint16* indicies = (uint16*)_data->indicies.contents;
-		for(int_t i = 2; i < sides; i++) {
+		_data->indicies = [_DEVICE newBufferWithLength:(sizeof(uint16_t) * _data->indiciesCount) options:MTLResourceStorageModeShared];
+		uint16_t* indicies = (uint16_t*)_data->indicies.contents;
+		for(int i = 2; i < sides; i++) {
 			indicies[(i - 2) * 3 + 0] = 0;
 			indicies[(i - 2) * 3 + 1] = i - 1;
 			indicies[(i - 2) * 3 + 2] = i;
@@ -293,7 +296,7 @@ void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int_t sid
 	if(_data->src != src || _data->dst != dst) {
 		_data->src = src;
 		_data->dst = dst;
-		for(int_t i = 0; i < sides; i++) {
+		for(int i = 0; i < sides; i++) {
 			float theta = 2.0f * (float)M_PI * (float)i / (float)sides;
 			float x = cosf(theta) * (float)dst.width * 0.5f;
 			float y = sinf(theta) * (float)dst.height * 0.5f;
@@ -306,7 +309,7 @@ void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int_t sid
 	
 	if(_data->color != color) {
 		_data->color = color;
-		for(int_t i = 0; i < _data->verticesCount; i++) {
+		for(int i = 0; i < _data->verticesCount; i++) {
 			_data->vertices[i].rgba[0] = color.GetRed();
 			_data->vertices[i].rgba[1] = color.GetGreen();
 			_data->vertices[i].rgba[2] = color.GetBlue();
@@ -334,14 +337,14 @@ void GImage::DrawQuad (const float vertices[8], const float coords[8], const GCo
 	}
 	
 	if(_data->indiciesCount != 6) {
-		uint16 indicies[6] = {
+		uint16_t indicies[6] = {
 			0, 1, 2, 1, 2, 3
 		};
 		_data->indiciesCount = 6;
 		_data->indicies = [_DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
 	}
 	
-	for(int_t i = 0; i < 4; i++) {
+	for(int i = 0; i < 4; i++) {
 		_data->vertices[i].xy[0] = vertices[i * 2 + 0];
 		_data->vertices[i].xy[1] = vertices[i * 2 + 1];
 		_data->vertices[i].uv[0] = coords[i * 2 + 0];
@@ -350,7 +353,7 @@ void GImage::DrawQuad (const float vertices[8], const float coords[8], const GCo
 	
 	if(_data->color != color) {
 		_data->color = color;
-		for(int_t i = 0; i < _data->verticesCount; i++) {
+		for(int i = 0; i < _data->verticesCount; i++) {
 			_data->vertices[i].rgba[0] = color.GetRed();
 			_data->vertices[i].rgba[1] = color.GetGreen();
 			_data->vertices[i].rgba[2] = color.GetBlue();
@@ -363,10 +366,10 @@ void GImage::DrawQuad (const float vertices[8], const float coords[8], const GCo
 	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
-void GImage::DrawVertices (const Vertex verticies[], int_t verticesCount, const uint16 indicies[], int_t indiciesCount) {
+void GImage::DrawVertices (const Vertex verticies[], int verticesCount, const uint16_t indicies[], int indiciesCount) {
 	if(_RENDER == nil || _data == NULL || _data->texture == nil)
 		return;
-	_data->indicies = [_DEVICE newBufferWithBytes:indicies length:(sizeof(uint16) * indiciesCount) options:MTLResourceStorageModeShared];
+	_data->indicies = [_DEVICE newBufferWithBytes:indicies length:(sizeof(uint16_t) * indiciesCount) options:MTLResourceStorageModeShared];
 	[_RENDER setVertexBytes:verticies length:(sizeof(Vertex) * verticesCount) atIndex:0];
 	[_RENDER setFragmentTexture:_data->texture atIndex:0];
 	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
@@ -425,11 +428,11 @@ bool GImage::Resource::NewFromFile (const GString& resource) {
 	if(image == NULL)
 		return false;
 	
-	width = (uint32)CGImageGetWidth(image);
-	height = (uint32)CGImageGetHeight(image);
+	width = (uint32_t)CGImageGetWidth(image);
+	height = (uint32_t)CGImageGetHeight(image);
 	bufferSize = width * height * 4;
-	buffer = new uint8[bufferSize];
-	memset(buffer, 0, sizeof(uint8) * bufferSize);
+	buffer = new uint8_t[bufferSize];
+	memset(buffer, 0, sizeof(uint8_t) * bufferSize);
 	
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	CGContextRef context = CGBitmapContextCreate(buffer, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast);
@@ -446,7 +449,7 @@ bool GImage::Resource::NewFromFile (const GString& resource) {
 	return true;
 }
 
-bool GImage::Resource::NewFromFileInMemory (void* resource, int_t size) {
+bool GImage::Resource::NewFromFileInMemory (void* resource, int size) {
 	Delete();
 	
 	CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8*)resource, (CFIndex)size, kCFAllocatorNull);
@@ -460,11 +463,11 @@ bool GImage::Resource::NewFromFileInMemory (void* resource, int_t size) {
 	if(image == NULL)
 		return false;
 	
-	width = (uint32)CGImageGetWidth(image);
-	height = (uint32)CGImageGetHeight(image);
+	width = (uint32_t)CGImageGetWidth(image);
+	height = (uint32_t)CGImageGetHeight(image);
 	bufferSize = width * height * 4;
-	buffer = new uint8[bufferSize];
-	memset(buffer, 0, sizeof(uint8) * bufferSize);
+	buffer = new uint8_t[bufferSize];
+	memset(buffer, 0, sizeof(uint8_t) * bufferSize);
 	
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	CGContextRef context = CGBitmapContextCreate(buffer, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast);
@@ -484,22 +487,22 @@ bool GImage::Resource::NewFromFileInMemory (void* resource, int_t size) {
 bool GImage::Resource::NewFromPackage (const GString& resource) {
 	Delete();
 	
-	uint64 archiveSize = GPackage::GetSize(resource + ".image");
+	uint64_t archiveSize = GPackage::GetSize(resource + ".image");
 	if(archiveSize == 0)
 		return false;
 	
-	uint8* archiveBuffer = new uint8[archiveSize];
+	uint8_t* archiveBuffer = new uint8_t[archiveSize];
 	
 	if(GPackage::Read(resource + ".image", archiveBuffer, archiveSize) == false) {
 		delete [] archiveBuffer;
 		return false;
 	}
 	
-	uint64 headerSize = sizeof(width) + sizeof(height) + sizeof(bufferSize);
+	uint64_t headerSize = sizeof(width) + sizeof(height) + sizeof(bufferSize);
 	
 	memcpy(this, archiveBuffer, headerSize);
 	
-	buffer = new uint8[bufferSize];
+	buffer = new uint8_t[bufferSize];
 	
 	archiveSize = GArchive::Decompress(archiveBuffer + headerSize, archiveSize - headerSize, buffer, bufferSize);
 	
@@ -524,13 +527,13 @@ void GImage::Resource::Delete () {
 
 bool GImage::Resource::WriteToPackage (GPackage& package, const GString& name) {
 	
-	uint64 headerSize = sizeof(width) + sizeof(height) + sizeof(bufferSize);
-	uint64 archiveSize = GArchive::GetBufferBounds(headerSize + sizeof(uint8) * bufferSize);
+	uint64_t headerSize = sizeof(width) + sizeof(height) + sizeof(bufferSize);
+	uint64_t archiveSize = GArchive::GetBufferBounds(headerSize + sizeof(uint8_t) * bufferSize);
 	
-	uint8* archiveBuffer = new uint8[archiveSize];
+	uint8_t* archiveBuffer = new uint8_t[archiveSize];
 	memcpy(archiveBuffer, this, headerSize);
 	
-	archiveSize = GArchive::Compress(buffer, sizeof(uint8) * bufferSize, archiveBuffer + headerSize, archiveSize - headerSize);
+	archiveSize = GArchive::Compress(buffer, sizeof(uint8_t) * bufferSize, archiveBuffer + headerSize, archiveSize - headerSize);
 	
 	if(archiveSize == 0) {
 		delete [] archiveBuffer;
@@ -546,4 +549,4 @@ bool GImage::Resource::WriteToPackage (GPackage& package, const GString& name) {
 	return true;
 }
 
-#endif // PLATFORM_MACOSX || PLATFORM_IOS
+#endif // __APPLE__

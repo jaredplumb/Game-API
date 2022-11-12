@@ -5,11 +5,11 @@ static uint8_t _VERSION = 5;
 static const char _IDENTIFIER[] = "SAVE";
 
 
-bool GSave::Read (const GString& name, void* data, uint_t size) {
+bool GSave::Read (const GString& name, void* data, int64_t size) {
 	
 #if DEBUG
 	GConsole::Debug("Reading save file \"%s/%s.sav\" ... ", (const char*)GSystem::GetSaveDirectory(), (const char*)name);
-	uint64 elapse = GSystem::GetMilliseconds();
+	int64_t elapse = GSystem::GetMilliseconds();
 #endif
 	
 	GFile file;
@@ -40,19 +40,19 @@ bool GSave::Read (const GString& name, void* data, uint_t size) {
 		return false;
 	}
 	
-	uint64 archiveSize;
+	int64_t archiveSize;
 	if(file.Read(&archiveSize, sizeof(archiveSize)) == false) {
 		GConsole::Debug("Failed to read archive size!\n");
 		return false;
 	}
 	
-	uint8 archive[archiveSize];
+	uint8_t archive[archiveSize];
 	if(file.Read(archive, archiveSize) == false) {
 		GConsole::Debug("Failed to read archive!\n");
 		return false;
 	}
 	
-	if(GArchive::Decompress(archive, archiveSize, (uint8*)data, size) != size) {
+	if(GArchive::Decompress(archive, archiveSize, data, size) != size) {
 		GConsole::Debug("Failed to decompress data!\n");
 		return false;
 	}
@@ -66,11 +66,11 @@ bool GSave::Read (const GString& name, void* data, uint_t size) {
 }
 
 
-bool GSave::Write (const GString& name, const void* data, uint_t size) {
+bool GSave::Write (const GString& name, const void* data, int64_t size) {
 	
 #if DEBUG
 	GConsole::Debug("Writing save file \"%s/%s.sav\" ... ", (const char*)GSystem::GetSaveDirectory(), (const char*)name);
-	uint64 elapse = GSystem::GetMilliseconds();
+	int64_t elapse = GSystem::GetMilliseconds();
 #endif
 	
 	GFile file;
@@ -89,9 +89,9 @@ bool GSave::Write (const GString& name, const void* data, uint_t size) {
 		return false;
 	}
 	
-	uint64 archiveSize = GArchive::GetBufferBounds(size);
-	uint8 archive[archiveSize];
-	archiveSize = GArchive::Compress((uint8*)data, size, archive, archiveSize);
+	int64_t archiveSize = GArchive::GetBufferBounds(size);
+	uint8_t archive[archiveSize];
+	archiveSize = GArchive::Compress(data, size, archive, archiveSize);
 	if(archiveSize == 0) {
 		GConsole::Debug("Failed to compress data!\n");
 		return false;

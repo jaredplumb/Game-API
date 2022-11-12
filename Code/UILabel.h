@@ -7,10 +7,10 @@
 class UILabel : public UINode {
 public:
 	UILabel ();
-	UILabel (const GString& text, int_t x, int_t y, GFont* font, UINode* parent = NULL);
+	UILabel (const GString& text, int x, int y, GFont* font, UINode* parent = NULL);
 	virtual ~UILabel ();
 	
-	bool New (const GString& text, int_t x, int_t y, GFont* font, UINode* parent = NULL);
+	bool New (const GString& text, int x, int y, GFont* font, UINode* parent = NULL);
 	void Delete ();
 	
 	void SetText (const GString& text);

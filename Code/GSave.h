@@ -5,8 +5,8 @@
 
 class GSave {
 public:
-	static bool Read (const GString& name, void* data, uint_t size);
-	static bool Write (const GString& name, const void* data, uint_t size);
+	static bool Read (const GString& name, void* data, int64_t size);
+	static bool Write (const GString& name, const void* data, int64_t size);
 };
 
 #endif // _GSAVE_H_
