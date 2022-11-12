@@ -8,17 +8,19 @@
 #define		UINODE_NAME(c,n)			static const UINode::UIFactory<c> _UI_NODE_ ## c ## _NAME(n, false);
 #define		UINODE_AUTORUN(c,n)			static const UINode::UIFactory<c> _UI_NODE_ ## c ## _NAME(n, true);
 #define		UINODE_PACKAGE(n)			_UINODEPACKAGE_UNIQUE(n, __COUNTER__)
+#define		_UINODEPACKAGE_UNIQUE(n,u)	_UINODEPACKAGE_STATIC(n,u)
+#define		_UINODEPACKAGE_STATIC(n,u)	static const GPackage _GPACKAGE_ ## u ## _NAME(n, true);
 
 class UINode {
 public:
 	UINode ();										// The default rect is the safe area
 	virtual ~UINode ();
 	
-	int GetUniqueRef () const;					// Returns this UINode's unique reference
+	int GetUniqueRef () const;						// Returns this UINode's unique reference
 	UINode* GetParent () const;						// Returns this nodes parent
 	int GetWidth () const;
 	int GetHeight () const;
-	GRect GetRect () const;							// Returns the rect of this UINode (0,0 location)
+	GRect GetRect () const;							// Returns the rect of this UINode
 	GRect GetRectInParent () const;					// Returns the rect of this UINode, relative to the parent
 	GRect GetScreenRect () const;					// Returns the rect of the screen relative to self
 	GRect GetSafeRect () const;						// Returns the rect of the safe area relative to self
@@ -40,7 +42,6 @@ public:
 	static int64_t GetMilliseconds ();				// Returns frame locked milliseconds
 	static int64_t GetElapse ();						// Returns frame locked elapse time
 	static uint32_t GetRandom (uint32_t range = 0);		// Returns a value from 0 to one minus range, unless range is 0, then the maximum 2^30 size is used (1073741824)
-	static float_t GetRandom (float_t min, float_t max);
 	static uint32_t GetRandomSeed ();					// Returns the current global random seed
 	static void SetRandomSeed (uint32_t seed = 0);	// Sets the global random seed, if seed is 0, then a random time value is used
 	
@@ -69,7 +70,7 @@ public:
 	inline bool operator!= (const UINode& n) const                            { return _ref != n._ref; }
 	
 private:
-	int				_ref;
+	int					_ref;
 	GRect				_rect;		// This is the rect relative to the parent, initially set to the screen's preferred rect, the root node uses the actual screen locations from GSystem as it's parent
 	bool				_visible;
 	bool				_active;
@@ -114,8 +115,5 @@ public:
 		}
 	};
 };
-
-#define		_UINODEPACKAGE_UNIQUE(n,u)		_UINODEPACKAGE_STATIC(n,u)
-#define		_UINODEPACKAGE_STATIC(n,u)		static const GPackage _GPACKAGE_ ## u ## _NAME(n, true);
 
 #endif // _UINODE_H_

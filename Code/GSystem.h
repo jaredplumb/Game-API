@@ -56,12 +56,12 @@ public:
 	// Typical usage is to set the matrix to default, then scale, then rotate, then translate, then update the matrix
 	static void MatrixSetModelDefault ();		// Set model to identity
 	static void MatrixSetProjectionDefault ();	// Set projection to an ortho 2D view
-	static void MatrixTranslateModel (float_t x, float_t y);
-	static void MatrixTranslateProjection (float_t x, float_t y);
-	static void MatrixScaleModel (float_t x, float_t y);
-	static void MatrixScaleProjection (float_t x, float_t y);
-	static void MatrixRotateModel (float_t degrees);
-	static void MatrixRotateProjection (float_t degrees);
+	static void MatrixTranslateModel (float x, float y);
+	static void MatrixTranslateProjection (float x, float y);
+	static void MatrixScaleModel (float x, float y);
+	static void MatrixScaleProjection (float x, float y);
+	static void MatrixRotateModel (float degrees);
+	static void MatrixRotateProjection (float degrees);
 	static void MatrixUpdate ();
 	
 	// Never assume these callbacks are called in any specific order

@@ -611,27 +611,27 @@ void GSystem::MatrixSetProjectionDefault () {
 	_PROJECTION_MATRIX.SetOrtho2D((float)_RECT.x, (float)_RECT.width, (float)_RECT.height, (float)_RECT.y, (float)-1, (float)1);
 }
 
-void GSystem::MatrixTranslateModel (float_t x, float_t y) {
+void GSystem::MatrixTranslateModel (float x, float y) {
 	_MODEL_MATRIX.SetTranslation((float)x, (float)y, (float)0);
 }
 
-void GSystem::MatrixTranslateProjection (float_t x, float_t y) {
+void GSystem::MatrixTranslateProjection (float x, float y) {
 	_PROJECTION_MATRIX.SetTranslation((float)x, (float)y, (float)0);
 }
 
-void GSystem::MatrixScaleModel (float_t x, float_t y) {
+void GSystem::MatrixScaleModel (float x, float y) {
 	_MODEL_MATRIX.SetScale((float)x, (float)y, (float)1);
 }
 
-void GSystem::MatrixScaleProjection (float_t x, float_t y) {
+void GSystem::MatrixScaleProjection (float x, float y) {
 	_PROJECTION_MATRIX.SetScale((float)x, (float)y, (float)1);
 }
 
-void GSystem::MatrixRotateModel (float_t degrees) {
+void GSystem::MatrixRotateModel (float degrees) {
 	_MODEL_MATRIX.SetRotation((float)degrees * ((float)M_PI / (float)180));
 }
 
-void GSystem::MatrixRotateProjection (float_t degrees) {
+void GSystem::MatrixRotateProjection (float degrees) {
 	_PROJECTION_MATRIX.SetRotation((float)degrees * ((float)M_PI / (float)180));
 }
 

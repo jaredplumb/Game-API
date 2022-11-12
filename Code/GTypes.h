@@ -1,5 +1,5 @@
-#ifndef GTYPES_H_
-#define GTYPES_H_
+#ifndef _GTYPES_H_
+#define _GTYPES_H_
 
 #include <cstdint>
 #include <cmath>
@@ -318,4 +318,4 @@ public:
 };
 
 
-#endif // GTYPES_H_
+#endif // _GTYPES_H_

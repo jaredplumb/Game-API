@@ -141,10 +141,6 @@ uint32_t UINode::GetRandom (uint32_t range) {
 	return range ? _RANDOM_SEED % range : _RANDOM_SEED % 1073741824;
 }
 
-float_t UINode::GetRandom (float_t min, float_t max) {
-	return ((float_t)GetRandom(10000) / (float_t)9999) * (max - min) + min;
-}
-
 uint32_t UINode::GetRandomSeed () {
 	return _RANDOM_SEED;
 }

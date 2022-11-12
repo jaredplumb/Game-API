@@ -32,9 +32,9 @@ public:
 	void DrawEllipse (const GRect& dst, const GColor& color = GColor::WHITE, const int sides = 45);
 	
 	// These are inline overload functions to allow for more drawing options
-	inline void Draw (int x, int y, float alpha = 1.0f)							{ Draw(GetRect(), GetRect().Offset(x, y), GColor(0xff, 0xff, 0xff, (uint8_t)(alpha * 255.0f))); }
+	inline void Draw (int x, int y, float alpha = 1.0f)								{ Draw(GetRect(), GetRect().Offset(x, y), GColor(0xff, 0xff, 0xff, (uint8_t)(alpha * 255.0f))); }
 	inline void Draw (const GPoint& loc, float alpha = 1.0f)						{ Draw(loc.x, loc.y, alpha); }
-	inline void Draw (const GRect& src, int x, int y, float alpha = 1.0f)		{ Draw(src, GRect(x, y, src.width, src.height), GColor(0xff, 0xff, 0xff, (uint8_t)(alpha * 255.0f))); }
+	inline void Draw (const GRect& src, int x, int y, float alpha = 1.0f)			{ Draw(src, GRect(x, y, src.width, src.height), GColor(0xff, 0xff, 0xff, (uint8_t)(alpha * 255.0f))); }
 	inline void Draw (const GRect& dst, float alpha = 1.0f)							{ Draw(GetRect(), dst, GColor(0xff, 0xff, 0xff, (uint8_t)(alpha * 255.0f))); }
 	inline void DrawRect (const GRect& dst, const GColor& color = GColor::WHITE)	{ Draw(GetRect(), dst, color); }
 	
