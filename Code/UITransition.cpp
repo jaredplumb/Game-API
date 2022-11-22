@@ -8,7 +8,7 @@ UITransition::UITransition ()
 {
 }
 
-UITransition::UITransition (eTransition transition, UINode* parent)
+UITransition::UITransition (eTransition transition, GNode* parent)
 :	_transition(NONE)
 ,	_timer(0)
 {
@@ -19,7 +19,7 @@ UITransition::~UITransition () {
 	Delete();
 }
 
-bool UITransition::New (eTransition transition, UINode* parent) {
+bool UITransition::New (eTransition transition, GNode* parent) {
 	_transition = transition;
 	switch(_transition) {
 		case NONE:
@@ -35,7 +35,7 @@ bool UITransition::New (eTransition transition, UINode* parent) {
 			break;
 	}
 	if(parent)
-		parent->Add(*this);
+		parent->AddNode(*this);
 	return true;
 }
 

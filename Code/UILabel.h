@@ -1,16 +1,16 @@
 #ifndef _UILABEL_H_
 #define _UILABEL_H_
 
-#include "UINode.h"
+#include "GNode.h"
 #include "GFont.h"
 
-class UILabel : public UINode {
+class UILabel : public GNode {
 public:
 	UILabel ();
-	UILabel (const GString& text, int x, int y, GFont* font, UINode* parent = NULL);
+	UILabel (const GString& text, int x, int y, GFont* font, GNode* parent = NULL);
 	virtual ~UILabel ();
 	
-	bool New (const GString& text, int x, int y, GFont* font, UINode* parent = NULL);
+	bool New (const GString& text, int x, int y, GFont* font, GNode* parent = NULL);
 	void Delete ();
 	
 	void SetText (const GString& text);

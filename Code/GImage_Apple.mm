@@ -11,7 +11,6 @@ extern id<MTLRenderCommandEncoder>	_RENDER;
 
 
 struct GImage::_PrivateData {
-	
 	int width, height;
 	
 	// This is temp data set by the last draw call, use width and height instead of src and dst
@@ -25,7 +24,6 @@ struct GImage::_PrivateData {
 	NSUInteger verticesCount;
 	id<MTLBuffer> indicies;
 	NSUInteger indiciesCount;
-	
 };
 
 
@@ -33,29 +31,29 @@ struct GImage::_PrivateData {
 
 
 GImage::GImage ()
-:	_data(NULL)
+:	_data(nullptr)
 {
 }
 
 GImage::GImage (const Resource& resource)
-:	_data(NULL)
+:	_data(nullptr)
 {
 	if(New(resource) == false)
-		GConsole::Debug("ERROR: Could not load image from resource!\n");
+		GSystem::Debug("ERROR: Could not load image from resource!\n");
 }
 
 GImage::GImage (const GString& resource)
-:	_data(NULL)
+:	_data(nullptr)
 {
 	if(New(resource) == false)
-		GConsole::Debug("ERROR: Could not load image \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Could not load image \"%s\"!\n", (const char*)resource);
 }
 
 GImage::GImage (const GColor& color)
-:	_data(NULL)
+:	_data(nullptr)
 {
 	if(New(color) == false)
-		GConsole::Debug("ERROR: Could not create image with color 0x%x!\n", color.color);
+		GSystem::Debug("ERROR: Could not create image with color 0x%x!\n", color.color);
 }
 
 GImage::~GImage () {
@@ -73,7 +71,7 @@ bool GImage::New (const Resource& resource) {
 	_data->width = resource.width;
 	_data->height = resource.height;
 	_data->texture = nil;
-	_data->vertices = NULL;
+	_data->vertices = nullptr;
 	_data->verticesCount = 0;
 	_data->indicies = nil;
 	_data->indiciesCount = 0;
@@ -115,12 +113,12 @@ bool GImage::New (const GColor& color) {
 
 void GImage::Delete () {
 	if(_data) {
-		_data->texture = nil; // Autorelease ??? [_data->texture release]
+		_data->texture = nil;
 		if(_data->vertices)
 			delete [] _data->vertices;
-		_data->indicies = nil; // Autorelease ???
+		_data->indicies = nil;
 		delete _data;
-		_data = NULL;
+		_data = nullptr;
 	}
 }
 
@@ -137,16 +135,16 @@ GRect GImage::GetRect () const {
 }
 
 bool GImage::IsEmpty () const {
-	return _data == NULL;
+	return _data == nullptr;
 }
 
 void GImage::Draw () {
-	if(_data != NULL)
+	if(_data != nullptr)
 		return Draw(GRect(0, 0, _data->width, _data->height), GRect(0, 0, _data->width, _data->height), GColor::WHITE);
 }
 
 void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
-	if(_RENDER == nil || _data == NULL || _data->texture == nil)
+	if(_RENDER == nil || _data == nullptr || _data->texture == nil)
 		return;
 	
 	if(_data->verticesCount != 4) {
@@ -160,9 +158,7 @@ void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 	}
 	
 	if(_data->indiciesCount != 6) {
-		uint16_t indicies[6] = {
-			0, 1, 2, 1, 2, 3
-		};
+		uint16_t indicies[6] = {0, 1, 2, 1, 2, 3};
 		_data->indiciesCount = 6;
 		_data->indicies = [_DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
 	}
@@ -198,13 +194,13 @@ void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 		}
 	}
 	
-	[_RENDER setVertexBytes:_data->vertices length:sizeof(Vertex) * _data->verticesCount atIndex:0];
+	[_RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
 	[_RENDER setFragmentTexture:_data->texture atIndex:0];
 	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 void GImage::DrawLine (const GPoint& a, const GPoint& b, int width, const GColor& color) {
-	if(_RENDER == nil || _data == NULL || _data->texture == nil)
+	if(_RENDER == nil || _data == nullptr || _data->texture == nil)
 		return;
 	
 	if(_data->verticesCount != 4) {
@@ -261,13 +257,13 @@ void GImage::DrawLine (const GPoint& a, const GPoint& b, int width, const GColor
 		}
 	}
 	
-	[_RENDER setVertexBytes:_data->vertices length:sizeof(Vertex) * _data->verticesCount atIndex:0];
+	[_RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
 	[_RENDER setFragmentTexture:_data->texture atIndex:0];
 	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int sides) {
-	if(_RENDER == nil || _data == NULL || _data->texture == nil)
+	if(_RENDER == nil || _data == nullptr || _data->texture == nil)
 		return;
 	
 	if(_data->verticesCount != sides) {
@@ -317,13 +313,13 @@ void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int sides
 		}
 	}
 	
-	[_RENDER setVertexBytes:_data->vertices length:sizeof(Vertex) * _data->verticesCount atIndex:0];
+	[_RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
 	[_RENDER setFragmentTexture:_data->texture atIndex:0];
 	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 void GImage::DrawQuad (const float vertices[8], const float coords[8], const GColor& color) {
-	if(_RENDER == nil || _data == NULL || _data->texture == nil)
+	if(_RENDER == nil || _data == nullptr || _data->texture == nil)
 		return;
 	
 	if(_data->verticesCount != 4) {
@@ -361,13 +357,13 @@ void GImage::DrawQuad (const float vertices[8], const float coords[8], const GCo
 		}
 	}
 	
-	[_RENDER setVertexBytes:_data->vertices length:sizeof(Vertex) * _data->verticesCount atIndex:0];
+	[_RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
 	[_RENDER setFragmentTexture:_data->texture atIndex:0];
 	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 void GImage::DrawVertices (const Vertex verticies[], int verticesCount, const uint16_t indicies[], int indiciesCount) {
-	if(_RENDER == nil || _data == NULL || _data->texture == nil)
+	if(_RENDER == nil || _data == nullptr || _data->texture == nil)
 		return;
 	_data->indicies = [_DEVICE newBufferWithBytes:indicies length:(sizeof(uint16_t) * indiciesCount) options:MTLResourceStorageModeShared];
 	[_RENDER setVertexBytes:verticies length:(sizeof(Vertex) * verticesCount) atIndex:0];
@@ -386,7 +382,7 @@ GImage::Resource::Resource ()
 :	width(0)
 ,	height(0)
 ,	bufferSize(0)
-,	buffer(NULL)
+,	buffer(nullptr)
 {
 }
 
@@ -394,10 +390,10 @@ GImage::Resource::Resource (const GString& resource)
 :	width(0)
 ,	height(0)
 ,	bufferSize(0)
-,	buffer(NULL)
+,	buffer(nullptr)
 {
 	if(New(resource) == false)
-		GConsole::Debug("ERROR: Could not load image resource \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Could not load image resource \"%s\"!\n", (const char*)resource);
 }
 
 GImage::Resource::~Resource () {
@@ -415,17 +411,17 @@ bool GImage::Resource::New (const GString& resource) {
 bool GImage::Resource::NewFromFile (const GString& resource) {
 	Delete();
 	
-	CFStringRef string = CFStringCreateWithCString(NULL, resource, kCFStringEncodingUTF8);
-	CFURLRef url = CFURLCreateWithFileSystemPath(NULL, string, kCFURLPOSIXPathStyle, false);
-	CGImageSourceRef imageSource = CGImageSourceCreateWithURL(url, NULL);
+	CFStringRef string = CFStringCreateWithCString(nullptr, resource, kCFStringEncodingUTF8);
+	CFURLRef url = CFURLCreateWithFileSystemPath(nullptr, string, kCFURLPOSIXPathStyle, false);
+	CGImageSourceRef imageSource = CGImageSourceCreateWithURL(url, nullptr);
 	CFRelease(string);
 	CFRelease(url);
-	if(imageSource == NULL)
+	if(imageSource == nullptr)
 		return false;
 	
-	CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
+	CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, nullptr);
 	CFRelease(imageSource);
-	if(image == NULL)
+	if(image == nullptr)
 		return false;
 	
 	width = (uint32_t)CGImageGetWidth(image);
@@ -452,34 +448,36 @@ bool GImage::Resource::NewFromFile (const GString& resource) {
 bool GImage::Resource::NewFromFileInMemory (void* resource, int size) {
 	Delete();
 	
-	CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8*)resource, (CFIndex)size, kCFAllocatorNull);
-	CGImageSourceRef imageSource = CGImageSourceCreateWithData(data, NULL);
-	CFRelease(data);
-	if(imageSource == NULL)
-		return false;
-	
-	CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
-	CFRelease(imageSource);
-	if(image == NULL)
-		return false;
-	
-	width = (uint32_t)CGImageGetWidth(image);
-	height = (uint32_t)CGImageGetHeight(image);
-	bufferSize = width * height * 4;
-	buffer = new uint8_t[bufferSize];
-	memset(buffer, 0, sizeof(uint8_t) * bufferSize);
-	
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	CGContextRef context = CGBitmapContextCreate(buffer, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast);
-	CGContextSetBlendMode(context, kCGBlendModeCopy);
-	
-	//CGContextTranslateCTM(context, (CGFloat)0, (CGFloat)height);
-	//CGContextScaleCTM(context, (CGFloat)1, (CGFloat)-1);
-	CGContextDrawImage(context, CGRectMake((CGFloat)0, (CGFloat)0, (CGFloat)width, (CGFloat)height), image);
-	
-	CGContextRelease(context);
-	CGColorSpaceRelease(colorSpace);
-	CGImageRelease(image);
+	@autoreleasepool {
+		CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8*)resource, (CFIndex)size, kCFAllocatorNull);
+		CGImageSourceRef imageSource = CGImageSourceCreateWithData(data, nullptr);
+		CFRelease(data);
+		if(imageSource == nullptr)
+			return false;
+		
+		CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, nullptr);
+		CFRelease(imageSource);
+		if(image == nullptr)
+			return false;
+		
+		width = (uint32_t)CGImageGetWidth(image);
+		height = (uint32_t)CGImageGetHeight(image);
+		bufferSize = width * height * 4;
+		buffer = new uint8_t[bufferSize];
+		memset(buffer, 0, sizeof(uint8_t) * bufferSize);
+		
+		CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+		CGContextRef context = CGBitmapContextCreate(buffer, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast);
+		CGContextSetBlendMode(context, kCGBlendModeCopy);
+		
+		//CGContextTranslateCTM(context, (CGFloat)0, (CGFloat)height);
+		//CGContextScaleCTM(context, (CGFloat)1, (CGFloat)-1);
+		CGContextDrawImage(context, CGRectMake((CGFloat)0, (CGFloat)0, (CGFloat)width, (CGFloat)height), image);
+		
+		CGContextRelease(context);
+		CGColorSpaceRelease(colorSpace);
+		CGImageRelease(image);
+	} // @autoreleasepool
 	
 	return true;
 }
@@ -521,7 +519,7 @@ void GImage::Resource::Delete () {
 	bufferSize = 0;
 	if(buffer) {
 		delete [] buffer;
-		buffer = NULL;
+		buffer = nullptr;
 	}
 }
 

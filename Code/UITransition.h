@@ -1,14 +1,14 @@
 #ifndef _UITRANSITION_H_
 #define _UITRANSITION_H_
 
-#include "UINode.h"
+#include "GNode.h"
 #include "GImage.h"
 
 // NOTE: To allow the fade to completely cover all UI elements, the UITransition object must
 // added last after all other UI objects such as UIButton and UILabel.  This is done on purpose
 // to allow custom UITransition that might only fade parts of the screen.
 
-class UITransition : public UINode {
+class UITransition : public GNode {
 public:
 	enum eTransition {
 		NONE,
@@ -18,10 +18,10 @@ public:
 	};
 	
 	UITransition ();
-	UITransition (eTransition transition, UINode* parent = NULL);
+	UITransition (eTransition transition, GNode* parent = NULL);
 	virtual ~UITransition ();
 	
-	bool New (eTransition transition, UINode* parent = NULL);
+	bool New (eTransition transition, GNode* parent = NULL);
 	void Delete ();
 	
 	virtual void OnDraw () override;

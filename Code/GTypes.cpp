@@ -113,11 +113,11 @@ GString& GString::Format (const char* string, ...) {
 	va_end(args);
 	
 	if(_length > 0) {
-		va_start(args, string);
 		_string = _CHAR_ALLOC(_length + 1);
+		va_start(args, string);
 		vsnprintf(_string, _length + 1, string, args);
-		_string[_length] = '\0';
 		va_end(args);
+		_string[_length] = '\0';
 	}
 	
 	return *this;
@@ -705,30 +705,4 @@ int64_t GArchive::GetBufferBounds (int64_t srcSize) {
 	// Returns the worst case buffer size for compression, plus the size of the needed
 	// header information for this library (version number and compression type)
 	return compressBound(srcSize) + 2;
-}
-
-
-
-
-
-
-
-void GConsole::Print (const char* message, ...) {
-	if (message) {
-		va_list args;
-		va_start(args, message);
-		vprintf(message, args);
-		va_end(args);
-	}
-}
-
-void GConsole::Debug (const char* message, ...) {
-#if DEBUG
-	if (message) {
-		va_list args;
-		va_start(args, message);
-		vprintf(message, args);
-		va_end(args);
-	}
-#endif
 }

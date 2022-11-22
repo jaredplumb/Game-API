@@ -75,7 +75,7 @@ static int _FindIndexFromHash (uint32_t* hash, int hashCount, uint32_t character
 				return 128 + mid; // The index from the hash starts at 128 because they are non-ASCII
 		}
 	}
-	GConsole::Debug("ERROR: Could not find font character (%u) in hash!\n", character);
+	GSystem::Debug("ERROR: Could not find font character (%u) in hash!\n", character);
 	return 0;
 }
 
@@ -105,6 +105,7 @@ GFont::~GFont () {
 }
 
 bool GFont::New (const Resource& resource) {
+	Delete();
 	
 	_data = new _PrivateData;
 	_data->height = resource.height;
@@ -147,7 +148,7 @@ bool GFont::New (const Resource& resource) {
 			int16_t amount = (int16_t)((resource.kernings[i] & 0xffff000000000000) >> 48);
 			if(firstIndex != 0 && secondIndex != 0 && amount != 0) {
 				if(_data->kernings[firstIndex] == NULL)
-					_data->kernings[firstIndex] = new std::map<int, int>();
+					_data->kernings[firstIndex] = new std::map<int, int>;
 				_data->kernings[firstIndex]->insert(std::pair<int, int>((int)secondIndex, (int)amount));
 			}
 		}
@@ -157,7 +158,7 @@ bool GFont::New (const Resource& resource) {
 	
 	
 	if(_data->image.New(resource.image) == false) {
-		GConsole::Debug("ERROR: Could not create image with name font resource data!\n");
+		GSystem::Debug("ERROR: Could not create image with name font resource data!\n");
 		return false;
 	}
 	
@@ -249,7 +250,7 @@ GRect GFont::GetRect (const GString& text) const {
 				index = _FindIndexFromHash(_data->hash, _data->hashCount, (((uint8_t)text[i + 3]) | ((uint8_t)text[i + 2] << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24)));
 				i += 3;
 			} else {
-				GConsole::Debug("ERROR: Unknown character (%x) found while drawing font!\n", (uint8_t)text[i]);
+				GSystem::Debug("ERROR: Unknown character (%x) found while drawing font!\n", (uint8_t)text[i]);
 			}
 			
 			// Draw the character
@@ -280,7 +281,7 @@ GRect GFont::GetRect (const GString& text) const {
 				
 				
 			} else {
-				GConsole::Debug("ERROR: Index not found while drawing font!\n");
+				GSystem::Debug("ERROR: Index not found while drawing font!\n");
 			}
 			
 			last = index;
@@ -328,7 +329,7 @@ void GFont::Draw (const GString& text, int x, int y, float alpha) {
 				index = _FindIndexFromHash(_data->hash, _data->hashCount, (((uint8_t)text[i + 3]) | ((uint8_t)text[i + 2] << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24)));
 				i += 3;
 			} else {
-				GConsole::Debug("ERROR: Unknown character (%x) found while drawing font!\n", (uint8_t)text[i]);
+				GSystem::Debug("ERROR: Unknown character (%x) found while drawing font!\n", (uint8_t)text[i]);
 			}
 			
 			// Draw the character
@@ -349,7 +350,7 @@ void GFont::Draw (const GString& text, int x, int y, float alpha) {
 				
 				
 			} else {
-				GConsole::Debug("ERROR: Index not found while drawing font!\n");
+				GSystem::Debug("ERROR: Index not found while drawing font!\n");
 			}
 			
 			last = index;
@@ -422,7 +423,7 @@ bool GFont::Resource::NewFromPackage (const GString& resource) {
 	uint64_t archiveSize = GPackage::GetSize(resource + ".font");
 	uint8_t* archiveBuffer = new uint8_t[archiveSize];
 	if(GPackage::Read(resource + ".font", archiveBuffer, archiveSize) == false) {
-		GConsole::Debug("ERROR: Failed to read \"%s\" from packages!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to read \"%s\" from packages!\n", (const char*)resource);
 		delete [] archiveBuffer;
 		return false;
 	}
@@ -448,7 +449,7 @@ bool GFont::Resource::NewFromPackage (const GString& resource) {
 	delete [] archiveBuffer;
 	
 	if(image.NewFromPackage(resource + ".font") == false) {
-		GConsole::Debug("ERROR: Failed to read \"%s\"'s image file from packages!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to read \"%s\"'s image file from packages!\n", (const char*)resource);
 		return false;
 	}
 	
@@ -491,7 +492,7 @@ bool GFont::Resource::NewFromFile (const GString& resource) {
 	
 	GFile file;
 	if(file.OpenForRead(resource) == false) {
-		GConsole::Debug("ERROR: Failed to open font file \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to open font file \"%s\"!\n", (const char*)resource);
 		return false;
 	}
 	
@@ -499,7 +500,7 @@ bool GFont::Resource::NewFromFile (const GString& resource) {
 	uint8_t buffer[size + 1];
 	buffer[size] = 0;
 	if(file.Read(buffer, sizeof(uint8_t) * size) == false) {
-		GConsole::Debug("ERROR: Failed to read entire contents of font file \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Failed to read entire contents of font file \"%s\"!\n", (const char*)resource);
 		return false;
 	}
 	
@@ -534,7 +535,7 @@ bool GFont::Resource::NewFromFile (const GString& resource) {
 					
 					
 					if(image.NewFromFile(GString(resource).TrimToDirectory() + (const char*)line) == false) {
-						GConsole::Debug("ERROR: Failed to get src image for font \"%s\"!\n", (const char*)resource);
+						GSystem::Debug("ERROR: Failed to get src image for font \"%s\"!\n", (const char*)resource);
 						return false;
 					}
 					
@@ -586,7 +587,7 @@ bool GFont::Resource::NewFromFile (const GString& resource) {
 						chars[128 + hashCount] = glyph;
 						hash[hashCount++] =  _ConvertUnicodeToHash(id);
 					} else {
-						GConsole::Debug("ERROR: Too many characters found in font file \"%s\"!\n", (const char*)resource);
+						GSystem::Debug("ERROR: Too many characters found in font file \"%s\"!\n", (const char*)resource);
 					}
 				}
 			}
@@ -641,15 +642,15 @@ bool GFont::Resource::NewFromFile (const GString& resource) {
 					if(firstIndex != 0 && secondIndex != 0)
 						kernings[kernCount++] = ((uint64_t)firstIndex | ((uint64_t)secondIndex << 24) | ((uint64_t)amount << 48));
 					else
-						GConsole::Debug("ERROR: Kernings \"first\" or \"second\" not found in font file \"%s\"!\n", (const char*)resource);
+						GSystem::Debug("ERROR: Kernings \"first\" or \"second\" not found in font file \"%s\"!\n", (const char*)resource);
 					
 				} else {
-					GConsole::Debug("ERROR: Too many kerning values in font file \"%s\"!\n", (const char*)resource);
+					GSystem::Debug("ERROR: Too many kerning values in font file \"%s\"!\n", (const char*)resource);
 				}
 			}
 			
 		} else if(GString::isprint(*line)) {
-			GConsole::Debug("ERROR: Unknown line found in font file \"%s\"!\n", (const char*)resource);
+			GSystem::Debug("ERROR: Unknown line found in font file \"%s\"!\n", (const char*)resource);
 		}
 		
 		
@@ -724,7 +725,7 @@ bool GFont::Resource::WriteToPackage (GPackage& package, const GString& name) {
 		memcpy(archiveBuffer + headerSize + sizeof(Char) * charCount + sizeof(uint32_t) * hashCount, kernings, sizeof(uint64_t) * kernCount);
 	
 	if(package.Write(name + ".font", archiveBuffer, archiveSize) == false) {
-		GConsole::Debug("Failed to write to package resource \"%s\"!\n", (const char*)name);
+		GSystem::Debug("Failed to write to package resource \"%s\"!\n", (const char*)name);
 		delete [] archiveBuffer;
 		return false;
 	}
@@ -732,7 +733,7 @@ bool GFont::Resource::WriteToPackage (GPackage& package, const GString& name) {
 	delete [] archiveBuffer;
 	
 	if(image.WriteToPackage(package, name + ".font") == false) {
-		GConsole::Debug("Failed to write to package resource \"%s\"'s image!\n", (const char*)name);
+		GSystem::Debug("Failed to write to package resource \"%s\"'s image!\n", (const char*)name);
 		return false;
 	}
 	

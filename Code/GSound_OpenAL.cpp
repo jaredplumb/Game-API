@@ -36,13 +36,13 @@ void GSound::Startup () {
 		if(_AL_CONTEXT) {
 			alcMakeContextCurrent(_AL_CONTEXT);
 		} else {
-			GConsole::Print("Could not create OpenAL context! (%s)\n", alGetString(alGetError()));
+			GSystem::Print("Could not create OpenAL context! (%s)\n", alGetString(alGetError()));
 			alcCloseDevice(_AL_DEVICE);
 			_AL_DEVICE = NULL;
 			return;
 		}
 	} else {
-		GConsole::Print("Could not open OpenAL device! (%s)\n", alGetString(alGetError()));
+		GSystem::Print("Could not open OpenAL device! (%s)\n", alGetString(alGetError()));
 		return;
 	}
 	
@@ -81,14 +81,14 @@ GSound::GSound (const Resource& resource)
 :	_data(NULL)
 {
 	if(New(resource) == false)
-		GConsole::Debug("ERROR: Could not load sound from resource!\n");
+		GSystem::Debug("ERROR: Could not load sound from resource!\n");
 }
 
 GSound::GSound (const GString& resource)
 :	_data(NULL)
 {
 	if(New(resource) == false)
-		GConsole::Debug("ERROR: Could not load sound \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Could not load sound \"%s\"!\n", (const char*)resource);
 }
 
 GSound::~GSound () {
@@ -143,7 +143,7 @@ bool GSound::New (const Resource& resource) {
 	
 	alGenBuffers(1, &_data->buffer);
 	if(_data->buffer == 0) {
-		GConsole::Debug("Could not create OpenAL audio buffer! (%s)\n", alGetString(alGetError()));
+		GSystem::Debug("Could not create OpenAL audio buffer! (%s)\n", alGetString(alGetError()));
 		return false;
 	}
 	
@@ -153,7 +153,7 @@ bool GSound::New (const Resource& resource) {
 	
 	alGenSources(1, &_data->source);
 	if(_data->source == 0) {
-		GConsole::Debug("Could not create OpenAL audio source! (%s)\n", alGetString(alGetError()));
+		GSystem::Debug("Could not create OpenAL audio source! (%s)\n", alGetString(alGetError()));
 		return false;
 	}
 	
@@ -212,7 +212,7 @@ GSound::Resource::Resource (const GString& resource)
 ,	buffer(NULL)
 {
 	if(New(resource) == false)
-		GConsole::Debug("ERROR: Could not load sound resource \"%s\"!\n", (const char*)resource);
+		GSystem::Debug("ERROR: Could not load sound resource \"%s\"!\n", (const char*)resource);
 }
 
 GSound::Resource::~Resource () {

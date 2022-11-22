@@ -4,7 +4,7 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
-static GRect					_RECT			(0, 0, 1280, 720);
+static GRect					_SCREEN_RECT	(0, 0, 1280, 720);
 static GRect					_SAFE_RECT		(0, 0, 1280, 720);
 static GRect					_PREFERRED_RECT	(0, 0, 1280, 720);
 static int						_FPS		    = 60;
@@ -284,20 +284,20 @@ static NSString* _SHADER = @""
 	_viewport.y = size.height;
 	
 	// Set the rect used for drawing, this includes the entire screen including hidden areas because of curved edges
-	_RECT.x = 0;
-	_RECT.y = 0;
-	_RECT.width = _viewport.x;
-	_RECT.height = _viewport.y;
+	_SCREEN_RECT.x = 0;
+	_SCREEN_RECT.y = 0;
+	_SCREEN_RECT.width = _viewport.x;
+	_SCREEN_RECT.height = _viewport.y;
 	
 	// Set the safe are for for interactions.  This is used to make sure UI elements and mouse/touch interaction is in the correct area
-	_SAFE_RECT = _RECT;
+	_SAFE_RECT = _SCREEN_RECT;
 	
 #if TARGET_OS_IPHONE
 	// Get the safe area already part of iOS.  The UIWindow may not be retina, so adjust offsets accordingly
-	int left = _RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
-	int top = _RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
-	int right = _RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
-	int bottom = _RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
+	int left = _SCREEN_RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
+	int top = _SCREEN_RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
+	int right = _SCREEN_RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
+	int bottom = _SCREEN_RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
 	_SAFE_RECT.x += left;
 	_SAFE_RECT.y += top;
 	_SAFE_RECT.width -= (left + right);
@@ -307,20 +307,20 @@ static NSString* _SHADER = @""
 	// Adjust the rect and safe rect if they are not sized correctly for the preferred rect
 	// The preferred rect should entirely fit within the safe rect, and maximize the safe rect to that size
 	if(_SAFE_RECT.width != _PREFERRED_RECT.width) {
-		_RECT.x = _RECT.x * _PREFERRED_RECT.width / _SAFE_RECT.width;
-		_RECT.y = _RECT.y * _PREFERRED_RECT.width / _SAFE_RECT.width;
-		_RECT.width = _RECT.width * _PREFERRED_RECT.width / _SAFE_RECT.width;
-		_RECT.height = _RECT.height * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_SCREEN_RECT.x = _SCREEN_RECT.x * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_SCREEN_RECT.y = _SCREEN_RECT.y * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_SCREEN_RECT.width = _SCREEN_RECT.width * _PREFERRED_RECT.width / _SAFE_RECT.width;
+		_SCREEN_RECT.height = _SCREEN_RECT.height * _PREFERRED_RECT.width / _SAFE_RECT.width;
 		_SAFE_RECT.x = _SAFE_RECT.x * _PREFERRED_RECT.width / _SAFE_RECT.width;
 		_SAFE_RECT.y = _SAFE_RECT.y * _PREFERRED_RECT.width / _SAFE_RECT.width;
 		_SAFE_RECT.height = _SAFE_RECT.height * _PREFERRED_RECT.width / _SAFE_RECT.width;
 		_SAFE_RECT.width = _PREFERRED_RECT.width; // This must be last because it is used for the aspect ratio
 	}
 	if(_SAFE_RECT.height < _PREFERRED_RECT.height) {
-		_RECT.x = _RECT.x * _PREFERRED_RECT.height / _SAFE_RECT.height;
-		_RECT.y = _RECT.y * _PREFERRED_RECT.height / _SAFE_RECT.height;
-		_RECT.width = _RECT.width * _PREFERRED_RECT.height / _SAFE_RECT.height;
-		_RECT.height = _RECT.height * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_SCREEN_RECT.x = _SCREEN_RECT.x * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_SCREEN_RECT.y = _SCREEN_RECT.y * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_SCREEN_RECT.width = _SCREEN_RECT.width * _PREFERRED_RECT.height / _SAFE_RECT.height;
+		_SCREEN_RECT.height = _SCREEN_RECT.height * _PREFERRED_RECT.height / _SAFE_RECT.height;
 		_SAFE_RECT.x = _SAFE_RECT.x * _PREFERRED_RECT.height / _SAFE_RECT.height;
 		_SAFE_RECT.y = _SAFE_RECT.y * _PREFERRED_RECT.height / _SAFE_RECT.height;
 		_SAFE_RECT.width = _SAFE_RECT.width * _PREFERRED_RECT.height / _SAFE_RECT.height;
@@ -328,8 +328,8 @@ static NSString* _SHADER = @""
 	}
 	
 	// Center the preferred rect within the screen rect then adjust to fit within the safe rect
-	_PREFERRED_RECT.x = _RECT.width / 2 - _PREFERRED_RECT.width / 2;
-	_PREFERRED_RECT.y = _RECT.height / 2 - _PREFERRED_RECT.height / 2;
+	_PREFERRED_RECT.x = _SCREEN_RECT.width / 2 - _PREFERRED_RECT.width / 2;
+	_PREFERRED_RECT.y = _SCREEN_RECT.height / 2 - _PREFERRED_RECT.height / 2;
 	if(_PREFERRED_RECT.x < _SAFE_RECT.x)
 		_PREFERRED_RECT.x = _SAFE_RECT.x;
 	if(_PREFERRED_RECT.y < _SAFE_RECT.y)
@@ -361,8 +361,8 @@ static NSString* _SHADER = @""
 - (void) touchesBegan: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
 		CGPoint location = [touch locationInView:self];
-		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+		location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 		GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
 	}
 }
@@ -370,8 +370,8 @@ static NSString* _SHADER = @""
 - (void) touchesMoved: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
 		CGPoint location = [touch locationInView:self];
-		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+		location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 		GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
 	}
 }
@@ -379,8 +379,8 @@ static NSString* _SHADER = @""
 - (void) touchesEnded: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
 		CGPoint location = [touch locationInView:self];
-		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+		location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 		GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 	}
 }
@@ -388,8 +388,8 @@ static NSString* _SHADER = @""
 - (void) touchesCancelled: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
 		CGPoint location = [touch locationInView:self];
-		location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-		location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+		location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 		GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 	}
 }
@@ -399,72 +399,72 @@ static NSString* _SHADER = @""
 - (void) mouseDown: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchCallbacks((int)location.x, (int)location.y); // [theEvent buttonNumber]
 }
 
 - (void) rightMouseDown: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) otherMouseDown: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) mouseUp: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) rightMouseUp: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) otherMouseUp: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) mouseDragged: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) rightMouseDragged: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) otherMouseDragged: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
 }
 
@@ -495,8 +495,8 @@ static NSString* _SHADER = @""
 
 
 
-GRect GSystem::GetRect () {
-	return _RECT;
+GRect GSystem::GetScreenRect () {
+	return _SCREEN_RECT;
 }
 
 GRect GSystem::GetSafeRect () {
@@ -509,11 +509,6 @@ GRect GSystem::GetPreferredRect () {
 
 int GSystem::GetFPS () {
 	return _FPS;
-}
-
-int GSystem::GetUniqueRef () {
-	static int REF = 1;
-	return REF++;
 }
 
 int64_t GSystem::GetMilliseconds () {
@@ -554,7 +549,7 @@ const GString& GSystem::GetSaveDirectory () {
 
 
 void GSystem::RunPreferredSize (int width, int height) {
-	_RECT = GRect(0, 0, width, height);
+	_SCREEN_RECT = GRect(0, 0, width, height);
 	_SAFE_RECT = GRect(0, 0, width, height);
 	_PREFERRED_RECT = GRect(0, 0, width, height);
 }
@@ -570,7 +565,7 @@ void GSystem::RunPreferredArgs (int argc, char* argv[]) {
 
 int GSystem::Run () {
 	GSystem::SetDefaultWD();
-	GConsole::Debug("WD: %s\n", getwd(NULL));
+	GSystem::Debug("WD: %s\n", getwd(NULL));
 	
 #if TARGET_OS_IPHONE
 	@autoreleasepool {
@@ -578,9 +573,7 @@ int GSystem::Run () {
 	}
 #else // TARGET_OS_MAC
 	@autoreleasepool {
-		[NSApplication sharedApplication];
-		_MyAppDelegate* delegate = [[_MyAppDelegate alloc] init];
-		[[NSApplication sharedApplication] setDelegate:delegate];
+		[[NSApplication sharedApplication] setDelegate:[[_MyAppDelegate alloc] init]];
 		[[NSApplication sharedApplication] run];
 	}
 #endif // TARGET_OS_IPHONE // TARGET_OS_MAC
@@ -608,7 +601,7 @@ void GSystem::MatrixSetModelDefault () {
 }
 
 void GSystem::MatrixSetProjectionDefault () {
-	_PROJECTION_MATRIX.SetOrtho2D((float)_RECT.x, (float)_RECT.width, (float)_RECT.height, (float)_RECT.y, (float)-1, (float)1);
+	_PROJECTION_MATRIX.SetOrtho2D((float)_SCREEN_RECT.x, (float)_SCREEN_RECT.width, (float)_SCREEN_RECT.height, (float)_SCREEN_RECT.y, (float)-1, (float)1);
 }
 
 void GSystem::MatrixTranslateModel (float x, float y) {

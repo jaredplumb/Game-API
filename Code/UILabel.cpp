@@ -5,7 +5,7 @@ UILabel::UILabel ()
 {
 }
 
-UILabel::UILabel (const GString& text, int x, int y, GFont* font, UINode* parent)
+UILabel::UILabel (const GString& text, int x, int y, GFont* font, GNode* parent)
 :	_font(NULL)
 {
 	New(text, x, y, font, parent);
@@ -15,13 +15,13 @@ UILabel::~UILabel () {
 	Delete();
 }
 
-bool UILabel::New (const GString& text, int x, int y, GFont* font, UINode* parent) {
+bool UILabel::New (const GString& text, int x, int y, GFont* font, GNode* parent) {
 	_text = text;
 	_font = font;
 	if(_font)
 		SetRect(_font->GetRect(_text).Offset(x, y));
 	if(parent)
-		parent->Add(*this);
+		parent->AddNode(*this);
 	return true;
 }
 

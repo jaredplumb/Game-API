@@ -2,6 +2,7 @@
 #define _GSYSTEM_H_
 
 #include "GTypes.h"
+#include <map>
 
 /// This class is used to access global data internally created to run a core game shell.  This
 /// class internally contains everything needed to automatically launches and create a game
@@ -13,9 +14,8 @@
 
 class GSystem {
 public:
-	
-	/// Returns the system rect in pixels, which is the entire screen, including hidden pixels behind curved corners and screen notches
-	static GRect GetRect ();
+	/// Returns  the entire screen in pixels, including hidden pixels behind curved corners and screen notches
+	static GRect GetScreenRect ();
 	
 	/// Returns the safe rect in pixels, which is the area with no obstructed visuals or interactions containing a minimum of the preferred size
 	static GRect GetSafeRect ();
@@ -25,9 +25,6 @@ public:
 	
 	/// Returns the the current FPS.
 	static int GetFPS ();
-	
-	/// Returns a new unique integer, per application session.
-	static int GetUniqueRef ();
 	
 	/// Returns the startup time in milliseconds.
 	static int64_t GetMilliseconds ();
@@ -44,8 +41,7 @@ public:
 	/// Returns the full path to the location to save data.
 	static const GString& GetSaveDirectory ();
 	
-	/// Sets the preferred screen width and height, fps, or arg, must be called before calling Run(), some
-	/// options will not work on all platforms
+	/// Sets the preferred screen width and height, fps, or arg, must be called before calling Run(), these functions may do nothing on some platforms
 	static void RunPreferredSize (int width, int height);
 	static void RunPreferredFPS (int fps);
 	static void RunPreferredArgs (int argc, char* argv[]);
@@ -64,30 +60,131 @@ public:
 	static void MatrixRotateProjection (float degrees);
 	static void MatrixUpdate ();
 	
-	// Never assume these callbacks are called in any specific order
-	static int NewStartupCallback (void (* callback) ());
-	static int NewShutdownCallback (void (* callback) ());
-	static int NewDrawCallback (void (* callback) ()); // This is called "Draw" and not "Timer", because it is always the speed of the framerate, and drawing is only allowed in these callbacks
-	static int NewTouchCallback (void (* callback) (int x, int y));
-	static int NewTouchUpCallback (void (* callback) (int x, int y));
-	static int NewTouchMoveCallback (void (* callback) (int x, int y));
+	/// Returns a new unique integer, per application session.
+	static inline int GetUniqueRef () {
+		static int REF = 1;
+		return REF++;
+	}
 	
-	// Callbacks do not need to be deleted, they will automatically be deleted after shutdown
-	static void DeleteStartupCallback (int ref);
-	static void DeleteShutdownCallback (int ref);
-	static void DeleteDrawCallback (int ref);
-	static void DeleteTouchCallback (int ref);
-	static void DeleteTouchUpCallback (int ref);
-	static void DeleteTouchMoveCallback (int ref);
-	static void DeleteAllCallbacks (); // Very dangerous to call, used internally
+	/// Prints a formatted string to the console.
+	static inline void Print (const char* message, ...) {
+		if (message) {
+			va_list args;
+			va_start(args, message);
+			vprintf(message, args);
+			va_end(args);
+		}
+	}
 	
-	// These should not be called without a good reason (they are used internally)
-	static void RunStartupCallbacks ();
-	static void RunShutdownCallbacks ();
-	static void RunDrawCallbacks ();
-	static void RunTouchCallbacks (int x, int y);
-	static void RunTouchUpCallbacks (int x, int y);
-	static void RunTouchMoveCallbacks (int x, int y);
+	/// Prints a formatted string to the console in debug builds only.
+	static inline void Debug (const char* message, ...) {
+#if DEBUG
+		if (message) {
+			va_list args;
+			va_start(args, message);
+			vprintf(message, args);
+			va_end(args);
+		}
+#endif
+	}
+	
+	static inline int NewStartupCallback (void (* callback) ()) {
+		int ref = GetUniqueRef();
+		_STARTUP_CALLBACKS.insert(std::make_pair(ref, callback));
+		return ref;
+	}
+	
+	static inline int NewShutdownCallback (void (* callback) ()) {
+		int ref = GetUniqueRef();
+		_SHUTDOWN_CALLBACKS.insert(std::make_pair(ref, callback));
+		return ref;
+	}
+	
+	static inline int NewDrawCallback (void (* callback) ()) {
+		int ref = GetUniqueRef();
+		_DRAW_CALLBACKS.insert(std::make_pair(ref, callback));
+		return ref;
+	}
+	
+	static inline int NewTouchCallback (void (* callback) (int x, int y)) {
+		int ref = GetUniqueRef();
+		_TOUCH_CALLBACKS.insert(std::make_pair(ref, callback));
+		return ref;
+	}
+	
+	static inline int NewTouchUpCallback (void (* callback) (int x, int y)) {
+		int ref = GetUniqueRef();
+		_TOUCHUP_CALLBACKS.insert(std::make_pair(ref, callback));
+		return ref;
+	}
+	
+	static inline int NewTouchMoveCallback (void (* callback) (int x, int y)) {
+		int ref = GetUniqueRef();
+		_TOUCHMOVE_CALLBACKS.insert(std::make_pair(ref, callback));
+		return ref;
+	}
+	
+	static inline void DeleteStartupCallback (int ref) {
+		_STARTUP_CALLBACKS.erase(_STARTUP_CALLBACKS.find(ref));
+	}
+	
+	static inline void DeleteShutdownCallback (int ref) {
+		_SHUTDOWN_CALLBACKS.erase(_SHUTDOWN_CALLBACKS.find(ref));
+	}
+	
+	static inline void DeleteDrawCallback (int ref) {
+		_DRAW_CALLBACKS.erase(_DRAW_CALLBACKS.find(ref));
+	}
+	
+	static inline void DeleteTouchCallback (int ref) {
+		_TOUCH_CALLBACKS.erase(_TOUCH_CALLBACKS.find(ref));
+	}
+	
+	static inline void DeleteTouchUpCallback (int ref) {
+		_TOUCHUP_CALLBACKS.erase(_TOUCHUP_CALLBACKS.find(ref));
+	}
+	
+	static inline void DeleteTouchMoveCallback (int ref) {
+		_TOUCHMOVE_CALLBACKS.erase(_TOUCHMOVE_CALLBACKS.find(ref));
+	}
+	
+	static inline void RunStartupCallbacks () {
+		for(std::map<int, void (*) ()>::iterator i = _STARTUP_CALLBACKS.begin(); i != _STARTUP_CALLBACKS.end(); i++)
+			i->second();
+	}
+	
+	static inline void RunShutdownCallbacks () {
+		for(std::map<int, void (*) ()>::iterator i = _SHUTDOWN_CALLBACKS.begin(); i != _SHUTDOWN_CALLBACKS.end(); i++)
+			i->second();
+	}
+	
+	static inline void RunDrawCallbacks () {
+		for(std::map<int, void (*) ()>::iterator i = _DRAW_CALLBACKS.begin(); i != _DRAW_CALLBACKS.end(); i++)
+			i->second();
+	}
+	
+	static inline void RunTouchCallbacks (int x, int y) {
+		for(std::map<int, void (*) (int, int)>::iterator i = _TOUCH_CALLBACKS.begin(); i != _TOUCH_CALLBACKS.end(); i++)
+			i->second(x, y);
+	}
+	
+	static inline void RunTouchUpCallbacks (int x, int y) {
+		for(std::map<int, void (*) (int, int)>::iterator i = _TOUCHUP_CALLBACKS.begin(); i != _TOUCHUP_CALLBACKS.end(); i++)
+			i->second(x, y);
+	}
+	
+	static inline void RunTouchMoveCallbacks (int x, int y) {
+		for(std::map<int, void (*) (int, int)>::iterator i = _TOUCHMOVE_CALLBACKS.begin(); i != _TOUCHMOVE_CALLBACKS.end(); i++)
+			i->second(x, y);
+	}
+	
+private:
+	static inline std::map<int, void (*) ()>				_STARTUP_CALLBACKS;
+	static inline std::map<int, void (*) ()>				_SHUTDOWN_CALLBACKS;
+	static inline std::map<int, void (*) ()>				_DRAW_CALLBACKS;
+	static inline std::map<int, void (*) (int x, int y)>	_TOUCH_CALLBACKS;
+	static inline std::map<int, void (*) (int x, int y)>	_TOUCHUP_CALLBACKS;
+	static inline std::map<int, void (*) (int x, int y)>	_TOUCHMOVE_CALLBACKS;
 };
 
 #endif // _GSYSTEM_H_

@@ -32,13 +32,16 @@ public:
 	inline bool operator!= (const GColor& c) const						{ return color != c.color; }
 	inline GColor& operator= (uint32_t hex)								{ color = hex; return *this; }
 	
-	static const uint32_t BLACK = 0x000000ff;
-	static const uint32_t WHITE = 0xffffffff;
-	static const uint32_t CLEAR = 0x00000000;
-	static const uint32_t RED = 0xff000000;
-	static const uint32_t GREEN = 0x00ff0000;
-	static const uint32_t BLUE = 0x0000ff00;
-	static const uint32_t ALPHA = 0x000000ff;
+	static constexpr uint32_t BLACK = 0x000000ff;
+	static constexpr uint32_t WHITE = 0xffffffff;
+	static constexpr uint32_t CLEAR = 0x00000000;
+	static constexpr uint32_t RED = 0xff0000ff;
+	static constexpr uint32_t GREEN = 0x00ff00ff;
+	static constexpr uint32_t BLUE = 0x0000ffff;
+	static constexpr uint32_t CYAN = 0x00ffffff;
+	static constexpr uint32_t MAGENTA = 0xff00ffff;
+	static constexpr uint32_t YELLOW = 0xffff00ff;
+	static constexpr uint32_t ALPHA = 0x000000ff;
 };
 
 
@@ -138,6 +141,7 @@ public:
 	inline GRect& Center (int x_, int y_, int w, int h)				{ x = x_ + (w - width) / 2; y = y_ + (h - height) / 2; return *this; }
 	inline GRect& Offset (const GPoint& p)							{ x += p.x; y += p.y; return *this; }
 	inline GRect& Offset (int x_, int y_)							{ x += x_; y += y_; return *this; }
+	inline GRect& OffsetToZero ()									{ x = 0; y = 0; return *this; }
 	inline bool operator== (const GRect& r) const					{ return x == r.x && y == r.y && width == r.width && height == r.height; }
 	inline bool operator!= (const GRect& r) const					{ return x != r.x || y != r.y || width != r.width || height != r.height; }
 };
@@ -243,6 +247,14 @@ public:
 	inline bool operator>= (const GString& string) const			{ return strcmp(_string, string._string) >= 0; }
 	inline bool operator>= (const char* string) const				{ return strcmp(_string, string) >= 0; }
 	
+	// This class provides literal string access for template parameters
+	template <int N>
+	struct Literal {
+		constexpr Literal (const char (&s)[N])						{ std::copy_n(s, N, string); }
+		inline operator const char* (void) const					{ return string; }
+		char string[N];
+	};
+	
 private:
 	char* _string;
 	int _length;
@@ -304,17 +316,6 @@ public:
 	static int64_t Compress (const void* srcBuffer, int64_t srcSize, void* dstBuffer, int64_t dstSize);
 	static int64_t Decompress (const void* srcBuffer, int64_t srcSize, void* dstBuffer, int64_t dstSize);
 	static int64_t GetBufferBounds (int64_t srcSize);
-};
-
-
-class GConsole {
-public:
-	/// Prints a formatted string to the console.
-	static void Print (const char* message, ...);
-	
-	/// Prints a formatted string to the console in debug builds only.
-	static void Debug (const char* message, ...);
-	
 };
 
 
