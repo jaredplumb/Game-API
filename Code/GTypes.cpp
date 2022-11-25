@@ -5,11 +5,11 @@
 
 
 
-static char* _CHAR_ALLOC (int size) {
+static char* CHAR_ALLOC (int size) {
 	return new char[size];
 }
 
-static void _FREE (char* string) {
+static void FREE (char* string) {
 	delete [] string;
 }
 
@@ -20,28 +20,28 @@ static void _FREE (char* string) {
 
 
 GString::GString ()
-:	_string(NULL)
+:	_string(nullptr)
 ,	_length(0)
 {
 }
 
 GString::GString (const GString& string)
-:	_string(NULL)
+:	_string(nullptr)
 ,	_length(string.GetLength())
 {
-	if(string._string != NULL) {
-		_string = _CHAR_ALLOC(_length + 1);
+	if(string._string != nullptr) {
+		_string = CHAR_ALLOC(_length + 1);
 		strncpy(_string, string._string, _length);
 		_string[_length] = '\0';
 	}
 }
 
 GString::GString (const char* string)
-:	_string(NULL)
+:	_string(nullptr)
 ,	_length(strlen(string))
 {
-	if(string != NULL) {
-		_string = _CHAR_ALLOC(_length + 1);
+	if(string != nullptr) {
+		_string = CHAR_ALLOC(_length + 1);
 		strncpy(_string, string, _length);
 		_string[_length] = '\0';
 	}
@@ -49,20 +49,20 @@ GString::GString (const char* string)
 
 GString::~GString () {
 	if(_string) {
-		_FREE(_string);
-		_string = NULL;
+		FREE(_string);
+		_string = nullptr;
 	}
 	_length = 0;
 }
 
 GString& GString::New (const GString& string) {
 	if(_string) {
-		_FREE(_string);
-		_string = NULL;
+		FREE(_string);
+		_string = nullptr;
 	}
 	_length = string.GetLength();
-	if(string._string != NULL) {
-		_string = _CHAR_ALLOC(_length + 1);
+	if(string._string != nullptr) {
+		_string = CHAR_ALLOC(_length + 1);
 		strncpy(_string, string._string, _length);
 		_string[_length] = '\0';
 	}
@@ -71,12 +71,12 @@ GString& GString::New (const GString& string) {
 
 GString& GString::New (const char* string) {
 	if(_string) {
-		_FREE(_string);
-		_string = NULL;
+		FREE(_string);
+		_string = nullptr;
 	}
 	_length = strlen(string);
-	if(string != NULL) {
-		_string = _CHAR_ALLOC(_length + 1);
+	if(string != nullptr) {
+		_string = CHAR_ALLOC(_length + 1);
 		strncpy(_string, string, _length);
 		_string[_length] = '\0';
 	}
@@ -85,20 +85,20 @@ GString& GString::New (const char* string) {
 
 void GString::Delete () {
 	if(_string) {
-		_FREE(_string);
-		_string = NULL;
+		FREE(_string);
+		_string = nullptr;
 	}
 	_length = 0;
 }
 
 GString& GString::Format (const char* string, ...) {
 	if(_string) {
-		_FREE(_string);
-		_string = NULL;
+		FREE(_string);
+		_string = nullptr;
 		_length = 0;
 	}
 	
-	if(string == NULL)
+	if(string == nullptr)
 		return *this;
 	
 	// TODO: if I change to an allocator system, I could get
@@ -109,11 +109,11 @@ GString& GString::Format (const char* string, ...) {
 	va_list args;
 	
 	va_start(args, string);
-	_length = vsnprintf(NULL, 0, string, args);
+	_length = vsnprintf(nullptr, 0, string, args);
 	va_end(args);
 	
 	if(_length > 0) {
-		_string = _CHAR_ALLOC(_length + 1);
+		_string = CHAR_ALLOC(_length + 1);
 		va_start(args, string);
 		vsnprintf(_string, _length + 1, string, args);
 		va_end(args);
@@ -130,37 +130,37 @@ int GString::GetLength () const {
 }
 
 bool GString::IsEmpty () const {
-	return _string == NULL || _string[0] == '\0';
+	return _string == nullptr || _string[0] == '\0';
 }
 
 GString& GString::Add (const GString& string) {
-	if(string._string == NULL)
+	if(string._string == nullptr)
 		return *this;
 	
-	if(_string == NULL)
+	if(_string == nullptr)
 		return New(string);
 	
 	_length = GetLength() + string.GetLength();
-	char* newstring = _CHAR_ALLOC(_length + 1);
+	char* newstring = CHAR_ALLOC(_length + 1);
 	strcpy(newstring, _string);
 	strcat(newstring, string._string);
-	_FREE(_string);
+	FREE(_string);
 	_string = newstring;
 	return *this;
 }
 
 GString& GString::Add (const char* string) {
-	if(string == NULL)
+	if(string == nullptr)
 		return *this;
 	
-	if(_string == NULL)
+	if(_string == nullptr)
 		return New(string);
 	
 	_length = GetLength() + strlen(string);
-	char* newstring = _CHAR_ALLOC(_length + 1);
+	char* newstring = CHAR_ALLOC(_length + 1);
 	strcpy(newstring, _string);
 	strcat(newstring, string);
-	_FREE(_string);
+	FREE(_string);
 	_string = newstring;
 	return *this;
 }
@@ -176,7 +176,7 @@ GString& GString::ToUpper () {
 }
 
 GString& GString::TrimSpaces () {
-	if(_string == NULL)
+	if(_string == nullptr)
 		return *this;
 	
 	// Remove end spaces
@@ -190,10 +190,10 @@ GString& GString::TrimSpaces () {
 	
 	// Create new string
 	_length = strlen(s);
-	char* n = _CHAR_ALLOC(_length + 1);
+	char* n = CHAR_ALLOC(_length + 1);
 	strncpy(n, s, _length);
 	n[_length] = '\0';
-	_FREE(_string);
+	FREE(_string);
 	_string = n;
 	
 	return *this;
@@ -261,7 +261,7 @@ bool GString::isxdigit (char c) {
 }
 
 char* GString::strcat (char* dst, const char* src) {
-	if(dst == NULL || src == NULL) return dst;
+	if(dst == nullptr || src == nullptr) return dst;
 	char* save = dst;
 	while(*save != 0)
 		save++;
@@ -271,9 +271,9 @@ char* GString::strcat (char* dst, const char* src) {
 }
 
 int GString::strcmp (const char* s1, const char* s2) {
-	if(s1 == NULL)
+	if(s1 == nullptr)
 		return (s2 ? -s2[0] : 0);
-	if(s2 == NULL)
+	if(s2 == nullptr)
 		return s1[0];
 	while(*s1 == *s2++)
 		if(*s1++ == 0)
@@ -282,9 +282,9 @@ int GString::strcmp (const char* s1, const char* s2) {
 }
 
 char* GString::strcpy (char* dst, const char* src) {
-	if(dst == NULL)
-		return NULL;
-	if(src == NULL) {
+	if(dst == nullptr)
+		return nullptr;
+	if(src == nullptr) {
 		*dst = 0;
 	} else {
 		char* save = dst;
@@ -295,9 +295,9 @@ char* GString::strcpy (char* dst, const char* src) {
 }
 
 int GString::stricmp (const char* s1, const char* s2) {
-	if(s1 == NULL)
+	if(s1 == nullptr)
 		return (s2 ? -tolower(s2[0]) : 0);
-	if(s2 == NULL)
+	if(s2 == nullptr)
 		return tolower(s1[0]);
 	while(tolower(*s1) == tolower(*s2++))
 		if(*s1++ == 0)
@@ -309,11 +309,11 @@ char* GString::stristr (const char* s, const char* find) {
 	for(int len = strlen(find); *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return const_cast<char*>(s);
-	return NULL;
+	return nullptr;
 }
 
 int GString::strlen (const char* s) {
-	if(s == NULL)
+	if(s == nullptr)
 		return 0;
 	const char* i = s;
 	while(*i)
@@ -322,12 +322,12 @@ int GString::strlen (const char* s) {
 }
 
 char* GString::strncat (char* dst, const char* src, int len) {
-	if(dst == NULL)
-		return NULL;
+	if(dst == nullptr)
+		return nullptr;
 	char* save = dst;
 	while(*save != 0)
 		save++;
-	if(src != NULL)
+	if(src != nullptr)
 		while(--len >= 0 && (*save++ = *src++) != 0)
 			;
 	while(--len >= 0)
@@ -338,9 +338,9 @@ char* GString::strncat (char* dst, const char* src, int len) {
 int GString::strncmp (const char* s1, const char* s2, int len) {
 	if(len == 0)
 		return 0;
-	if(s1 == NULL)
+	if(s1 == nullptr)
 		return (s2 ? -s2[0] : 0);
-	if(s2 == NULL)
+	if(s2 == nullptr)
 		return s1[0];
 	do {
 		if(*s1 != *s2++)
@@ -352,10 +352,10 @@ int GString::strncmp (const char* s1, const char* s2, int len) {
 }
 
 char* GString::strncpy (char* dst, const char* src, int len) {
-	if(dst == NULL)
-		return NULL;
+	if(dst == nullptr)
+		return nullptr;
 	char* save = dst;
-	if(src != NULL)
+	if(src != nullptr)
 		while(--len >= 0 && (*save++ = *src++) != 0)
 			;
 	while(--len >= 0)
@@ -366,9 +366,9 @@ char* GString::strncpy (char* dst, const char* src, int len) {
 int GString::strnicmp (const char* s1, const char* s2, int len) {
 	if(len == 0)
 		return 0;
-	if(s1 == NULL)
+	if(s1 == nullptr)
 		return (s2 ? -tolower(s2[0]) : 0);
-	if(s2 == NULL)
+	if(s2 == nullptr)
 		return tolower(s1[0]);
 	do {
 		if(tolower(*s1) != tolower(*s2++))
@@ -383,55 +383,55 @@ char* GString::strnistr (const char* s, const char* find, int len) {
 	for(; *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return (char*)s;
-	return NULL;
+	return nullptr;
 }
 
 char* GString::strnstr (const char* s, const char* find, int len) {
 	for(; *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)s;
-	return NULL;
+	return nullptr;
 }
 
 char* GString::strstr (const char* s, const char* find) {
 	for(int len = strlen(find); *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)s;
-	return NULL;
+	return nullptr;
 }
 
 char* GString::strnnext (const char* s, const char* find, int len) {
 	for(; *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)(s + len);
-	return NULL;
+	return nullptr;
 }
 
 char* GString::strnext (const char* s, const char* find) {
 	for(int len = strlen(find); *s != 0; s++)
 		if(strncmp(s, find, len) == 0)
 			return (char*)(s + len);
-	return NULL;
+	return nullptr;
 }
 
 char* GString::strninext (const char* s, const char* find, int len) {
 	for(; *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return (char*)(s + len);
-	return NULL;
+	return nullptr;
 }
 
 char* GString::strinext (const char* s, const char* find) {
 	for(int len = strlen(find); *s != 0; s++)
 		if(strnicmp(s, find, len) == 0)
 			return (char*)(s + len);
-	return NULL;
+	return nullptr;
 }
 
 int GString::strtoi (const char* s, char** end, int base) {
-	if(s == NULL) {
-		if(end != NULL)
-			*end = NULL;
+	if(s == nullptr) {
+		if(end != nullptr)
+			*end = nullptr;
 		return 0;
 	}
 	while(isspace(*s))
@@ -463,7 +463,7 @@ int GString::strtoi (const char* s, char** end, int base) {
 		i *= base;
 		i += c;
 	}
-	if(end != NULL)
+	if(end != nullptr)
 		*end = (char*)s;
 	return neg ? -i : i;
 }
@@ -497,7 +497,7 @@ char* GString::toupper (char* s) {
 
 
 GFile::GFile ()
-:	_file(NULL)
+:	_file(nullptr)
 {
 }
 
@@ -506,7 +506,7 @@ GFile::~GFile () {
 }
 
 GFile::GFile (const GString& path)
-:	_file(NULL)
+:	_file(nullptr)
 {
 	OpenForRead(path);
 }
@@ -514,56 +514,56 @@ GFile::GFile (const GString& path)
 bool GFile::OpenForRead (const GString& path) {
 	Close();
 	_file = fopen(path, "rb");
-	return _file != NULL;
+	return _file != nullptr;
 }
 
 bool GFile::OpenForWrite (const GString& path) {
 	Close();
 	_file = fopen(path, "wb+");
-	return _file != NULL;
+	return _file != nullptr;
 }
 
 bool GFile::OpenForAppend (const GString& path) {
 	Close();
 	_file = fopen(path, "ab+");
-	return _file != NULL;
+	return _file != nullptr;
 }
 
 void GFile::Close () {
 	if(_file) {
 		fclose(_file);
-		_file = NULL;
+		_file = nullptr;
 	}
 }
 
 bool GFile::Read (void* data, int64_t size) {
-	return _file ? (fread(data, size, 1, _file) == 1) : false;
+	return _file != nullptr && fread(data, size, 1, _file) == 1;
 }
 
 bool GFile::Write (const void* data, int64_t size) {
-	return _file ? (fwrite(data, size, 1, _file) == 1) : false;
+	return _file != nullptr && fwrite(data, size, 1, _file) == 1;
 }
 
 bool GFile::IsOpen () const {
-	return _file != NULL;
+	return _file != nullptr;
 }
 
 int64_t GFile::GetPosition () const {
-	return _file ? (int)ftello(_file) : 0;
+	return _file ? (int64_t)ftello(_file) : 0;
 }
 
 int64_t GFile::GetSize () const {
-	if(_file == NULL)
+	if(_file == nullptr)
 		return 0;
-	int64_t current = (int)ftello(_file);
+	off_t current = ftello(_file);
 	fseeko(_file, 0, SEEK_END);
-	int64_t size = (int)ftello(_file);
+	off_t size = ftello(_file);
 	fseeko(_file, current, SEEK_SET);
-	return size;
+	return (int64_t)size;
 }
 
 bool GFile::SetPosition (int64_t position) {
-	return _file ? (fseeko(_file, (off_t)position, SEEK_SET) == 0) : false;
+	return _file != nullptr && fseeko(_file, (off_t) position, SEEK_SET) == 0;
 }
 
 std::vector<GString> GFile::GetFileNamesInDirectory (const GString& path) {
@@ -615,11 +615,11 @@ std::vector<GString> GFile::GetFileNamesInDirectory (const GString& path) {
 
 
 
-enum _eCompressType {
-	_COMPRESS_TYPE_ZLIB = 0,
+enum eCompressType {
+	COMPRESS_TYPE_ZLIB = 0,
 };
 
-static int64_t _ZLIBCompress (uint8_t* srcBuffer, int64_t srcSize, uint8_t* dstBuffer, int64_t dstSize, int64_t level) {
+static int64_t ZLIBCompress (uint8_t* srcBuffer, int64_t srcSize, uint8_t* dstBuffer, int64_t dstSize, int64_t level) {
 	z_stream stream;
 	memset(&stream, 0, sizeof(stream));
 	stream.next_in = srcBuffer;
@@ -639,7 +639,7 @@ static int64_t _ZLIBCompress (uint8_t* srcBuffer, int64_t srcSize, uint8_t* dstB
 	return stream.total_out;
 }
 
-static int64_t _ZLIBDecompress (uint8_t* srcBuffer, int64_t srcSize, uint8_t* dstBuffer, int64_t dstSize) {
+static int64_t ZLIBDecompress (uint8_t* srcBuffer, int64_t srcSize, uint8_t* dstBuffer, int64_t dstSize) {
 	z_stream stream;
 	memset(&stream, 0, sizeof(stream));
 	stream.next_in = srcBuffer;
@@ -666,12 +666,12 @@ int64_t GArchive::Compress (const void* srcBuffer, int64_t srcSize, void* dstBuf
 	
 	// Set the header data
 	((uint8_t*)dstBuffer)[0] = VERSION;
-	((uint8_t*)dstBuffer)[1] = static_cast<uint8_t>(_COMPRESS_TYPE_ZLIB);
+	((uint8_t*)dstBuffer)[1] = static_cast<uint8_t>(COMPRESS_TYPE_ZLIB);
 	dstBuffer = ((uint8_t*)dstBuffer) + 2;
 	dstSize -= 2;
 	
 	// Max zlib compression
-	dstSize = _ZLIBCompress((uint8_t*)srcBuffer, srcSize, (uint8_t*)dstBuffer, dstSize, 9);
+	dstSize = ZLIBCompress((uint8_t*)srcBuffer, srcSize, (uint8_t*)dstBuffer, dstSize, 9);
 	
 	// Return the actual size of the compressed data
 	return dstSize != 0 ? dstSize + 2 : 0;
@@ -686,14 +686,14 @@ int64_t GArchive::Decompress (const void* srcBuffer, int64_t srcSize, void* dstB
 		return 0;
 	
 	// Get the remainder of the header data
-	_eCompressType compressType = static_cast<_eCompressType>(((uint8_t*)srcBuffer)[1]);
+	auto compressType = static_cast<eCompressType>(((uint8_t*)srcBuffer)[1]);
 	srcBuffer = ((uint8_t*)srcBuffer) + 2;
 	srcSize -= 2;
 	
 	// Decompress depending on the type
 	switch(compressType) {
-		case _COMPRESS_TYPE_ZLIB:
-			return _ZLIBDecompress((uint8_t*)srcBuffer, srcSize, (uint8_t*)dstBuffer, dstSize);
+		case COMPRESS_TYPE_ZLIB:
+			return ZLIBDecompress((uint8_t*)srcBuffer, srcSize, (uint8_t*)dstBuffer, dstSize);
 		default:
 			return 0;
 	}

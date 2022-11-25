@@ -312,7 +312,7 @@ private:
 
 class GArchive {
 public:
-	static const uint8_t VERSION = 4;
+	static constexpr uint8_t VERSION = 4;
 	static int64_t Compress (const void* srcBuffer, int64_t srcSize, void* dstBuffer, int64_t dstSize);
 	static int64_t Decompress (const void* srcBuffer, int64_t srcSize, void* dstBuffer, int64_t dstSize);
 	static int64_t GetBufferBounds (int64_t srcSize);
