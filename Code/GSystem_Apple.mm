@@ -511,18 +511,6 @@ int GSystem::GetFPS () {
 	return _FPS;
 }
 
-int64_t GSystem::GetMilliseconds () {
-	return static_cast<int64_t>(CFAbsoluteTimeGetCurrent() * 1000.0);
-}
-
-int64_t GSystem::GetMicroseconds () {
-	return static_cast<int64_t>(CFAbsoluteTimeGetCurrent() * 1000000.0);
-}
-
-int64_t GSystem::GetNanoseconds () {
-	return static_cast<int64_t>(CFAbsoluteTimeGetCurrent() * 1000000000.0);
-}
-
 void GSystem::SetDefaultWD () {
 	CFURLRef directory = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
 	char resources[PATH_MAX];

@@ -2,6 +2,7 @@
 #define _GSYSTEM_H_
 
 #include "GTypes.h"
+#include <chrono>
 #include <map>
 
 /// This class is used to access global data internally created to run a core game shell.  This
@@ -26,14 +27,14 @@ public:
 	/// Returns the the current FPS.
 	static int GetFPS ();
 	
-	/// Returns the startup time in milliseconds.
-	static int64_t GetMilliseconds ();
+	/// Returns the epoch time in milliseconds.
+	static int64_t GetMilliseconds () { return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()); }
 	
-	/// Returns the startup time in microseconds.
-	static int64_t GetMicroseconds ();
+	/// Returns the epoch time in microseconds.
+	static int64_t GetMicroseconds () { return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()); }
 	
-	/// Returns the startup time in nanoseconds.
-	static int64_t GetNanoseconds ();
+	/// Returns the epoch time in nanoseconds.
+	static int64_t GetNanoseconds () { return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()); }
 	
 	/// Sets the default working directory to the Resources directory.
 	static void SetDefaultWD ();
