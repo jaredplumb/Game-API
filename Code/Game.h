@@ -13,8 +13,4 @@ static const char* GAME_API_VERSION = "3.0";
 #include "GNode.h"
 #include "GFile.h"
 
-#include "UIButton.h"
-#include "UILabel.h"
-#include "UITransition.h"
-
 #endif // _GAME_H_
