@@ -1,5 +1,5 @@
 #include "GSave.h"
-#include "GFile.h"
+#include "GResource.h"
 
 static constexpr uint8_t _VERSION = 5;
 static constexpr char _IDENTIFIER[] = "SAVE";
@@ -11,7 +11,7 @@ bool GSave::Read (const GString& name, void* data, int64_t size) {
 	int64_t elapse = GSystem::GetMilliseconds();
 #endif
 	
-	GFile file;
+	GResource file;
 	if(file.OpenForRead(GString().Format("%s/%s.sav", (const char*)GSystem::GetSaveDirectory(), (const char*)name)) == false) {
 		GSystem::Debug("Failed to open file for reading!\n");
 		return false;
@@ -72,7 +72,7 @@ bool GSave::Write (const GString& name, const void* data, int64_t size) {
 	int64_t elapse = GSystem::GetMilliseconds();
 #endif
 	
-	GFile file;
+	GResource file;
 	if(file.OpenForWrite(GString().Format("%s/%s.sav", (const char*)GSystem::GetSaveDirectory(), (const char*)name)) == false) {
 		GSystem::Debug("Failed to open for writing!\n");
 		return false;

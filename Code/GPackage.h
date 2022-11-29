@@ -3,7 +3,7 @@
 
 #include "GTypes.h"
 #include "GSystem.h"
-#include "GFile.h"
+#include "GResource.h"
 #include <map>
 #include <list>
 
@@ -41,7 +41,7 @@ public:
 	static bool Read (const GString& resource, void* data, int64_t size);
 	
 private:
-	GFile								_file;
+	GResource							_file;
 	int64_t								_footer;
 	std::map<GString, int64_t>			_resources;
 	static constexpr uint8_t			VERSION = 5;

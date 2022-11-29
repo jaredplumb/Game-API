@@ -230,7 +230,7 @@ bool GSound::Resource::New (const GString& resource) {
 bool GSound::Resource::NewFromFile (const GString& resource) {
 	Delete();
 	
-	GFile file(resource);
+	GResource file(resource);
 	if(file.IsOpen() == false)
 		return false;
 	bufferSize = file.GetSize();
