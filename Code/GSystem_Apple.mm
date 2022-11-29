@@ -4,16 +4,16 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
-static GRect					_SCREEN_RECT;
-static GRect					_SAFE_RECT;
-static GRect					_PREFERRED_RECT;
-static int						_FPS		    = 60;
-static int						_ARG_C			= 0;
-static char**					_ARG_V			= NULL;
-id<MTLDevice>					_DEVICE			= nil; // Non-static to allow for extern access from GImage
-id<MTLRenderCommandEncoder>		_RENDER			= nil; // Non-static to allow for extern access from GImage
-static GMatrix32_4x4			_MODEL_MATRIX;
-static GMatrix32_4x4			_PROJECTION_MATRIX;
+static GRect					SCREEN_RECT;
+static GRect					SAFE_RECT;
+static GRect					PREFERRED_RECT;
+static int						FPS		    = 60;
+static int						ARG_C			= 0;
+static char**					ARG_V			= nullptr;
+id<MTLDevice>					DEVICE			= nil; // Non-static to allow for extern access from GImage
+id<MTLRenderCommandEncoder>		RENDER			= nil; // Non-static to allow for extern access from GImage
+static GMatrix32_4x4			MODEL_MATRIX;
+static GMatrix32_4x4			PROJECTION_MATRIX;
 
 
 
@@ -139,18 +139,18 @@ static GMatrix32_4x4			_PROJECTION_MATRIX;
 	[appMenu addItem:quitMenuItem];
 	[NSApp setMainMenu:mainMenu];
 	
-	// If the preferred rect is not set, use a 1080p window
-	if(_PREFERRED_RECT.width == 0 || _PREFERRED_RECT.height == 0) {
-		_PREFERRED_RECT.x = 0;
-		_PREFERRED_RECT.y = 0;
-		_PREFERRED_RECT.width = 1920;
-		_PREFERRED_RECT.height = 1080;
+	// If the preferred rect is not set, use a 1080p window (note that the window is resizable and will fit correctly in the window if this is too big)
+	if(PREFERRED_RECT.width == 0 || PREFERRED_RECT.height == 0) {
+		PREFERRED_RECT.x = 0;
+		PREFERRED_RECT.y = 0;
+		PREFERRED_RECT.width = 1920;
+		PREFERRED_RECT.height = 1080;
 	}
 	
 	// Setup the window
-	NSRect windowRect = NSMakeRect(0, 0, _PREFERRED_RECT.width, _PREFERRED_RECT.height);
+	NSRect windowRect = NSMakeRect(0, 0, PREFERRED_RECT.width, PREFERRED_RECT.height);
 	self._window = [[NSWindow alloc] initWithContentRect:windowRect styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable) backing:NSBackingStoreBuffered defer:YES];
-	[self._window setContentAspectRatio:NSMakeSize((CGFloat)_PREFERRED_RECT.width / (CGFloat)_PREFERRED_RECT.height, ((CGFloat)1))];
+	[self._window setContentAspectRatio:NSMakeSize((CGFloat)PREFERRED_RECT.width / (CGFloat)PREFERRED_RECT.height, ((CGFloat)1))];
 	[self._window setTitle:[[NSProcessInfo processInfo] processName]];
 	[self._window setContentView:[[_MyMetalView alloc] initWithFrame:windowRect]];
 	[self._window makeKeyAndOrderFront:self];
@@ -180,40 +180,6 @@ static GMatrix32_4x4			_PROJECTION_MATRIX;
 
 
 
-// Added this as a string for simplicity for multiple platforms.  This can be added to a .metal file instead
-// and the id<MTLLibrary> defaultLibrary code below can be changed to newDefaultLibrary.
-static NSString* _SHADER = @""
-"#include <metal_stdlib>\n"
-"#include <simd/simd.h>\n"
-"using namespace metal;\n"
-"\n"
-"struct _CustomVertex {\n"
-"	packed_float2 xy;\n"
-"	packed_uchar4 rgba;\n"
-"	packed_float2 uv;\n"
-"};\n"
-"\n"
-"struct _VertexOutput {\n"
-"	float4 xyzw [[position]];\n"
-"	float4 rgba;\n"
-"	float2 uv;\n"
-"};\n"
-"\n"
-"vertex _VertexOutput _VertexShader (constant _CustomVertex* vertexArray [[buffer(0)]],\n"
-"									constant float4x4* matrix  [[buffer(1)]],\n"
-"									ushort vertexID [[vertex_id]]) {\n"
-"	_VertexOutput out;\n"
-"	out.xyzw = *matrix * float4(vertexArray[vertexID].xy, 0.0, 1.0);\n"
-"	out.rgba = float4(vertexArray[vertexID].rgba) / 255.0;\n"
-"	out.uv = float2(vertexArray[vertexID].uv);\n"
-"	return out;\n"
-"}\n"
-"\n"
-"fragment float4 _FragmentShader (_VertexOutput in [[stage_in]],\n"
-"								 texture2d<float> texture [[texture(0)]]) {\n"
-"	return in.rgba * float4(texture.sample(sampler(mag_filter::linear, min_filter::linear), in.uv));\n"
-"}\n"
-"";
 
 
 
@@ -222,8 +188,8 @@ static NSString* _SHADER = @""
 
 
 
-@implementation _MyMetalView
-{
+
+@implementation _MyMetalView {
 	id<MTLCommandQueue> _commandQueue;
 	id<MTLRenderPipelineState> _pipelineState;
 	vector_uint2 _viewport;
@@ -237,16 +203,51 @@ static NSString* _SHADER = @""
 	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect]; // Convert the view to use the full pixel coordinates of the screen (retina)
 #endif // TARGET_OS_IPHONE //TARGET_OS_MAC
 	
-	_DEVICE = MTLCreateSystemDefaultDevice();
-	self = [super initWithFrame:frameRect device:_DEVICE];
+	DEVICE = MTLCreateSystemDefaultDevice();
+	self = [super initWithFrame:frameRect device:DEVICE];
 	[self setDelegate:self];
 	[self setColorPixelFormat:MTLPixelFormatBGRA8Unorm];
 	[self setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
-	[self setPreferredFramesPerSecond:(NSInteger)_FPS];
+	[self setPreferredFramesPerSecond:(NSInteger)FPS];
 	//[self mtkView:self drawableSizeWillChange:frameRect.size];
 	
+	// Added this as a string for simplicity for multiple platforms.  This can be added to a .metal file instead
+	// and the id<MTLLibrary> defaultLibrary code below can be changed to newDefaultLibrary.
+	constexpr NSString* SHADER = @""
+	"#include <metal_stdlib>\n"
+	"#include <simd/simd.h>\n"
+	"using namespace metal;\n"
+	"\n"
+	"struct _CustomVertex {\n"
+	"	packed_float2 xy;\n"
+	"	packed_uchar4 rgba;\n"
+	"	packed_float2 uv;\n"
+	"};\n"
+	"\n"
+	"struct _VertexOutput {\n"
+	"	float4 xyzw [[position]];\n"
+	"	float4 rgba;\n"
+	"	float2 uv;\n"
+	"};\n"
+	"\n"
+	"vertex _VertexOutput _VertexShader (constant _CustomVertex* vertexArray [[buffer(0)]],\n"
+	"									constant float4x4* matrix  [[buffer(1)]],\n"
+	"									ushort vertexID [[vertex_id]]) {\n"
+	"	_VertexOutput out;\n"
+	"	out.xyzw = *matrix * float4(vertexArray[vertexID].xy, 0.0, 1.0);\n"
+	"	out.rgba = float4(vertexArray[vertexID].rgba) / 255.0;\n"
+	"	out.uv = float2(vertexArray[vertexID].uv);\n"
+	"	return out;\n"
+	"}\n"
+	"\n"
+	"fragment float4 _FragmentShader (_VertexOutput in [[stage_in]],\n"
+	"								 texture2d<float> texture [[texture(0)]]) {\n"
+	"	return in.rgba * float4(texture.sample(sampler(mag_filter::linear, min_filter::linear), in.uv));\n"
+	"}\n"
+	"";
+	
 	NSError* error = NULL;
-	id<MTLLibrary> defaultLibrary = [self.device newLibraryWithSource:_SHADER options:nil error:&error];
+	id<MTLLibrary> defaultLibrary = [self.device newLibraryWithSource:SHADER options:nil error:&error];
 	id<MTLFunction> vertexFunction = [defaultLibrary newFunctionWithName:@"_VertexShader"];
 	id<MTLFunction> fragmentFunction = [defaultLibrary newFunctionWithName:@"_FragmentShader"];
 	
@@ -270,18 +271,14 @@ static NSString* _SHADER = @""
 	id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
 	MTLRenderPassDescriptor* renderPassDescriptor = view.currentRenderPassDescriptor;
 	if(renderPassDescriptor != nil) {
-		
-		_RENDER = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-		[_RENDER setViewport:(MTLViewport){(double)0, (double)0, (double)_viewport.x, (double)_viewport.y, (double)-1, (double)1}];
-		[_RENDER setRenderPipelineState:_pipelineState];
-		
+		RENDER = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+		[RENDER setViewport:(MTLViewport){(double)0, (double)0, (double)_viewport.x, (double)_viewport.y, (double)-1, (double)1}];
+		[RENDER setRenderPipelineState:_pipelineState];
 		GSystem::MatrixSetModelDefault();
 		GSystem::MatrixSetProjectionDefault();
 		GSystem::MatrixUpdate();
 		GSystem::RunDrawCallbacks();
-		
-		[_RENDER endEncoding];
-		
+		[RENDER endEncoding];
 		[commandBuffer presentDrawable:view.currentDrawable];
 	}
 	[commandBuffer commit];
@@ -291,69 +288,69 @@ static NSString* _SHADER = @""
 	_viewport.x = size.width;
 	_viewport.y = size.height;
 	
-	// Set the rect used for drawing, this includes the entire screen including hidden areas because of curved edges
-	_SCREEN_RECT.x = 0;
-	_SCREEN_RECT.y = 0;
-	_SCREEN_RECT.width = _viewport.x;
-	_SCREEN_RECT.height = _viewport.y;
+	// Set the rect used for drawing, this includes the entire viewport including hidden areas because of curved edges or notches
+	SCREEN_RECT.x = 0;
+	SCREEN_RECT.y = 0;
+	SCREEN_RECT.width = _viewport.x;
+	SCREEN_RECT.height = _viewport.y;
 	
-	// Set the safe are for for interactions.  This is used to make sure UI elements and mouse/touch interaction is in the correct area
-	_SAFE_RECT = _SCREEN_RECT;
-	
+	// The safe area is a subsection of the screen that is fully visible and does not interfere with device interactions such as swiping areas (initially set to the entire window/screen)
 #if TARGET_OS_IPHONE
-	// Get the safe area already part of iOS.  The UIWindow may not be retina, so adjust offsets accordingly
-	int left = _SCREEN_RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
-	int top = _SCREEN_RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
-	int right = _SCREEN_RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
-	int bottom = _SCREEN_RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
-	_SAFE_RECT.x += left;
-	_SAFE_RECT.y += top;
-	_SAFE_RECT.width -= (left + right);
-	_SAFE_RECT.height -= (top + bottom);
+	// Get the safe area insets from the edge of the screen already part of iOS and set the safe rect using them
+	int left = SCREEN_RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
+	int top = SCREEN_RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
+	int right = SCREEN_RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
+	int bottom = SCREEN_RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
+	SAFE_RECT.x = left;
+	SAFE_RECT.y = top;
+	SAFE_RECT.width = SCREEN_RECT.width - left - right;
+	SAFE_RECT.height = SCREEN_RECT.height - top - bottom;
+#else
+	// On Mac the safe rect is the screen rect
+	SAFE_RECT = SCREEN_RECT;
 #endif
 	
-	// If no preferred rect is set, use the safe rect as the preferred rect
-	if(_PREFERRED_RECT.width == 0 || _PREFERRED_RECT.height == 0) {
-		_PREFERRED_RECT.x = 0;
-		_PREFERRED_RECT.y = 0;
-		_PREFERRED_RECT.width = _SAFE_RECT.width;
-		_PREFERRED_RECT.height = _SAFE_RECT.height;
+	// If no preferred rect is set, use the safe rect's width and height
+	if(PREFERRED_RECT.width == 0 || PREFERRED_RECT.height == 0) {
+		PREFERRED_RECT.x = 0;
+		PREFERRED_RECT.y = 0;
+		PREFERRED_RECT.width = SAFE_RECT.width;
+		PREFERRED_RECT.height = SAFE_RECT.height;
 	}
 	
-	// Adjust the rect and safe rect if they are not sized correctly for the preferred rect
-	// The preferred rect should entirely fit within the safe rect, and maximize the safe rect to that size
-	if(_SAFE_RECT.width != _PREFERRED_RECT.width) {
-		_SCREEN_RECT.x = _SCREEN_RECT.x * _PREFERRED_RECT.width / _SAFE_RECT.width;
-		_SCREEN_RECT.y = _SCREEN_RECT.y * _PREFERRED_RECT.width / _SAFE_RECT.width;
-		_SCREEN_RECT.width = _SCREEN_RECT.width * _PREFERRED_RECT.width / _SAFE_RECT.width;
-		_SCREEN_RECT.height = _SCREEN_RECT.height * _PREFERRED_RECT.width / _SAFE_RECT.width;
-		_SAFE_RECT.x = _SAFE_RECT.x * _PREFERRED_RECT.width / _SAFE_RECT.width;
-		_SAFE_RECT.y = _SAFE_RECT.y * _PREFERRED_RECT.width / _SAFE_RECT.width;
-		_SAFE_RECT.height = _SAFE_RECT.height * _PREFERRED_RECT.width / _SAFE_RECT.width;
-		_SAFE_RECT.width = _PREFERRED_RECT.width; // This must be last because it is used for the aspect ratio
+	// The screen rect and safe rect are adjusted to fit the preferred rect as best as possible
+	if(SAFE_RECT.width != PREFERRED_RECT.width) {
+		SCREEN_RECT.x = SCREEN_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
+		SCREEN_RECT.y = SCREEN_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
+		SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.width / SAFE_RECT.width;
+		SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
+		SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
+		SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
+		SAFE_RECT.height = SAFE_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
+		SAFE_RECT.width = PREFERRED_RECT.width; // This must be last because it is used for the aspect ratio
 	}
-	if(_SAFE_RECT.height < _PREFERRED_RECT.height) {
-		_SCREEN_RECT.x = _SCREEN_RECT.x * _PREFERRED_RECT.height / _SAFE_RECT.height;
-		_SCREEN_RECT.y = _SCREEN_RECT.y * _PREFERRED_RECT.height / _SAFE_RECT.height;
-		_SCREEN_RECT.width = _SCREEN_RECT.width * _PREFERRED_RECT.height / _SAFE_RECT.height;
-		_SCREEN_RECT.height = _SCREEN_RECT.height * _PREFERRED_RECT.height / _SAFE_RECT.height;
-		_SAFE_RECT.x = _SAFE_RECT.x * _PREFERRED_RECT.height / _SAFE_RECT.height;
-		_SAFE_RECT.y = _SAFE_RECT.y * _PREFERRED_RECT.height / _SAFE_RECT.height;
-		_SAFE_RECT.width = _SAFE_RECT.width * _PREFERRED_RECT.height / _SAFE_RECT.height;
-		_SAFE_RECT.height = _PREFERRED_RECT.height; // This must be last because it is used for the aspect ratio
+	if(SAFE_RECT.height < PREFERRED_RECT.height) {
+		SCREEN_RECT.x = SCREEN_RECT.x * PREFERRED_RECT.height / SAFE_RECT.height;
+		SCREEN_RECT.y = SCREEN_RECT.y * PREFERRED_RECT.height / SAFE_RECT.height;
+		SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.height / SAFE_RECT.height;
+		SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.height / SAFE_RECT.height;
+		SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.height / SAFE_RECT.height;
+		SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.height / SAFE_RECT.height;
+		SAFE_RECT.width = SAFE_RECT.width * PREFERRED_RECT.height / SAFE_RECT.height;
+		SAFE_RECT.height = PREFERRED_RECT.height; // This must be last because it is used for the aspect ratio
 	}
 	
 	// Center the preferred rect within the screen rect then adjust to fit within the safe rect
-	_PREFERRED_RECT.x = _SCREEN_RECT.width / 2 - _PREFERRED_RECT.width / 2;
-	_PREFERRED_RECT.y = _SCREEN_RECT.height / 2 - _PREFERRED_RECT.height / 2;
-	if(_PREFERRED_RECT.x < _SAFE_RECT.x)
-		_PREFERRED_RECT.x = _SAFE_RECT.x;
-	if(_PREFERRED_RECT.y < _SAFE_RECT.y)
-		_PREFERRED_RECT.y = _SAFE_RECT.y;
-	if(_PREFERRED_RECT.x + _PREFERRED_RECT.width > _SAFE_RECT.x + _SAFE_RECT.width)
-		_PREFERRED_RECT.x = _SAFE_RECT.x + _SAFE_RECT.width - _PREFERRED_RECT.width;
-	if(_PREFERRED_RECT.y + _PREFERRED_RECT.height > _SAFE_RECT.y + _SAFE_RECT.height)
-		_PREFERRED_RECT.y = _SAFE_RECT.y + _SAFE_RECT.height - _PREFERRED_RECT.height;
+	PREFERRED_RECT.x = SCREEN_RECT.width / 2 - PREFERRED_RECT.width / 2;
+	PREFERRED_RECT.y = SCREEN_RECT.height / 2 - PREFERRED_RECT.height / 2;
+	if(PREFERRED_RECT.x < SAFE_RECT.x)
+		PREFERRED_RECT.x = SAFE_RECT.x;
+	if(PREFERRED_RECT.y < SAFE_RECT.y)
+		PREFERRED_RECT.y = SAFE_RECT.y;
+	if(PREFERRED_RECT.x + PREFERRED_RECT.width > SAFE_RECT.x + SAFE_RECT.width)
+		PREFERRED_RECT.x = SAFE_RECT.x + SAFE_RECT.width - PREFERRED_RECT.width;
+	if(PREFERRED_RECT.y + PREFERRED_RECT.height > SAFE_RECT.y + SAFE_RECT.height)
+		PREFERRED_RECT.y = SAFE_RECT.y + SAFE_RECT.height - PREFERRED_RECT.height;
 }
 
 - (void) encodeWithCoder:(nonnull NSCoder*)aCoder { 
@@ -377,8 +374,8 @@ static NSString* _SHADER = @""
 - (void) touchesBegan: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
 		CGPoint location = [touch locationInView:self];
-		location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-		location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+		location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 		GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
 	}
 }
@@ -386,8 +383,8 @@ static NSString* _SHADER = @""
 - (void) touchesMoved: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
 		CGPoint location = [touch locationInView:self];
-		location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-		location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+		location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 		GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
 	}
 }
@@ -395,8 +392,8 @@ static NSString* _SHADER = @""
 - (void) touchesEnded: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
 		CGPoint location = [touch locationInView:self];
-		location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-		location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+		location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 		GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 	}
 }
@@ -404,8 +401,8 @@ static NSString* _SHADER = @""
 - (void) touchesCancelled: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
 		CGPoint location = [touch locationInView:self];
-		location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-		location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+		location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+		location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 		GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 	}
 }
@@ -415,72 +412,72 @@ static NSString* _SHADER = @""
 - (void) mouseDown: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchCallbacks((int)location.x, (int)location.y); // [theEvent buttonNumber]
 }
 
 - (void) rightMouseDown: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) otherMouseDown: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) mouseUp: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) rightMouseUp: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) otherMouseUp: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) mouseDragged: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) rightMouseDragged: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
 }
 
 - (void) otherMouseDragged: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
-	location.x = location.x * (CGFloat)_SCREEN_RECT.width / self.frame.size.width;
-	location.y = location.y * (CGFloat)_SCREEN_RECT.height / self.frame.size.height;
+	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
+	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
 	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
 }
 
@@ -512,19 +509,19 @@ static NSString* _SHADER = @""
 
 
 GRect GSystem::GetScreenRect () {
-	return _SCREEN_RECT;
+	return SCREEN_RECT;
 }
 
 GRect GSystem::GetSafeRect () {
-	return _SAFE_RECT;
+	return SAFE_RECT;
 }
 
 GRect GSystem::GetPreferredRect () {
-	return _PREFERRED_RECT;
+	return PREFERRED_RECT;
 }
 
 int GSystem::GetFPS () {
-	return _FPS;
+	return FPS;
 }
 
 void GSystem::SetDefaultWD () {
@@ -553,18 +550,18 @@ const GString& GSystem::GetSaveDirectory () {
 
 
 void GSystem::RunPreferredSize (int width, int height) {
-	_SCREEN_RECT = GRect(0, 0, width, height);
-	_SAFE_RECT = GRect(0, 0, width, height);
-	_PREFERRED_RECT = GRect(0, 0, width, height);
+	SCREEN_RECT = GRect(0, 0, width, height);
+	SAFE_RECT = GRect(0, 0, width, height);
+	PREFERRED_RECT = GRect(0, 0, width, height);
 }
 
 void GSystem::RunPreferredFPS (int fps) {
-	_FPS = fps;
+	FPS = fps;
 }
 
 void GSystem::RunPreferredArgs (int argc, char* argv[]) {
-	_ARG_C = argc;
-	_ARG_V = argv;
+	ARG_C = argc;
+	ARG_V = argv;
 }
 
 int GSystem::Run () {
@@ -573,7 +570,7 @@ int GSystem::Run () {
 	
 #if TARGET_OS_IPHONE
 	@autoreleasepool {
-		return UIApplicationMain((int)_ARG_C, _ARG_V, nil, NSStringFromClass([_MyAppDelegate class]));
+		return UIApplicationMain((int)ARG_C, ARG_V, nil, NSStringFromClass([_MyAppDelegate class]));
 	}
 #else // TARGET_OS_MAC
 	@autoreleasepool {
@@ -601,42 +598,42 @@ int GSystem::Run () {
 // https://developer.apple.com/library/content/samplecode/AdoptingMetalI/Listings/MetalTexturedMesh_AAPLMathUtilities_m.html#//apple_ref/doc/uid/TP40017287-MetalTexturedMesh_AAPLMathUtilities_m-DontLinkElementID_5
 
 void GSystem::MatrixSetModelDefault () {
-	_MODEL_MATRIX.SetIdentity();
+	MODEL_MATRIX.SetIdentity();
 }
 
 void GSystem::MatrixSetProjectionDefault () {
-	_PROJECTION_MATRIX.SetOrtho2D((float)_SCREEN_RECT.x, (float)_SCREEN_RECT.width, (float)_SCREEN_RECT.height, (float)_SCREEN_RECT.y, (float)-1, (float)1);
+	PROJECTION_MATRIX.SetOrtho2D((float)SCREEN_RECT.x, (float)SCREEN_RECT.width, (float)SCREEN_RECT.height, (float)SCREEN_RECT.y, (float)-1, (float)1);
 }
 
 void GSystem::MatrixTranslateModel (float x, float y) {
-	_MODEL_MATRIX.SetTranslation((float)x, (float)y, (float)0);
+	MODEL_MATRIX.SetTranslation((float)x, (float)y, (float)0);
 }
 
 void GSystem::MatrixTranslateProjection (float x, float y) {
-	_PROJECTION_MATRIX.SetTranslation((float)x, (float)y, (float)0);
+	PROJECTION_MATRIX.SetTranslation((float)x, (float)y, (float)0);
 }
 
 void GSystem::MatrixScaleModel (float x, float y) {
-	_MODEL_MATRIX.SetScale((float)x, (float)y, (float)1);
+	MODEL_MATRIX.SetScale((float)x, (float)y, (float)1);
 }
 
 void GSystem::MatrixScaleProjection (float x, float y) {
-	_PROJECTION_MATRIX.SetScale((float)x, (float)y, (float)1);
+	PROJECTION_MATRIX.SetScale((float)x, (float)y, (float)1);
 }
 
 void GSystem::MatrixRotateModel (float degrees) {
-	_MODEL_MATRIX.SetRotation((float)degrees * ((float)M_PI / (float)180));
+	MODEL_MATRIX.SetRotation((float)degrees * ((float)M_PI / (float)180));
 }
 
 void GSystem::MatrixRotateProjection (float degrees) {
-	_PROJECTION_MATRIX.SetRotation((float)degrees * ((float)M_PI / (float)180));
+	PROJECTION_MATRIX.SetRotation((float)degrees * ((float)M_PI / (float)180));
 }
 
 void GSystem::MatrixUpdate () {
-	if(_RENDER != nil) {
+	if(RENDER != nil) {
 		static GMatrix32_4x4 MATRIX;
-		MATRIX = _PROJECTION_MATRIX * _MODEL_MATRIX;
-		[_RENDER setVertexBytes:&MATRIX length:sizeof(MATRIX) atIndex:1];
+		MATRIX = PROJECTION_MATRIX * MODEL_MATRIX;
+		[RENDER setVertexBytes:&MATRIX length:sizeof(MATRIX) atIndex:1];
 	}
 }
 

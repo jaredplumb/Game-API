@@ -5,8 +5,8 @@
 #import <MetalKit/MetalKit.h>
 
 // These are defined in GSystem_Apple.mm
-extern id<MTLDevice>				_DEVICE;
-extern id<MTLRenderCommandEncoder>	_RENDER;
+extern id<MTLDevice>				DEVICE;
+extern id<MTLRenderCommandEncoder>	RENDER;
 
 
 
@@ -81,7 +81,7 @@ bool GImage::New (const Resource& resource) {
 	textureDescriptor.pixelFormat = MTLPixelFormatRGBA8Unorm;
 	textureDescriptor.width = resource.width;
 	textureDescriptor.height = resource.height;
-	_data->texture = [_DEVICE newTextureWithDescriptor:textureDescriptor];
+	_data->texture = [DEVICE newTextureWithDescriptor:textureDescriptor];
 	if(_data->texture == nil) {
 		Delete();
 		return false;
@@ -144,7 +144,7 @@ void GImage::Draw () {
 }
 
 void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
-	if(_RENDER == nil || _data == nullptr || _data->texture == nil)
+	if(RENDER == nil || _data == nullptr || _data->texture == nil)
 		return;
 	
 	if(_data->verticesCount != 4) {
@@ -160,7 +160,7 @@ void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 	if(_data->indiciesCount != 6) {
 		uint16_t indicies[6] = {0, 1, 2, 1, 2, 3};
 		_data->indiciesCount = 6;
-		_data->indicies = [_DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
+		_data->indicies = [DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
 	}
 	
 	if(_data->src != src || _data->dst != dst) {
@@ -194,13 +194,13 @@ void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 		}
 	}
 	
-	[_RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
-	[_RENDER setFragmentTexture:_data->texture atIndex:0];
-	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
+	[RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
+	[RENDER setFragmentTexture:_data->texture atIndex:0];
+	[RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 void GImage::DrawLine (const GPoint& a, const GPoint& b, int width, const GColor& color) {
-	if(_RENDER == nil || _data == nullptr || _data->texture == nil)
+	if(RENDER == nil || _data == nullptr || _data->texture == nil)
 		return;
 	
 	if(_data->verticesCount != 4) {
@@ -218,7 +218,7 @@ void GImage::DrawLine (const GPoint& a, const GPoint& b, int width, const GColor
 			0, 1, 2, 1, 2, 3
 		};
 		_data->indiciesCount = 6;
-		_data->indicies = [_DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
+		_data->indicies = [DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
 	}
 	
 	GRect src(a.x, a.y, width, 0);
@@ -257,13 +257,13 @@ void GImage::DrawLine (const GPoint& a, const GPoint& b, int width, const GColor
 		}
 	}
 	
-	[_RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
-	[_RENDER setFragmentTexture:_data->texture atIndex:0];
-	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
+	[RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
+	[RENDER setFragmentTexture:_data->texture atIndex:0];
+	[RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int sides) {
-	if(_RENDER == nil || _data == nullptr || _data->texture == nil)
+	if(RENDER == nil || _data == nullptr || _data->texture == nil)
 		return;
 	
 	if(_data->verticesCount != sides) {
@@ -279,7 +279,7 @@ void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int sides
 	
 	if(_data->indiciesCount != sides * 3 - 2) {
 		_data->indiciesCount = sides * 3 - 2;
-		_data->indicies = [_DEVICE newBufferWithLength:(sizeof(uint16_t) * _data->indiciesCount) options:MTLResourceStorageModeShared];
+		_data->indicies = [DEVICE newBufferWithLength:(sizeof(uint16_t) * _data->indiciesCount) options:MTLResourceStorageModeShared];
 		uint16_t* indicies = (uint16_t*)_data->indicies.contents;
 		for(int i = 2; i < sides; i++) {
 			indicies[(i - 2) * 3 + 0] = 0;
@@ -313,13 +313,13 @@ void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int sides
 		}
 	}
 	
-	[_RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
-	[_RENDER setFragmentTexture:_data->texture atIndex:0];
-	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
+	[RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
+	[RENDER setFragmentTexture:_data->texture atIndex:0];
+	[RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 void GImage::DrawQuad (const float vertices[8], const float coords[8], const GColor& color) {
-	if(_RENDER == nil || _data == nullptr || _data->texture == nil)
+	if(RENDER == nil || _data == nullptr || _data->texture == nil)
 		return;
 	
 	if(_data->verticesCount != 4) {
@@ -337,7 +337,7 @@ void GImage::DrawQuad (const float vertices[8], const float coords[8], const GCo
 			0, 1, 2, 1, 2, 3
 		};
 		_data->indiciesCount = 6;
-		_data->indicies = [_DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
+		_data->indicies = [DEVICE newBufferWithBytes:indicies length:sizeof(indicies) options:MTLResourceStorageModeShared];
 	}
 	
 	for(int i = 0; i < 4; i++) {
@@ -357,18 +357,18 @@ void GImage::DrawQuad (const float vertices[8], const float coords[8], const GCo
 		}
 	}
 	
-	[_RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
-	[_RENDER setFragmentTexture:_data->texture atIndex:0];
-	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
+	[RENDER setVertexBytes:_data->vertices length:(sizeof(Vertex) * _data->verticesCount) atIndex:0];
+	[RENDER setFragmentTexture:_data->texture atIndex:0];
+	[RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 void GImage::DrawVertices (const Vertex verticies[], int verticesCount, const uint16_t indicies[], int indiciesCount) {
-	if(_RENDER == nil || _data == nullptr || _data->texture == nil)
+	if(RENDER == nil || _data == nullptr || _data->texture == nil)
 		return;
-	_data->indicies = [_DEVICE newBufferWithBytes:indicies length:(sizeof(uint16_t) * indiciesCount) options:MTLResourceStorageModeShared];
-	[_RENDER setVertexBytes:verticies length:(sizeof(Vertex) * verticesCount) atIndex:0];
-	[_RENDER setFragmentTexture:_data->texture atIndex:0];
-	[_RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
+	_data->indicies = [DEVICE newBufferWithBytes:indicies length:(sizeof(uint16_t) * indiciesCount) options:MTLResourceStorageModeShared];
+	[RENDER setVertexBytes:verticies length:(sizeof(Vertex) * verticesCount) atIndex:0];
+	[RENDER setFragmentTexture:_data->texture atIndex:0];
+	[RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:indiciesCount indexType:MTLIndexTypeUInt16 indexBuffer:_data->indicies indexBufferOffset:0];
 }
 
 
