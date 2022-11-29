@@ -1,12 +1,4 @@
 #include "GPackage.h"
-#include <list>
-
-static const uint8_t			_VERSION = 5;
-static const char				_IDENTIFIER[] = "PACKAGE";
-static std::list<GPackage*>*	_packages = NULL;
-static GString					_lastResource;
-static GPackage*				_lastPackage = NULL;
-static int64_t					_lastSize = 0;
 
 GPackage::GPackage ()
 :	_footer(0)
@@ -46,8 +38,8 @@ bool GPackage::OpenForRead (const GString& path) {
 		return false;
 	}
 	
-	uint8_t identifier[sizeof(_IDENTIFIER)];
-	if(_file.Read(identifier, sizeof(_IDENTIFIER)) == false) {
+	uint8_t identifier[sizeof(IDENTIFIER)];
+	if(_file.Read(identifier, sizeof(IDENTIFIER)) == false) {
 		GSystem::Debug("ERROR: Failed to read identifier from package \"%s\"!\n", (const char*)path);
 		return false;
 	}
@@ -109,10 +101,8 @@ bool GPackage::OpenForRead (const GString& path) {
 	}
 	
 	delete[] buffer;
-
-	if(_packages == NULL)
-		_packages = new std::list<GPackage*>;
-	_packages->push_back(this);
+	
+	PACKAGES.push_back(this);
 	
     GSystem::Debug("%s ready for reading...\n", (const char*)path);
     
@@ -127,12 +117,12 @@ bool GPackage::OpenForWrite (const GString& path) {
 		return false;
 	}
 	
-	if(_file.Write(&_VERSION, sizeof(_VERSION)) == false) {
+	if(_file.Write(&VERSION, sizeof(VERSION)) == false) {
 		GSystem::Debug("ERROR: Failed to write version for package \"%s\"!\n", (const char*)path);
 		return false;
 	}
 	
-	if(_file.Write(_IDENTIFIER, sizeof(_IDENTIFIER)) == false) {
+	if(_file.Write(IDENTIFIER, sizeof(IDENTIFIER)) == false) {
 		GSystem::Debug("ERROR: Failed to write identifier for package \"%s\"!\n", (const char*)path);
 		return false;
 	}
@@ -147,19 +137,7 @@ bool GPackage::OpenForWrite (const GString& path) {
 }
 
 bool GPackage::Close () {
-	
-	if(_packages)
-		for(std::list<GPackage*>::iterator i = _packages->begin(); i != _packages->end(); i++)
-			if(*i == this) {
-				_packages->erase(i);
-				break;
-			}
-	
-	if(_packages && _packages->empty()) {
-		delete _packages;
-		_packages = NULL;
-	}
-	
+	PACKAGES.remove(this);
 	_file.Close();
 	_footer = 0;
 	_resources.clear();
@@ -167,18 +145,15 @@ bool GPackage::Close () {
 }
 
 int64_t GPackage::GetSize (const GString& resource) {
-	_lastResource = resource;
-	_lastPackage = NULL;
-	_lastSize = 0;
+	CACHED_RESOURCE = resource;
+	CACHED_PACKAGE = nullptr;
+	CACHED_SIZE = 0;
 	
-	if(_packages == NULL)
-		return 0;
-	
-	for(std::list<GPackage*>::iterator p = _packages->begin(); p != _packages->end(); p++) {
-		std::map<GString, int64_t>::iterator r = (*p)->_resources.find(resource);
-		if(r != (*p)->_resources.end()) {
+	for(std::list<GPackage*>::iterator p = PACKAGES.begin(); p != PACKAGES.end(); p++) {
+		std::map<GString, int64_t>::iterator i = (*p)->_resources.find(resource);
+		if(i != (*p)->_resources.end()) {
 			
-			if((*p)->_file.SetPosition(r->second) == false) {
+			if((*p)->_file.SetPosition(i->second) == false) {
 				GSystem::Debug("ERROR: Failed to set package position for resource \"%s\"!\n", (const char*)resource);
 				return 0;
 			}
@@ -189,30 +164,29 @@ int64_t GPackage::GetSize (const GString& resource) {
 				return 0;
 			}
 			
-			_lastPackage = (*p);
-			_lastSize = size;
+			CACHED_PACKAGE = (*p);
+			CACHED_SIZE = size;
 			return size;
 		}
 	}
 	
-	//GSystem::Debug("ERROR: Failed to find resource \"%s\"!\n", (const char*)resource);
 	return 0;
 }
 
 bool GPackage::Read (const GString& resource, void* data, int64_t size) {
-	if(resource != _lastResource || _lastPackage == NULL)
+	if(resource != CACHED_RESOURCE || CACHED_PACKAGE == nullptr)
 		GetSize(resource);
 	
-	if(_lastSize == 0)
+	if(CACHED_SIZE == 0)
 		return false;
 	
-	if(_lastPackage->_file.Read(data, (int)size) == false) {
+	if(CACHED_PACKAGE->_file.Read(data, (int)size) == false) {
 		GSystem::Debug("ERROR: Failed to read from package resource \"%s\"!\n", (const char*)resource);
-		_lastPackage = NULL;
+		CACHED_PACKAGE = nullptr;
 		return false;
 	}
 	
-	_lastPackage = NULL;
+	CACHED_PACKAGE = nullptr;
 	return true;
 }
 
@@ -240,12 +214,12 @@ bool GPackage::Write (const GString& resource, const void* data, int64_t size) {
 		return false;
 	}
 	
-	if(_file.Write(&_VERSION, sizeof(_VERSION)) == false) {
+	if(_file.Write(&VERSION, sizeof(VERSION)) == false) {
 		GSystem::Debug("ERROR: Failed to write version to package!\n");
 		return false;
 	}
 	
-	if(_file.Write(_IDENTIFIER, sizeof(_IDENTIFIER)) == false) {
+	if(_file.Write(IDENTIFIER, sizeof(IDENTIFIER)) == false) {
 		GSystem::Debug("ERROR: Failed to write identifier to package!\n");
 		return false;
 	}

@@ -5,6 +5,7 @@
 #include "GSystem.h"
 #include "GFile.h"
 #include <map>
+#include <list>
 
 #define		GPACKAGE_AUTOLOAD(n)		_GPACKAGE_UNIQUE(n,__COUNTER__)
 #define		_GPACKAGE_UNIQUE(n,u)		_GPACKAGE_STATIC(n,u)
@@ -12,7 +13,6 @@
 
 class GPackage {
 public:
-	
 	GPackage ();
 	~GPackage ();
 	
@@ -41,9 +41,15 @@ public:
 	static bool Read (const GString& resource, void* data, int64_t size);
 	
 private:
-	GFile						_file;
-	int64_t						_footer;
-	std::map<GString, int64_t>	_resources;
+	GFile								_file;
+	int64_t								_footer;
+	std::map<GString, int64_t>			_resources;
+	static constexpr uint8_t			VERSION = 5;
+	static constexpr const char			IDENTIFIER[] = "PACKAGE";
+	static inline std::list<GPackage*>	PACKAGES;
+	static inline GPackage*				CACHED_PACKAGE = nullptr;
+	static inline GString				CACHED_RESOURCE;
+	static inline int64_t				CACHED_SIZE = 0;
 };
 
 #endif // _GPACKAGE_H_
