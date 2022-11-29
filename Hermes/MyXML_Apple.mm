@@ -1,16 +1,16 @@
-#include "GXML.h"
+#include "MyXML.h"
 #ifdef __APPLE__
 #import <Foundation/Foundation.h>
 
 @interface _XMLParser : NSXMLParser<NSXMLParserDelegate> {
-	GXML* _xml;		// Pointer to main xml object
-	GXML* _element;	// Pointer to the current element
+	MyXML* _xml;		// Pointer to main xml object
+	MyXML* _element;	// Pointer to the current element
 }
 @end
 
 @implementation _XMLParser
 
-- (void) setxml: (GXML*)xml {
+- (void) setxml: (MyXML*)xml {
 	_xml = xml;
 }
 
@@ -20,7 +20,7 @@
 
 - (void) parser: (NSXMLParser*)parser didStartElement: (NSString*)elementName namespaceURI: (NSString*)namespaceURI qualifiedName: (NSString*)qName attributes: (NSDictionary*)attributeDict {
 	if(_element) {
-		GXML* element = new GXML;
+		MyXML* element = new MyXML;
 		element->parent = _element;
 		_element->elements.insert(std::make_pair([[elementName lowercaseString] UTF8String], element));
 		_element = element;
@@ -49,20 +49,20 @@
 
 @end
 
-GXML::GXML ()
+MyXML::MyXML ()
 :	parent(NULL)
 {
 }
 
-GXML::~GXML () {
+MyXML::~MyXML () {
 	Delete();
 }
 
-GXML::GXML (const GString& resource) {
+MyXML::MyXML (const GString& resource) {
 	NewFromFile(resource);
 }
 
-bool GXML::NewFromFile (const GString& path) {
+bool MyXML::NewFromFile (const GString& path) {
 	Delete();
 	
 	_XMLParser* parser = [[_XMLParser alloc] initWithContentsOfURL:[NSURL fileURLWithPath:[NSString stringWithUTF8String:path] isDirectory:NO]];
@@ -82,8 +82,8 @@ bool GXML::NewFromFile (const GString& path) {
 	return true;
 }
 
-void GXML::Delete () {
-	for(std::multimap<GString, GXML*>::iterator i = elements.begin(); i != elements.end(); i++)
+void MyXML::Delete () {
+	for(std::multimap<GString, MyXML*>::iterator i = elements.begin(); i != elements.end(); i++)
 		if(i->second) {
 			delete i->second;
 			i->second = NULL;
@@ -95,34 +95,34 @@ void GXML::Delete () {
 	parent = NULL;
 }
 
-const GString& GXML::GetTag () const {
+const GString& MyXML::GetTag () const {
 	return tag;
 }
 
-const GString& GXML::GetContent () const {
+const GString& MyXML::GetContent () const {
 	return content;
 }
 
-const GString* GXML::GetAttribute (const GString& name) const {
+const GString* MyXML::GetAttribute (const GString& name) const {
 	std::map<GString, GString>::const_iterator find = attributes.find(GString(name).ToLower());
 	if(find != attributes.end())
 		return &find->second;
 	return NULL;
 }
 
-const GXML* GXML::GetElement (const GString& element, int index) const {
-	std::pair<std::multimap<GString, GXML*>::const_iterator, std::multimap<GString, GXML*>::const_iterator> find = elements.equal_range(GString(element).ToLower());
-	for(std::multimap<GString, GXML*>::const_iterator i = find.first; i != find.second; i++)
+const MyXML* MyXML::GetElement (const GString& element, int index) const {
+	std::pair<std::multimap<GString, MyXML*>::const_iterator, std::multimap<GString, MyXML*>::const_iterator> find = elements.equal_range(GString(element).ToLower());
+	for(std::multimap<GString, MyXML*>::const_iterator i = find.first; i != find.second; i++)
 		if(index-- <= 0)
 			return i->second;
 	return NULL;
 }
 
-const GXML* GXML::GetParent () const {
+const MyXML* MyXML::GetParent () const {
 	return parent;
 }
 
-static GString _GetString (const GXML* xml, const GString& tab) {
+static GString _GetString (const MyXML* xml, const GString& tab) {
 	
 	if(xml == NULL)
 		return NULL;
@@ -137,7 +137,7 @@ static GString _GetString (const GXML* xml, const GString& tab) {
 	string += ">\n";
 	
 	// Add elements recursively
-	for(std::multimap<GString, GXML*>::const_iterator i = xml->elements.begin(); i != xml->elements.end(); i++)
+	for(std::multimap<GString, MyXML*>::const_iterator i = xml->elements.begin(); i != xml->elements.end(); i++)
 		string += _GetString(i->second, tab + "\t");
 	
 	// Add content (if it exists)
@@ -150,7 +150,7 @@ static GString _GetString (const GXML* xml, const GString& tab) {
 	return string;
 }
 
-GString GXML::GetString () const {
+GString MyXML::GetString () const {
 	return GString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n") + _GetString(this, "");
 }
 
