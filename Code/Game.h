@@ -12,6 +12,7 @@ static const char* GAME_API_VERSION = "3.0";
 #include "GFont.h"
 #include "GSave.h"
 #include "GNode.h"
+#include "GFile.h"
 
 #include "UIButton.h"
 #include "UILabel.h"

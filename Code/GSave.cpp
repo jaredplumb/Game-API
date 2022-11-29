@@ -1,9 +1,8 @@
 #include "GSave.h"
-
+#include "GFile.h"
 
 static constexpr uint8_t _VERSION = 5;
 static constexpr char _IDENTIFIER[] = "SAVE";
-
 
 bool GSave::Read (const GString& name, void* data, int64_t size) {
 	

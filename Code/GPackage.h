@@ -3,6 +3,7 @@
 
 #include "GTypes.h"
 #include "GSystem.h"
+#include "GFile.h"
 #include <map>
 
 #define		GPACKAGE_AUTOLOAD(n)		_GPACKAGE_UNIQUE(n,__COUNTER__)
