@@ -4,9 +4,9 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
-static GRect					_SCREEN_RECT	(0, 0, 1280, 720);
-static GRect					_SAFE_RECT		(0, 0, 1280, 720);
-static GRect					_PREFERRED_RECT	(0, 0, 1280, 720);
+static GRect					_SCREEN_RECT;
+static GRect					_SAFE_RECT;
+static GRect					_PREFERRED_RECT;
 static int						_FPS		    = 60;
 static int						_ARG_C			= 0;
 static char**					_ARG_V			= NULL;
@@ -138,6 +138,14 @@ static GMatrix32_4x4			_PROJECTION_MATRIX;
 	NSMenuItem* quitMenuItem = [[NSMenuItem alloc] initWithTitle:[@"Quit " stringByAppendingString:appName] action:@selector(terminate:) keyEquivalent:@"q"];
 	[appMenu addItem:quitMenuItem];
 	[NSApp setMainMenu:mainMenu];
+	
+	// If the preferred rect is not set, use a 1080p window
+	if(_PREFERRED_RECT.width == 0 || _PREFERRED_RECT.height == 0) {
+		_PREFERRED_RECT.x = 0;
+		_PREFERRED_RECT.y = 0;
+		_PREFERRED_RECT.width = 1920;
+		_PREFERRED_RECT.height = 1080;
+	}
 	
 	// Setup the window
 	NSRect windowRect = NSMakeRect(0, 0, _PREFERRED_RECT.width, _PREFERRED_RECT.height);
@@ -303,6 +311,14 @@ static NSString* _SHADER = @""
 	_SAFE_RECT.width -= (left + right);
 	_SAFE_RECT.height -= (top + bottom);
 #endif
+	
+	// If no preferred rect is set, use the safe rect as the preferred rect
+	if(_PREFERRED_RECT.width == 0 || _PREFERRED_RECT.height == 0) {
+		_PREFERRED_RECT.x = 0;
+		_PREFERRED_RECT.y = 0;
+		_PREFERRED_RECT.width = _SAFE_RECT.width;
+		_PREFERRED_RECT.height = _SAFE_RECT.height;
+	}
 	
 	// Adjust the rect and safe rect if they are not sized correctly for the preferred rect
 	// The preferred rect should entirely fit within the safe rect, and maximize the safe rect to that size
@@ -622,6 +638,26 @@ void GSystem::MatrixUpdate () {
 		MATRIX = _PROJECTION_MATRIX * _MODEL_MATRIX;
 		[_RENDER setVertexBytes:&MATRIX length:sizeof(MATRIX) atIndex:1];
 	}
+}
+
+void GSystem::Print (const char* message, ...) {
+	if (message) {
+		va_list args;
+		va_start(args, message);
+		vprintf(message, args);
+		va_end(args);
+	}
+}
+
+void GSystem::Debug (const char* message, ...) {
+#if DEBUG
+	if (message) {
+		va_list args;
+		va_start(args, message);
+		vprintf(message, args);
+		va_end(args);
+	}
+#endif
 }
 
 #endif // __APPLE__

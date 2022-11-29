@@ -1,5 +1,5 @@
-#ifndef _GSYSTEM_H_
-#define _GSYSTEM_H_
+#ifndef GSYSTEM_H_
+#define GSYSTEM_H_
 
 #include "GTypes.h"
 #include <chrono>
@@ -68,26 +68,27 @@ public:
 	}
 	
 	/// Prints a formatted string to the console.
-	static inline void Print (const char* message, ...) {
-		if (message) {
-			va_list args;
-			va_start(args, message);
-			vprintf(message, args);
-			va_end(args);
-		}
-	}
+	static void Print (const char* message, ...);// {
+	//	if (message) {
+	//		va_list args;
+	//		va_start(args, message);
+     //       //__android_log_print(ANDROID_LOG_ERROR, "Game-API", "Hello World\n");
+	//		vprintf(message, args);
+     //       va_end(args);
+	//	}
+	//}
 	
 	/// Prints a formatted string to the console in debug builds only.
-	static inline void Debug (const char* message, ...) {
-#if DEBUG
-		if (message) {
-			va_list args;
-			va_start(args, message);
-			vprintf(message, args);
-			va_end(args);
-		}
-#endif
-	}
+	static void Debug (const char* message, ...);//  {
+//#if DEBUG
+	//	if (message) {
+	//		va_list args;
+	//		va_start(args, message);
+	//		vprintf(message, args);
+	//		va_end(args);
+	//	}
+//#endif
+	//}
 	
 	static inline int NewStartupCallback (void (* callback) ()) {
 		int ref = GetUniqueRef();
@@ -188,4 +189,4 @@ private:
 	static inline std::map<int, void (*) (int x, int y)>	_TOUCHMOVE_CALLBACKS;
 };
 
-#endif // _GSYSTEM_H_
+#endif // GSYSTEM_H_
