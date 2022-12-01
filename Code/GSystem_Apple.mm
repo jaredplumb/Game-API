@@ -3,6 +3,7 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
+#include <string>
 #include <dirent.h>
 
 static GRect					SCREEN_RECT;
@@ -528,43 +529,172 @@ int GSystem::GetFPS () {
 
 
 
-static const GString& _GetResourceDirectory () {
-	static GString RESOURCE_DIRECTORY;
-	if(RESOURCE_DIRECTORY.IsEmpty()) {
-		CFURLRef directory = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
-		char resources[PATH_MAX];
-		CFURLGetFileSystemRepresentation(directory, true, (UInt8*)resources, PATH_MAX);
-		CFRelease(directory);
-		RESOURCE_DIRECTORY.New(resources);
-	}
-	return RESOURCE_DIRECTORY;
-}
 
-static const GString& _GetSaveDirectory () {
-	static GString SAVE_DIRECTORY;
-	if(SAVE_DIRECTORY.IsEmpty()) {
-#if TARGET_OS_IPHONE
-		NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-#else
-		NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
-#endif
-		if([paths count] > 0)
-			SAVE_DIRECTORY.New([[paths objectAtIndex:0] fileSystemRepresentation]);
+
+static const char* GetResourceDirectory2 () {
+	static std::string RESOURCE_DIRECTORY;
+	if(RESOURCE_DIRECTORY.empty()) {
+		RESOURCE_DIRECTORY = std::string([[[NSBundle mainBundle] resourceURL] fileSystemRepresentation]);
+		GSystem::Debug("Resources: %s\n", RESOURCE_DIRECTORY.c_str());
 	}
-	return SAVE_DIRECTORY;
+	return RESOURCE_DIRECTORY.c_str();
 }
 
 FILE* GSystem::OpenResourceFileForRead (const GString& resource) {
-	return fopen(GString().Format("%s/%s", (const char*)_GetResourceDirectory(), (const char*)resource), "rb");
+	return fopen(GString().Format("%s/%s", GetResourceDirectory2(), (const char*)resource), "rb");
 }
 
-FILE* GSystem::OpenSaveFileForRead (const GString& name) {
-	return fopen(GString().Format("%s/%s.sav", (const char*)_GetSaveDirectory(), (const char*)name), "rb");
+
+
+
+
+
+
+static const char* GetSaveDirectory () {
+	static std::string SAVE_DIRECTORY;
+	if(SAVE_DIRECTORY.empty()) {
+		NSURL* support = [[[NSFileManager defaultManager] URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil] URLByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
+		if([[NSFileManager defaultManager] fileExistsAtPath:[support path]] == NO)
+			[[NSFileManager defaultManager] createDirectoryAtPath:[support path] withIntermediateDirectories:YES attributes:nil error:nil];
+		SAVE_DIRECTORY = std::string([support fileSystemRepresentation]);
+		GSystem::Debug("Saves: \"%s\"\n", SAVE_DIRECTORY.c_str());
+	}
+	return SAVE_DIRECTORY.c_str();
 }
 
-FILE* GSystem::OpenSaveFileForWrite (const GString& name) {
-	return fopen(GString().Format("%s/%s.sav", (const char*)_GetSaveDirectory(), (const char*)name), "wb+");
+bool GSystem::SaveRead (const GString& name, void* data, int64_t size) {
+	
+#if DEBUG
+	GetSaveDirectory(); // This is to make the debug output in GetSaveDirectory happen before the debug output in this function
+	GSystem::Debug("Reading save \"%s\" ... ", (const char*)name);
+	int64_t elapse = GSystem::GetMilliseconds();
+#endif
+	
+	FILE* file = fopen(GString().Format("%s/%s.sav", (const char*)GetSaveDirectory(), (const char*)name), "rb");
+	if(file == nullptr) {
+		GSystem::Debug("Failed to open save for reading!\n");
+		return false;
+	}
+	
+	int8_t version;
+	if(fread(&version, sizeof(version), 1, file) != 1) {
+		GSystem::Debug("Failed to read save version!\n");
+		fclose(file);
+		return false;
+	}
+	
+	if(version != SAVE_VERSION) {
+		GSystem::Debug("Save version %d should be save version %d!\n", version, SAVE_VERSION);
+		fclose(file);
+		return false;
+	}
+	
+	char identifier[sizeof(SAVE_IDENTIFIER) / sizeof(char)];
+	if(fread(identifier, sizeof(SAVE_IDENTIFIER) / sizeof(char), 1, file) != 1) {
+		GSystem::Debug("Failed to read save identifier!\n");
+		fclose(file);
+		return false;
+	}
+	
+	if(GString::strncmp(identifier, SAVE_IDENTIFIER, sizeof(SAVE_IDENTIFIER) / sizeof(char)) != 0) {
+		GSystem::Debug("Save indintifier \"%s\" should be save identfier \"%s\"!", identifier, SAVE_IDENTIFIER);
+		fclose(file);
+		return false;
+	}
+	
+	int64_t archiveSize;
+	if(fread(&archiveSize, sizeof(archiveSize), 1, file) != 1) {
+		GSystem::Debug("Failed to read save data size!\n");
+		fclose(file);
+		return false;
+	}
+	
+	uint8_t archive[archiveSize];
+	if(fread(archive, sizeof(archive) / sizeof(uint8_t), 1, file) != 1) {
+		GSystem::Debug("Failed to read save data!\n");
+		fclose(file);
+		return false;
+	}
+	
+	if(GArchive::Decompress(archive, archiveSize, data, size) != size) {
+		GSystem::Debug("Failed to decompress save data!\n");
+		fclose(file);
+		return false;
+	}
+	
+	fclose(file);
+	
+#if DEBUG
+	elapse = GSystem::GetMilliseconds() - elapse;
+	GSystem::Debug("Done (%d ms)\n", (int)elapse);
+#endif
+	
+	return true;
 }
+
+bool GSystem::SaveWrite (const GString& name, const void* data, int64_t size) {
+	
+#if DEBUG
+	GSystem::Debug("Writing save \"%s\" ... ", (const char*)name);
+	int64_t elapse = GSystem::GetMilliseconds();
+#endif
+	
+	FILE* file = fopen(GString().Format("%s/%s.sav", (const char*)GetSaveDirectory(), (const char*)name), "wb+");
+	if(file == nullptr) {
+		GSystem::Debug("Failed to open save for writing!\n");
+		return false;
+	}
+	
+	if(fwrite(&SAVE_VERSION, sizeof(SAVE_VERSION), 1, file) != 1) {
+		GSystem::Debug("Failed to write save version!\n");
+		fclose(file);
+		return false;
+	}
+	
+	if(fwrite(SAVE_IDENTIFIER, sizeof(SAVE_IDENTIFIER) / sizeof(char), 1, file) != 1) {
+		GSystem::Debug("Failed to write save identifier!\n");
+		fclose(file);
+		return false;
+	}
+	
+	int64_t archiveSize = GArchive::GetBufferBounds(size);
+	uint8_t archive[archiveSize];
+	archiveSize = GArchive::Compress(data, size, archive, archiveSize);
+	if(archiveSize == 0) {
+		GSystem::Debug("Failed to compress save data!\n");
+		fclose(file);
+		return false;
+	}
+	
+	if(fwrite(&archiveSize, sizeof(archiveSize), 1, file) != 1) {
+		GSystem::Debug("Failed to write save data size!\n");
+		fclose(file);
+		return false;
+	}
+	
+	if(fwrite(archive, archiveSize, 1, file) != 1) {
+		GSystem::Debug("Failed to write save data!\n");
+		fclose(file);
+		return false;
+	}
+	
+	fclose(file);
+	
+#if DEBUG
+	elapse = GSystem::GetMilliseconds() - elapse;
+	GSystem::Debug("Done (%d bytes compressed to %d bytes in %d ms)\n", (int)size, (int)archiveSize, (int)elapse);
+#endif
+	
+	return true;
+}
+
+
+
+
+
+
+
+
 
 std::vector<GString> GSystem::GetFileNamesInDirectory (const GString& path) {
 	std::vector<GString> files;
@@ -622,7 +752,7 @@ int GSystem::Run () {
 #if TARGET_OS_IPHONE
 	GSystem::Debug("Running iOS Application...\n");
 	@autoreleasepool {
-		return UIApplicationMain((int)ARG_C, ARG_V, nil, NSStringFromClass([_MyAppDelegate class]));
+		return UIApplicationMain(ARG_C, ARG_V, nil, NSStringFromClass([_MyAppDelegate class]));
 	}
 #else // TARGET_OS_MAC
 	GSystem::Debug("Running MacOS Application...\n");

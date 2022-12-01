@@ -1,5 +1,5 @@
-#ifndef GSYSTEM_H_
-#define GSYSTEM_H_
+#ifndef G_SYSTEM_H_
+#define G_SYSTEM_H_
 
 #include "GTypes.h"
 #include <chrono>
@@ -39,11 +39,11 @@ public:
 	/// Opens a C FILE to a resouce (or asset) for reading
 	static FILE* OpenResourceFileForRead (const GString& resource);
 	
-	/// Opens a C FILE to a save file for reading
-	static FILE* OpenSaveFileForRead (const GString& name);
+	/// Read save data from the appropriate place
+	static bool SaveRead (const GString& name, void* data, int64_t size);
 	
-	/// Opens a C FILE to a save file for writing
-	static FILE* OpenSaveFileForWrite (const GString& name);
+	/// Write save data to the appropriate place
+	static bool SaveWrite (const GString& name, const void* data, int64_t size);
 	
 	/// Returns a list of file names in the directory provided by the path including all sub directories
 	static std::vector<GString> GetFileNamesInDirectory (const GString& path);
@@ -176,6 +176,10 @@ private:
 	static inline std::map<int, void (*) (int x, int y)>	TOUCH_CALLBACKS;
 	static inline std::map<int, void (*) (int x, int y)>	TOUCHUP_CALLBACKS;
 	static inline std::map<int, void (*) (int x, int y)>	TOUCHMOVE_CALLBACKS;
+	
+	static constexpr int8_t									SAVE_VERSION = 5;
+	static constexpr char									SAVE_IDENTIFIER[] = "SAVE";
+	
 };
 
-#endif // GSYSTEM_H_
+#endif // G_SYSTEM_H_

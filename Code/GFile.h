@@ -15,8 +15,6 @@ public:
 	inline bool OpenForWrite (const GString& path)			{ Close(); _file = fopen(path, "wb+"); return _file != nullptr; }
 	inline bool OpenForAppend (const GString& path)			{ Close(); _file = fopen(path, "ab+"); return _file != nullptr; }
 	inline bool OpenResourceForRead (const GString& path)	{ Close(); _file = GSystem::OpenResourceFileForRead(path); return _file != nullptr; }
-	inline bool OpenSaveForRead (const GString& name)		{ Close(); _file = GSystem::OpenSaveFileForRead(name); return _file != nullptr; }
-	inline bool OpenSaveForWrite (const GString& name)		{ Close(); _file = GSystem::OpenSaveFileForWrite(name); return _file != nullptr; }
 	
 	inline bool Read (void* data, int64_t size)				{ return _file != nullptr && fread(data, size, 1, _file) == 1; }
 	inline bool Write (const void* data, int64_t size)		{ return _file != nullptr && fwrite(data, size, 1, _file) == 1; }

@@ -9,7 +9,6 @@ static const char* GAME_API_VERSION = "3.0";
 #include "GImage.h"
 #include "GSound.h"
 #include "GFont.h"
-#include "GSave.h"
 #include "GNode.h"
 #include "GFile.h"
 
