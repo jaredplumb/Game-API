@@ -1,7 +1,7 @@
 #ifndef _GSAVE_H_
 #define _GSAVE_H_
 
-#include "GSystem.h"
+#include "GTypes.h"
 
 class GSave {
 public:

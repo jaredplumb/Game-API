@@ -11,6 +11,6 @@ static const char* GAME_API_VERSION = "3.0";
 #include "GFont.h"
 #include "GSave.h"
 #include "GNode.h"
-#include "GResource.h"
+#include "GFile.h"
 
 #endif // _GAME_H_

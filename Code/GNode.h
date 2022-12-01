@@ -9,7 +9,7 @@
 
 #define		GNODE_PACKAGE(n)			_GNODEPACKAGE_UNIQUE(n, __COUNTER__)
 #define		_GNODEPACKAGE_UNIQUE(n,u)	_GNODEPACKAGE_STATIC(n,u)
-#define		_GNODEPACKAGE_STATIC(n,u)	static const GPackage _GPACKAGE_ ## u ## _NAME(n, true);
+#define		_GNODEPACKAGE_STATIC(n,u)	static const GPackage _GPACKAGE_ ## u ## _NAME(n);
 
 class GNode {
 public:

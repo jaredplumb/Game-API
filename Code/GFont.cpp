@@ -1,5 +1,5 @@
 #include "GFont.h"
-#include "GResource.h"
+#include "GFile.h"
 
 
 /* NOTES FOR BITMAP FONT CREATION
@@ -490,8 +490,8 @@ static uint32_t _ConvertUnicodeToHash (uint32_t c) {
 
 bool GFont::Resource::NewFromFile (const GString& resource) {
 	
-	GResource file;
-	if(file.OpenForRead(resource) == false) {
+	GFile file;
+	if(file.OpenResourceForRead(resource) == false) {
 		GSystem::Debug("ERROR: Failed to open font file \"%s\"!\n", (const char*)resource);
 		return false;
 	}

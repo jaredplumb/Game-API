@@ -3,6 +3,7 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
+#include <dirent.h>
 
 static GRect					SCREEN_RECT;
 static GRect					SAFE_RECT;
@@ -524,30 +525,83 @@ int GSystem::GetFPS () {
 	return FPS;
 }
 
-void GSystem::SetDefaultWD () {
-	CFURLRef directory = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
-	char resources[PATH_MAX];
-	CFURLGetFileSystemRepresentation(directory, true, (UInt8*)resources, PATH_MAX);
-	CFRelease(directory);
-	chdir(resources);
+
+
+
+static const GString& _GetResourceDirectory () {
+	static GString RESOURCE_DIRECTORY;
+	if(RESOURCE_DIRECTORY.IsEmpty()) {
+		CFURLRef directory = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
+		char resources[PATH_MAX];
+		CFURLGetFileSystemRepresentation(directory, true, (UInt8*)resources, PATH_MAX);
+		CFRelease(directory);
+		RESOURCE_DIRECTORY.New(resources);
+	}
+	return RESOURCE_DIRECTORY;
 }
 
-const GString& GSystem::GetSaveDirectory () {
-	static GString _DIRECTORY;
-	if(_DIRECTORY.IsEmpty()) {
+static const GString& _GetSaveDirectory () {
+	static GString SAVE_DIRECTORY;
+	if(SAVE_DIRECTORY.IsEmpty()) {
 #if TARGET_OS_IPHONE
 		NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
 #else
 		NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
 #endif
 		if([paths count] > 0)
-			_DIRECTORY.New([[paths objectAtIndex:0] fileSystemRepresentation]);
+			SAVE_DIRECTORY.New([[paths objectAtIndex:0] fileSystemRepresentation]);
 	}
-	return _DIRECTORY;
+	return SAVE_DIRECTORY;
 }
 
+FILE* GSystem::OpenResourceFileForRead (const GString& resource) {
+	return fopen(GString().Format("%s/%s", (const char*)_GetResourceDirectory(), (const char*)resource), "rb");
+}
 
+FILE* GSystem::OpenSaveFileForRead (const GString& name) {
+	return fopen(GString().Format("%s/%s.sav", (const char*)_GetSaveDirectory(), (const char*)name), "rb");
+}
 
+FILE* GSystem::OpenSaveFileForWrite (const GString& name) {
+	return fopen(GString().Format("%s/%s.sav", (const char*)_GetSaveDirectory(), (const char*)name), "wb+");
+}
+
+std::vector<GString> GSystem::GetFileNamesInDirectory (const GString& path) {
+	std::vector<GString> files;
+	
+	GString directory = path;
+	if(directory.IsEmpty())
+		directory = "./";
+	
+	if(directory[directory.GetLength() - 1] != '/')
+		directory += "/";
+	
+	DIR* dir = opendir(directory);
+	if(dir == nullptr) {
+		FILE* file = fopen(path, "rb");
+		if(file != nullptr) {
+			files.push_back(path);
+			fclose(file);
+			return files;
+		}
+		return files;
+	}
+	
+	for(dirent* info = readdir(dir); info != nullptr; info = readdir(dir)) {
+		if(info->d_type == DT_DIR) {
+			if(GString::strcmp(info->d_name, ".") != 0 && GString::strcmp(info->d_name, "..") != 0) {
+				std::vector<GString> sub = GetFileNamesInDirectory(directory + info->d_name);
+				files.reserve(files.size() + sub.size());
+				files.insert(files.end(), sub.begin(), sub.end());
+			}
+		} else {
+			files.push_back(directory + info->d_name);
+		}
+	}
+	
+	closedir(dir);
+	return files;
+}
 
 void GSystem::RunPreferredSize (int width, int height) {
 	SCREEN_RECT = GRect(0, 0, width, height);
@@ -565,20 +619,18 @@ void GSystem::RunPreferredArgs (int argc, char* argv[]) {
 }
 
 int GSystem::Run () {
-	GSystem::SetDefaultWD();
-	GSystem::Debug("WD: %s\n", getwd(NULL));
-	
 #if TARGET_OS_IPHONE
+	GSystem::Debug("Running iOS Application...\n");
 	@autoreleasepool {
 		return UIApplicationMain((int)ARG_C, ARG_V, nil, NSStringFromClass([_MyAppDelegate class]));
 	}
 #else // TARGET_OS_MAC
+	GSystem::Debug("Running MacOS Application...\n");
 	@autoreleasepool {
 		[[NSApplication sharedApplication] setDelegate:[[_MyAppDelegate alloc] init]];
 		[[NSApplication sharedApplication] run];
 	}
 #endif // TARGET_OS_IPHONE // TARGET_OS_MAC
-	
 	return EXIT_SUCCESS;
 }
 

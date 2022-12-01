@@ -15,19 +15,11 @@ GPackage::GPackage (const GString& path)
 	OpenForRead(path);
 }
 
-GPackage::GPackage (const GString& path, bool setDefaultWD)
-:	_footer(0)
-{
-	if(setDefaultWD)
-		GSystem::SetDefaultWD();
-	OpenForRead(path);
-}
-
 bool GPackage::OpenForRead (const GString& path) {
 	
 	Close();
 	
-	if(_file.OpenForRead(path) == false) {
+	if(_file.OpenResourceForRead(path) == false) {
 		GSystem::Debug("ERROR: Failed to open package \"%s\"!\n", (const char*)path);
 		return false;
 	}
@@ -109,7 +101,7 @@ bool GPackage::OpenForRead (const GString& path) {
 	return true;
 }
 
-bool GPackage::OpenForWrite (const GString& path) {
+bool GPackage::OpenFileForWrite (const GString& path) {
 	Close();
 	
 	if(_file.OpenForWrite(path) == false) {

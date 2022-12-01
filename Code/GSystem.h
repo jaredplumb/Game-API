@@ -36,11 +36,17 @@ public:
 	/// Returns the epoch time in nanoseconds.
 	static int64_t GetNanoseconds () { return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()); }
 	
-	/// Sets the default working directory to the Resources directory.
-	static void SetDefaultWD ();
+	/// Opens a C FILE to a resouce (or asset) for reading
+	static FILE* OpenResourceFileForRead (const GString& resource);
 	
-	/// Returns the full path to the location to save data.
-	static const GString& GetSaveDirectory ();
+	/// Opens a C FILE to a save file for reading
+	static FILE* OpenSaveFileForRead (const GString& name);
+	
+	/// Opens a C FILE to a save file for writing
+	static FILE* OpenSaveFileForWrite (const GString& name);
+	
+	/// Returns a list of file names in the directory provided by the path including all sub directories
+	static std::vector<GString> GetFileNamesInDirectory (const GString& path);
 	
 	/// Sets the preferred screen width and height, fps, or arg, must be called before calling Run(), these functions may do nothing on some platforms
 	static void RunPreferredSize (int width, int height);
@@ -68,125 +74,108 @@ public:
 	}
 	
 	/// Prints a formatted string to the console.
-	static void Print (const char* message, ...);// {
-	//	if (message) {
-	//		va_list args;
-	//		va_start(args, message);
-     //       //__android_log_print(ANDROID_LOG_ERROR, "Game-API", "Hello World\n");
-	//		vprintf(message, args);
-     //       va_end(args);
-	//	}
-	//}
+	static void Print (const char* message, ...);
 	
 	/// Prints a formatted string to the console in debug builds only.
-	static void Debug (const char* message, ...);//  {
-//#if DEBUG
-	//	if (message) {
-	//		va_list args;
-	//		va_start(args, message);
-	//		vprintf(message, args);
-	//		va_end(args);
-	//	}
-//#endif
-	//}
+	static void Debug (const char* message, ...);
 	
 	static inline int NewStartupCallback (void (* callback) ()) {
 		int ref = GetUniqueRef();
-		_STARTUP_CALLBACKS.insert(std::make_pair(ref, callback));
+		STARTUP_CALLBACKS.insert(std::make_pair(ref, callback));
 		return ref;
 	}
 	
 	static inline int NewShutdownCallback (void (* callback) ()) {
 		int ref = GetUniqueRef();
-		_SHUTDOWN_CALLBACKS.insert(std::make_pair(ref, callback));
+		SHUTDOWN_CALLBACKS.insert(std::make_pair(ref, callback));
 		return ref;
 	}
 	
 	static inline int NewDrawCallback (void (* callback) ()) {
 		int ref = GetUniqueRef();
-		_DRAW_CALLBACKS.insert(std::make_pair(ref, callback));
+		DRAW_CALLBACKS.insert(std::make_pair(ref, callback));
 		return ref;
 	}
 	
 	static inline int NewTouchCallback (void (* callback) (int x, int y)) {
 		int ref = GetUniqueRef();
-		_TOUCH_CALLBACKS.insert(std::make_pair(ref, callback));
+		TOUCH_CALLBACKS.insert(std::make_pair(ref, callback));
 		return ref;
 	}
 	
 	static inline int NewTouchUpCallback (void (* callback) (int x, int y)) {
 		int ref = GetUniqueRef();
-		_TOUCHUP_CALLBACKS.insert(std::make_pair(ref, callback));
+		TOUCHUP_CALLBACKS.insert(std::make_pair(ref, callback));
 		return ref;
 	}
 	
 	static inline int NewTouchMoveCallback (void (* callback) (int x, int y)) {
 		int ref = GetUniqueRef();
-		_TOUCHMOVE_CALLBACKS.insert(std::make_pair(ref, callback));
+		TOUCHMOVE_CALLBACKS.insert(std::make_pair(ref, callback));
 		return ref;
 	}
 	
 	static inline void DeleteStartupCallback (int ref) {
-		_STARTUP_CALLBACKS.erase(_STARTUP_CALLBACKS.find(ref));
+		STARTUP_CALLBACKS.erase(STARTUP_CALLBACKS.find(ref));
 	}
 	
 	static inline void DeleteShutdownCallback (int ref) {
-		_SHUTDOWN_CALLBACKS.erase(_SHUTDOWN_CALLBACKS.find(ref));
+		SHUTDOWN_CALLBACKS.erase(SHUTDOWN_CALLBACKS.find(ref));
 	}
 	
 	static inline void DeleteDrawCallback (int ref) {
-		_DRAW_CALLBACKS.erase(_DRAW_CALLBACKS.find(ref));
+		DRAW_CALLBACKS.erase(DRAW_CALLBACKS.find(ref));
 	}
 	
 	static inline void DeleteTouchCallback (int ref) {
-		_TOUCH_CALLBACKS.erase(_TOUCH_CALLBACKS.find(ref));
+		TOUCH_CALLBACKS.erase(TOUCH_CALLBACKS.find(ref));
 	}
 	
 	static inline void DeleteTouchUpCallback (int ref) {
-		_TOUCHUP_CALLBACKS.erase(_TOUCHUP_CALLBACKS.find(ref));
+		TOUCHUP_CALLBACKS.erase(TOUCHUP_CALLBACKS.find(ref));
 	}
 	
 	static inline void DeleteTouchMoveCallback (int ref) {
-		_TOUCHMOVE_CALLBACKS.erase(_TOUCHMOVE_CALLBACKS.find(ref));
+		TOUCHMOVE_CALLBACKS.erase(TOUCHMOVE_CALLBACKS.find(ref));
 	}
 	
 	static inline void RunStartupCallbacks () {
-		for(std::map<int, void (*) ()>::iterator i = _STARTUP_CALLBACKS.begin(); i != _STARTUP_CALLBACKS.end(); i++)
+		for(std::map<int, void (*) ()>::iterator i = STARTUP_CALLBACKS.begin(); i != STARTUP_CALLBACKS.end(); i++)
 			i->second();
 	}
 	
 	static inline void RunShutdownCallbacks () {
-		for(std::map<int, void (*) ()>::iterator i = _SHUTDOWN_CALLBACKS.begin(); i != _SHUTDOWN_CALLBACKS.end(); i++)
+		for(std::map<int, void (*) ()>::iterator i = SHUTDOWN_CALLBACKS.begin(); i != SHUTDOWN_CALLBACKS.end(); i++)
 			i->second();
 	}
 	
 	static inline void RunDrawCallbacks () {
-		for(std::map<int, void (*) ()>::iterator i = _DRAW_CALLBACKS.begin(); i != _DRAW_CALLBACKS.end(); i++)
+		for(std::map<int, void (*) ()>::iterator i = DRAW_CALLBACKS.begin(); i != DRAW_CALLBACKS.end(); i++)
 			i->second();
 	}
 	
 	static inline void RunTouchCallbacks (int x, int y) {
-		for(std::map<int, void (*) (int, int)>::iterator i = _TOUCH_CALLBACKS.begin(); i != _TOUCH_CALLBACKS.end(); i++)
+		for(std::map<int, void (*) (int, int)>::iterator i = TOUCH_CALLBACKS.begin(); i != TOUCH_CALLBACKS.end(); i++)
 			i->second(x, y);
 	}
 	
 	static inline void RunTouchUpCallbacks (int x, int y) {
-		for(std::map<int, void (*) (int, int)>::iterator i = _TOUCHUP_CALLBACKS.begin(); i != _TOUCHUP_CALLBACKS.end(); i++)
+		for(std::map<int, void (*) (int, int)>::iterator i = TOUCHUP_CALLBACKS.begin(); i != TOUCHUP_CALLBACKS.end(); i++)
 			i->second(x, y);
 	}
 	
 	static inline void RunTouchMoveCallbacks (int x, int y) {
-		for(std::map<int, void (*) (int, int)>::iterator i = _TOUCHMOVE_CALLBACKS.begin(); i != _TOUCHMOVE_CALLBACKS.end(); i++)
+		for(std::map<int, void (*) (int, int)>::iterator i = TOUCHMOVE_CALLBACKS.begin(); i != TOUCHMOVE_CALLBACKS.end(); i++)
 			i->second(x, y);
 	}
 	
 private:
-	static inline std::map<int, void (*) ()>				_STARTUP_CALLBACKS;
-	static inline std::map<int, void (*) ()>				_SHUTDOWN_CALLBACKS;
-	static inline std::map<int, void (*) ()>				_DRAW_CALLBACKS;
-	static inline std::map<int, void (*) (int x, int y)>	_TOUCH_CALLBACKS;
-	static inline std::map<int, void (*) (int x, int y)>	_TOUCHUP_CALLBACKS;
-	static inline std::map<int, void (*) (int x, int y)>	_TOUCHMOVE_CALLBACKS;
+	static inline std::map<int, void (*) ()>				STARTUP_CALLBACKS;
+	static inline std::map<int, void (*) ()>				SHUTDOWN_CALLBACKS;
+	static inline std::map<int, void (*) ()>				DRAW_CALLBACKS;
+	static inline std::map<int, void (*) (int x, int y)>	TOUCH_CALLBACKS;
+	static inline std::map<int, void (*) (int x, int y)>	TOUCHUP_CALLBACKS;
+	static inline std::map<int, void (*) (int x, int y)>	TOUCHMOVE_CALLBACKS;
 };
 
 #endif // GSYSTEM_H_

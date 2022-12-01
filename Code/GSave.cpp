@@ -1,5 +1,6 @@
 #include "GSave.h"
-#include "GResource.h"
+#include "GSystem.h"
+#include "GFile.h"
 
 static constexpr uint8_t _VERSION = 5;
 static constexpr char _IDENTIFIER[] = "SAVE";
@@ -7,12 +8,12 @@ static constexpr char _IDENTIFIER[] = "SAVE";
 bool GSave::Read (const GString& name, void* data, int64_t size) {
 	
 #if DEBUG
-	GSystem::Debug("Reading save file \"%s/%s.sav\" ... ", (const char*)GSystem::GetSaveDirectory(), (const char*)name);
+	GSystem::Debug("Reading save file \"%s.sav\" ... ", (const char*)name);
 	int64_t elapse = GSystem::GetMilliseconds();
 #endif
 	
-	GResource file;
-	if(file.OpenForRead(GString().Format("%s/%s.sav", (const char*)GSystem::GetSaveDirectory(), (const char*)name)) == false) {
+	GFile file;
+	if(file.OpenSaveForRead(name) == false) {
 		GSystem::Debug("Failed to open file for reading!\n");
 		return false;
 	}
@@ -68,12 +69,12 @@ bool GSave::Read (const GString& name, void* data, int64_t size) {
 bool GSave::Write (const GString& name, const void* data, int64_t size) {
 	
 #if DEBUG
-	GSystem::Debug("Writing save file \"%s/%s.sav\" ... ", (const char*)GSystem::GetSaveDirectory(), (const char*)name);
+	GSystem::Debug("Writing save file \"%s.sav\" ... ", (const char*)name);
 	int64_t elapse = GSystem::GetMilliseconds();
 #endif
 	
-	GResource file;
-	if(file.OpenForWrite(GString().Format("%s/%s.sav", (const char*)GSystem::GetSaveDirectory(), (const char*)name)) == false) {
+	GFile file;
+	if(file.OpenSaveForWrite(name) == false) {
 		GSystem::Debug("Failed to open for writing!\n");
 		return false;
 	}
