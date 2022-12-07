@@ -18,12 +18,6 @@ static void FREE (char* string) {
 
 
 
-GString::GString ()
-:	_string(nullptr)
-,	_length(0)
-{
-}
-
 GString::GString (const GString& string)
 :	_string(nullptr)
 ,	_length(string.GetLength())
@@ -133,7 +127,7 @@ bool GString::IsEmpty () const {
 }
 
 GString& GString::Add (const GString& string) {
-	if(string._string == nullptr)
+	if(string._string == nullptr || *string == '\0')
 		return *this;
 	
 	if(_string == nullptr)
@@ -149,7 +143,7 @@ GString& GString::Add (const GString& string) {
 }
 
 GString& GString::Add (const char* string) {
-	if(string == nullptr)
+	if(string == nullptr || *string == '\0')
 		return *this;
 	
 	if(_string == nullptr)
@@ -507,19 +501,11 @@ static int64_t ZLIBCompress (uint8_t* srcBuffer, int64_t srcSize, uint8_t* dstBu
 	z_stream stream;
 	memset(&stream, 0, sizeof(stream));
 	stream.next_in = srcBuffer;
-	stream.avail_in = static_cast<uInt>(srcSize);
+	stream.avail_in = (uInt)srcSize;
 	stream.next_out = dstBuffer;
-	stream.avail_out = static_cast<uInt>(dstSize);
-	
-	if(deflateInit(&stream, level) != Z_OK)
+	stream.avail_out = (uInt)dstSize;
+	if(deflateInit(&stream, level) != Z_OK || deflate(&stream, Z_FINISH) != Z_STREAM_END || deflateEnd(&stream) != Z_OK)
 		return 0;
-	
-	if(deflate(&stream, Z_FINISH) != Z_STREAM_END)
-		return 0;
-	
-	if(deflateEnd(&stream) != Z_OK)
-		return 0;
-	
 	return stream.total_out;
 }
 
@@ -527,66 +513,38 @@ static int64_t ZLIBDecompress (uint8_t* srcBuffer, int64_t srcSize, uint8_t* dst
 	z_stream stream;
 	memset(&stream, 0, sizeof(stream));
 	stream.next_in = srcBuffer;
-	stream.avail_in = static_cast<uInt>(srcSize);
+	stream.avail_in = (uInt)srcSize;
 	stream.next_out = dstBuffer;
-	stream.avail_out = static_cast<uInt>(dstSize);
-	
-	if(inflateInit(&stream) != Z_OK)
+	stream.avail_out = (uInt)dstSize;
+	if(inflateInit(&stream) != Z_OK || inflate(&stream, Z_FINISH) != Z_STREAM_END || inflateEnd(&stream) != Z_OK)
 		return 0;
-	
-	if(inflate(&stream, Z_FINISH) != Z_STREAM_END)
-		return 0;
-	
-	
-	if(inflateEnd(&stream) != Z_OK)
-		return 0;
-	
 	return stream.total_out;
 }
 
 int64_t GArchive::Compress (const void* srcBuffer, int64_t srcSize, void* dstBuffer, int64_t dstSize) {
-	if(dstSize < 2)
+	if(dstSize < 2 * sizeof(uint8_t))
 		return 0;
-	
-	// Set the header data
-	((uint8_t*)dstBuffer)[0] = VERSION;
-	((uint8_t*)dstBuffer)[1] = static_cast<uint8_t>(COMPRESS_TYPE_ZLIB);
-	dstBuffer = ((uint8_t*)dstBuffer) + 2;
-	dstSize -= 2;
-	
-	// Max zlib compression
-	dstSize = ZLIBCompress((uint8_t*)srcBuffer, srcSize, (uint8_t*)dstBuffer, dstSize, 9);
-	
-	// Return the actual size of the compressed data
-	return dstSize != 0 ? dstSize + 2 : 0;
+	*((uint8_t*)dstBuffer + 0 * sizeof(uint8_t)) = VERSION;
+	*((uint8_t*)dstBuffer + 1 * sizeof(uint8_t)) = (uint8_t)COMPRESS_TYPE_ZLIB;
+	dstSize = ZLIBCompress((uint8_t*)srcBuffer, srcSize, (uint8_t*)dstBuffer + 2 * sizeof(uint8_t), dstSize - 2 * sizeof(uint8_t), 9);
+	return dstSize != 0 ? dstSize + 2 * sizeof(uint8_t) : 0;
 }
 
 int64_t GArchive::Decompress (const void* srcBuffer, int64_t srcSize, void* dstBuffer, int64_t dstSize) {
-	if(srcSize < 2)
+	if(srcSize < 2 * sizeof(uint8_t))
 		return 0;
-	
-	// Check the version
-	if(((uint8_t*)srcBuffer)[0] != VERSION)
+	if(*((uint8_t*)srcBuffer) != VERSION)
 		return 0;
-	
-	// Get the remainder of the header data
-	auto compressType = static_cast<eCompressType>(((uint8_t*)srcBuffer)[1]);
-	srcBuffer = ((uint8_t*)srcBuffer) + 2;
-	srcSize -= 2;
-	
-	// Decompress depending on the type
-	switch(compressType) {
+	switch((eCompressType)*((uint8_t*)srcBuffer + sizeof(uint8_t))) {
 		case COMPRESS_TYPE_ZLIB:
-			return ZLIBDecompress((uint8_t*)srcBuffer, srcSize, (uint8_t*)dstBuffer, dstSize);
+			return ZLIBDecompress((uint8_t*)srcBuffer + 2 * sizeof(uint8_t), srcSize - 2 * sizeof(uint8_t), (uint8_t*)dstBuffer, dstSize);
 		default:
 			return 0;
 	}
-	
 	return 0;
 }
 
 int64_t GArchive::GetBufferBounds (int64_t srcSize) {
-	// Returns the worst case buffer size for compression, plus the size of the needed
-	// header information for this library (version number and compression type)
-	return compressBound(srcSize) + 2;
+	// Returns the worst case buffer size for compression plus the size of the header information (version number and compression type)
+	return compressBound(srcSize) + 2 * sizeof(uint8_t);
 }

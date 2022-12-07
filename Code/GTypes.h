@@ -167,7 +167,7 @@ public:
 // c string management.
 class GString {
 public:
-	GString ();
+	inline GString (): _string(nullptr), _length(0) {}
 	GString (const GString& string);
 	GString (const char* string);
 	~GString ();

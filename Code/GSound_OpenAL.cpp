@@ -4,11 +4,11 @@
 #include <OpenAL/alc.h>
 
 
-static ALCdevice *		_AL_DEVICE		= NULL;
-static ALCcontext *		_AL_CONTEXT		= NULL;
+static ALCdevice* AL_DEVICE = nullptr;
+static ALCcontext* AL_CONTEXT = nullptr;
 
 
-struct GSound::_PrivateData {
+struct GSound::PrivateData {
 	ALuint buffer;
 	ALuint source;
 };
@@ -18,27 +18,27 @@ struct GSound::_PrivateData {
 void GSound::Startup () {
 	
 	// If already open and created do nothing
-	if(_AL_DEVICE && _AL_CONTEXT)
+	if(AL_DEVICE && AL_CONTEXT)
 		return;
 	
 	// Use a context and device if they already exist
-	_AL_CONTEXT = alcGetCurrentContext();
-	if(_AL_CONTEXT) {
-		_AL_DEVICE = alcGetContextsDevice(_AL_CONTEXT);
-		if(_AL_DEVICE)
+	AL_CONTEXT = alcGetCurrentContext();
+	if(AL_CONTEXT) {
+		AL_DEVICE = alcGetContextsDevice(AL_CONTEXT);
+		if(AL_DEVICE)
 			return;
 	}
 	
 	// Open and create a new OpenAL devine and context
-	_AL_DEVICE = alcOpenDevice(NULL);
-	if(_AL_DEVICE) {
-		_AL_CONTEXT = alcCreateContext(_AL_DEVICE, NULL);
-		if(_AL_CONTEXT) {
-			alcMakeContextCurrent(_AL_CONTEXT);
+	AL_DEVICE = alcOpenDevice(NULL);
+	if(AL_DEVICE) {
+		AL_CONTEXT = alcCreateContext(AL_DEVICE, NULL);
+		if(AL_CONTEXT) {
+			alcMakeContextCurrent(AL_CONTEXT);
 		} else {
 			GSystem::Print("Could not create OpenAL context! (%s)\n", alGetString(alGetError()));
-			alcCloseDevice(_AL_DEVICE);
-			_AL_DEVICE = NULL;
+			alcCloseDevice(AL_DEVICE);
+			AL_DEVICE = NULL;
 			return;
 		}
 	} else {
@@ -61,14 +61,14 @@ void GSound::Startup () {
 
 void GSound::Shutdown () {
 	
-	if(_AL_CONTEXT) {
-		alcDestroyContext(_AL_CONTEXT);
-		_AL_CONTEXT = NULL;
+	if(AL_CONTEXT) {
+		alcDestroyContext(AL_CONTEXT);
+		AL_CONTEXT = NULL;
 	}
 	
-	if(_AL_DEVICE) {
-		alcCloseDevice(_AL_DEVICE);
-		_AL_DEVICE = NULL;
+	if(AL_DEVICE) {
+		alcCloseDevice(AL_DEVICE);
+		AL_DEVICE = NULL;
 	}
 }
 
@@ -104,7 +104,7 @@ bool GSound::New (const Resource& resource) {
 	if(resource.bufferSize < 44)
 		return false;
 	
-	_data = new _PrivateData;
+	_data = new PrivateData;
 	_data->buffer = 0;
 	_data->source = 0;
 	
@@ -201,100 +201,57 @@ bool GSound::IsPlaying () {
 	return false;
 }
 
-GSound::Resource::Resource ()
-:	bufferSize(0)
-,	buffer(NULL)
-{
-}
 
-GSound::Resource::Resource (const GString& resource)
-:	bufferSize(0)
-,	buffer(NULL)
-{
-	if(New(resource) == false)
-		GSystem::Debug("ERROR: Could not load sound resource \"%s\"!\n", (const char*)resource);
-}
 
-GSound::Resource::~Resource () {
-	Delete();
-}
 
-bool GSound::Resource::New (const GString& resource) {
-	if(NewFromPackage(resource))
-		return true;
-	if(NewFromFile(resource))
-		return true;
-	return false;
-}
 
-bool GSound::Resource::NewFromFile (const GString& resource) {
-	Delete();
-	
-	GFile file;
-	if(file.OpenResourceForRead(resource) == false)
-		return false;
-	bufferSize = file.GetSize();
-	buffer = new uint8_t[bufferSize];
-	return file.Read(buffer, bufferSize);
-}
 
-bool GSound::Resource::NewFromPackage (const GString& resource) {
-	Delete();
-	
-	uint64_t archiveSize = GPackage::GetSize(resource + ".sound");
-	if(archiveSize == 0)
-		return false;
-	
-	uint8_t* archiveBuffer = new uint8_t[archiveSize];
-	if(GPackage::Read(resource + ".sound", archiveBuffer, archiveSize) == false) {
-		delete [] archiveBuffer;
+
+
+
+
+
+
+bool GSound::Resource::New (const GString& name) {
+	bufferSize = GSystem::ResourceSize(name + ".snd");
+	if(bufferSize <= sizeof(Resource)) {
+		bufferSize = 0;
 		return false;
 	}
-	
-	uint64_t headerSize = sizeof(bufferSize);
-	memcpy(this, archiveBuffer, headerSize);
-	
 	buffer = new uint8_t[bufferSize];
-	archiveSize = GArchive::Decompress(archiveBuffer + headerSize, archiveSize - headerSize, buffer, bufferSize);
-	
-	if(archiveSize != bufferSize) {
-		delete [] archiveBuffer;
-		return false;
-	}
-	
-	delete [] archiveBuffer;
-	return true;
-}
-
-void GSound::Resource::Delete () {
-	bufferSize = 0;
-	if(buffer) {
+	if(!GSystem::ResourceRead(name + ".snd", buffer, bufferSize)) {
 		delete [] buffer;
-		buffer = NULL;
+		buffer = nullptr;
+		bufferSize = 0;
+		return false;
 	}
+	return true;
 }
 
-bool GSound::Resource::WriteToPackage (GPackage& package, const GString& name) {
-	uint64_t headerSize = sizeof(bufferSize);
-	uint64_t archiveSize = GArchive::GetBufferBounds(headerSize + sizeof(uint8_t) * bufferSize);
-	
-	uint8_t* archiveBuffer = new uint8_t[archiveSize];
-	memcpy(archiveBuffer, this, headerSize);
-	
-	archiveSize = GArchive::Compress(buffer, sizeof(uint8_t) * bufferSize, archiveBuffer + headerSize, archiveSize - headerSize);
-	
-	if(archiveSize == 0) {
-		delete [] archiveBuffer;
+bool GSound::Resource::NewFromFile (const GString& path) {
+	bufferSize = GSystem::ResourceSizeFromFile(path);
+	if(bufferSize <= 0) {
+		bufferSize = 0;
 		return false;
 	}
-	
-	if(package.Write(name + ".sound", archiveBuffer, archiveSize + headerSize) == false) {
-		delete [] archiveBuffer;
+	buffer = new uint8_t[bufferSize];
+	if(!GSystem::ResourceReadFromFile(path, buffer, bufferSize)) {
+		delete [] buffer;
+		buffer = nullptr;
+		bufferSize = 0;
 		return false;
 	}
-	
-	delete [] archiveBuffer;
 	return true;
+}
+
+bool GSound::Resource::Write (const GString& name) {
+	const int64_t resourceSize = sizeof(bufferSize) + bufferSize * sizeof(uint8_t);
+	std::unique_ptr<uint8_t[]> resourceBuffer(new uint8_t[resourceSize]);
+	int64_t offset = 0;
+	*((int64_t*)(resourceBuffer.get() + offset)) = bufferSize;
+	offset += sizeof(bufferSize);
+	memcpy(resourceBuffer.get() + offset, buffer, bufferSize);
+	return GSystem::ResourceWrite(name + ".snd", resourceBuffer.get(), resourceSize * sizeof(uint8_t));
 }
 
 #endif // defined(__APPLE__)

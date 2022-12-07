@@ -1,14 +1,13 @@
-#ifndef _GIMAGE_H_
-#define _GIMAGE_H_
+#ifndef G_IMAGE_H_
+#define G_IMAGE_H_
 
 #include "GTypes.h"
 #include "GSystem.h"
-#include "GPackage.h"
 
 class GImage {
 public:
-	class Resource;
-	class Vertex;
+	struct Vertex;
+	struct Resource;
 	
 	GImage ();
 	GImage (const Resource& resource);
@@ -42,34 +41,28 @@ public:
 	void DrawQuad (const float vertices[8], const float coords[8], const GColor& color = GColor::WHITE);
 	void DrawVertices (const Vertex verticies[], int verticesCount, const uint16_t indicies[], int indiciesCount);
 	
-	class Resource {
-	public:
-		uint32_t width;
-		uint32_t height;
-		uint64_t bufferSize;
-		uint8_t* buffer;
-		
-		Resource ();
-		Resource (const GString& resource);
-		~Resource ();
-		bool New (const GString& resource);
-		bool NewFromFile (const GString& resource);
-		bool NewFromFileInMemory (void* resource, int size);
-		bool NewFromPackage (const GString& resource);
-		void Delete ();
-		bool WriteToPackage (GPackage& package, const GString& name);
-	};
-	
-	class Vertex {
-	public:
+	struct Vertex {
 		float xy[2];
 		uint8_t rgba[4];
 		float uv[2];
 	};
 	
+	struct Resource {
+		int32_t width;
+		int32_t height;
+		int64_t bufferSize;
+		uint8_t* buffer;
+		inline Resource (): width(0), height(0), bufferSize(0), buffer(nullptr) {}
+		inline Resource (const GString& name): width(0), height(0), bufferSize(0), buffer(nullptr) { New(name); }
+		inline ~Resource () { width = 0; height = 0; bufferSize = 0; if(buffer) delete [] buffer; buffer = nullptr; }
+		bool New (const GString& name);
+		bool NewFromFile (const GString& path);
+		bool Write (const GString& name);
+	};
+	
 private:
-	struct _PrivateData;
-	_PrivateData* _data;
+	struct PrivateData;
+	PrivateData* _data;
 };
 
-#endif // _GIMAGE_H_
+#endif // G_IMAGE_H_

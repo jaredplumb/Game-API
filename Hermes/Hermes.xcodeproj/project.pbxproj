@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		2F0AC30C1F807E34009B5A1E /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F0AC30A1F807E27009B5A1E /* Metal.framework */; };
 		2F0AC30D1F807E39009B5A1E /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F0AC30B1F807E27009B5A1E /* MetalKit.framework */; };
-		2F1DC26E2282925400246153 /* GPackage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2552282925400246153 /* GPackage.cpp */; };
 		2F1DC2752282925400246153 /* GImage_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2602282925400246153 /* GImage_Apple.mm */; };
 		2F1DC2772282925400246153 /* GFont.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC2622282925400246153 /* GFont.cpp */; };
 		2F1DC27D2282925400246153 /* GTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1DC26D2282925400246153 /* GTypes.cpp */; };
@@ -22,7 +21,6 @@
 		2F9C467B2224688500CB7CDC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F9C467A2224688500CB7CDC /* AVFoundation.framework */; };
 		2F9C467D2224688E00CB7CDC /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F9C467C2224688E00CB7CDC /* libz.tbd */; };
 		2FA482162936A6BC00A2D9E8 /* MyXML_Apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2FA482152936A6BC00A2D9E8 /* MyXML_Apple.mm */; };
-		2FA482192936A80F00A2D9E8 /* GFile_Apple.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2FA482182936A80F00A2D9E8 /* GFile_Apple.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -40,10 +38,7 @@
 /* Begin PBXFileReference section */
 		2F0AC30A1F807E27009B5A1E /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Metal.framework; sourceTree = DEVELOPER_DIR; };
 		2F0AC30B1F807E27009B5A1E /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
-		2F1DC2552282925400246153 /* GPackage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GPackage.cpp; path = ../Code/GPackage.cpp; sourceTree = "<group>"; };
-		2F1DC2572282925400246153 /* GSystem_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GSystem_Apple.mm; path = ../Code/GSystem_Apple.mm; sourceTree = "<group>"; };
 		2F1DC2582282925400246153 /* GTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GTypes.h; path = ../Code/GTypes.h; sourceTree = "<group>"; };
-		2F1DC25B2282925400246153 /* GPackage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GPackage.h; path = ../Code/GPackage.h; sourceTree = "<group>"; };
 		2F1DC25C2282925400246153 /* GSound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GSound.h; path = ../Code/GSound.h; sourceTree = "<group>"; };
 		2F1DC2602282925400246153 /* GImage_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GImage_Apple.mm; path = ../Code/GImage_Apple.mm; sourceTree = "<group>"; };
 		2F1DC2622282925400246153 /* GFont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFont.cpp; path = ../Code/GFont.cpp; sourceTree = "<group>"; };
@@ -57,6 +52,7 @@
 		2F56F1E9291EEADB00B30349 /* GSystem_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GSystem_Apple.mm; path = ../Code/GSystem_Apple.mm; sourceTree = "<group>"; };
 		2F56F1EB291EEADB00B30349 /* GSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GSystem.h; path = ../Code/GSystem.h; sourceTree = "<group>"; };
 		2F56F1EE291EEB1600B30349 /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
+		2F73378E29403B0B00F9E1AD /* GSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GSystem.h; path = ../Code/GSystem.h; sourceTree = "<group>"; };
 		2F772BEB168E0D4600A6864F /* Hermes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Hermes.cpp; sourceTree = "<group>"; };
 		2F772BEC168E0D4600A6864F /* Hermes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Hermes.h; sourceTree = "<group>"; };
 		2F772BED168E0D4600A6864F /* Main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Main.cpp; sourceTree = "<group>"; };
@@ -64,8 +60,6 @@
 		2F9C467C2224688E00CB7CDC /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		2FA482142936A6BC00A2D9E8 /* MyXML.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyXML.h; sourceTree = "<group>"; };
 		2FA482152936A6BC00A2D9E8 /* MyXML_Apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MyXML_Apple.mm; sourceTree = "<group>"; };
-		2FA482172936A80F00A2D9E8 /* GFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GFile.h; path = ../Code/GFile.h; sourceTree = "<group>"; };
-		2FA482182936A80F00A2D9E8 /* GFile_Apple.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GFile_Apple.cpp; path = ../Code/GFile_Apple.cpp; sourceTree = "<group>"; };
 		2FD7A4BC15B914E500F424E8 /* Hermes */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Hermes; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -89,21 +83,17 @@
 		2F47A6F018DB7B530054053B /* Game API */ = {
 			isa = PBXGroup;
 			children = (
-				2FA482182936A80F00A2D9E8 /* GFile_Apple.cpp */,
-				2FA482172936A80F00A2D9E8 /* GFile.h */,
 				2F1DC2622282925400246153 /* GFont.cpp */,
 				2F1DC2632282925400246153 /* GFont.h */,
 				2F1DC2602282925400246153 /* GImage_Apple.mm */,
 				2F1DC2682282925400246153 /* GImage.h */,
-				2F1DC2552282925400246153 /* GPackage.cpp */,
-				2F1DC25B2282925400246153 /* GPackage.h */,
 				2F56F1E7291EEAAA00B30349 /* GSound_OpenAL.cpp */,
 				2F1DC25C2282925400246153 /* GSound.h */,
-				2F1DC2572282925400246153 /* GSystem_Apple.mm */,
+				2F56F1E9291EEADB00B30349 /* GSystem_Apple.mm */,
 				2F56F1EB291EEADB00B30349 /* GSystem.h */,
 				2F1DC26D2282925400246153 /* GTypes.cpp */,
 				2F1DC2582282925400246153 /* GTypes.h */,
-				2F56F1E9291EEADB00B30349 /* GSystem_Apple.mm */,
+				2F73378E29403B0B00F9E1AD /* GSystem.h */,
 			);
 			name = "Game API";
 			sourceTree = "<group>";
@@ -111,13 +101,13 @@
 		2FD7A4B115B914E500F424E8 = {
 			isa = PBXGroup;
 			children = (
+				2F772BEB168E0D4600A6864F /* Hermes.cpp */,
+				2F772BED168E0D4600A6864F /* Main.cpp */,
+				2F772BEC168E0D4600A6864F /* Hermes.h */,
+				2FA482142936A6BC00A2D9E8 /* MyXML.h */,
+				2FA482152936A6BC00A2D9E8 /* MyXML_Apple.mm */,
 				2FD7A56615B91D3D00F424E8 /* Frameworks */,
 				2F47A6F018DB7B530054053B /* Game API */,
-				2F772BEB168E0D4600A6864F /* Hermes.cpp */,
-				2F772BEC168E0D4600A6864F /* Hermes.h */,
-				2F772BED168E0D4600A6864F /* Main.cpp */,
-				2FA482152936A6BC00A2D9E8 /* MyXML_Apple.mm */,
-				2FA482142936A6BC00A2D9E8 /* MyXML.h */,
 				2FD7A4BD15B914E500F424E8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -201,8 +191,6 @@
 				2F1DC2752282925400246153 /* GImage_Apple.mm in Sources */,
 				2F772BEE168E0D4600A6864F /* Hermes.cpp in Sources */,
 				2F56F1E8291EEAAA00B30349 /* GSound_OpenAL.cpp in Sources */,
-				2F1DC26E2282925400246153 /* GPackage.cpp in Sources */,
-				2FA482192936A80F00A2D9E8 /* GFile_Apple.cpp in Sources */,
 				2F1DC27D2282925400246153 /* GTypes.cpp in Sources */,
 				2FA482162936A6BC00A2D9E8 /* MyXML_Apple.mm in Sources */,
 				2F772BEF168E0D4600A6864F /* Main.cpp in Sources */,

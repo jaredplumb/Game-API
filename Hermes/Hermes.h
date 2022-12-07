@@ -3,7 +3,7 @@
 
 #include "GTypes.h"
 
-static const char* VERSION_STRING = "1.0.2";
+static const char* VERSION_STRING = "1.1";
 
 class Hermes {
 public:

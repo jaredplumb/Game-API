@@ -1,6 +1,4 @@
 #include "GFont.h"
-#include "GFile.h"
-
 
 /* NOTES FOR BITMAP FONT CREATION
  I've been using the program bmGlyph to create fonts, and exporting for Unity, although any export
@@ -25,9 +23,9 @@
  printf("%c %d %x\n", string[i], (uchar)string[i], (uchar)string[i]);
  
  hex 00-7f is US-ASCII			(127 values)
- hex c2-df indicates 2 bytes		(29 values)
- hex e0-ef indicates 3 bytes		(15 values)
- hex f0-f4 indicates 4 bytes		(4 values)
+ hex c2-df indicates 2 bytes	(29 values)
+ hex e0-ef indicates 3 bytes	(15 values)
+ hex f0-f4 indicates 4 bytes	(4 values)
  hex 80-bf is a sequencial byte	(63 values)
  others are invalid
  
@@ -41,416 +39,237 @@
 
 
 
-
-struct GFont::_PrivateData {
-	int						height;
-	int						base;
-	int						charCount;
-	int						hashCount;
-	GRect*					rects;
-	GPoint*					offsets;
-	int*					advances;
-	std::map<int, int>**	kernings;
-	uint32_t*				hash;
-	GImage					image;
-};
-
-
-
-
-static int _FindIndexFromHash (uint32_t* hash, int hashCount, uint32_t character) {
-	if(character < (1 << 7)) {
-		return character;
-	} else {
-		// Binary search since the hash is pre-sorted
-		int min = 0;
-		int max = hashCount - 1;
-		while(max >= min) {
-			int mid = min + (max - min) / 2;
-			if(character > hash[mid])
-				min = mid + 1;
-			else if(character < hash[mid])
-				max = mid - 1;
-			else
-				return 128 + mid; // The index from the hash starts at 128 because they are non-ASCII
-		}
-	}
-	GSystem::Debug("ERROR: Could not find font character (%u) in hash!\n", character);
-	return 0;
-}
-
-
-
-
-
-GFont::GFont ()
-:	_data(NULL)
-{
-}
-
-GFont::GFont (const Resource& resource)
-:	_data(NULL)
-{
-	New(resource);
-}
-
-GFont::GFont (const GString& resource)
-:	_data(NULL)
-{
-	New(resource);
-}
-
-GFont::~GFont () {
-	Delete();
-}
-
 bool GFont::New (const Resource& resource) {
-	Delete();
+	_height = 0;
+	_base = 0;
+	_rects.clear();
+	_offsets.clear();
+	_advances.clear();
+	_has_kern.clear();
+	_hash.clear();
+	_kernings.clear();
 	
-	_data = new _PrivateData;
-	_data->height = resource.height;
-	_data->base = resource.base;
-	_data->charCount = resource.charCount;
-	_data->hashCount = resource.hashCount;
-	_data->rects = NULL;
-	_data->offsets = NULL;
-	_data->advances = NULL;
-	_data->kernings = NULL;
-	if(_data->charCount > 0) {
-		_data->rects = new GRect[_data->charCount];
-		_data->offsets = new GPoint[_data->charCount];
-		_data->advances = new int[_data->charCount];
-		_data->kernings = new std::map<int, int>*[_data->charCount];
-		for(int i = 0; i < _data->charCount; i++) {
-			_data->rects[i].x = resource.chars[i].x;
-			_data->rects[i].y = resource.chars[i].y;
-			_data->rects[i].width = resource.chars[i].width;
-			_data->rects[i].height = resource.chars[i].height;
-			_data->offsets[i].x = resource.chars[i].xoffset;
-			_data->offsets[i].y = resource.chars[i].yoffset;
-			_data->advances[i] = resource.chars[i].xadvance;
-			_data->kernings[i] = NULL;
-		}
-	}
-	
-	_data->hash = NULL;
-	if(_data->hashCount > 0) {
-		_data->hash = new uint32_t[_data->hashCount];
-		for(int i = 0; i < _data->hashCount; i++)
-			_data->hash[i] = resource.hash[i];
-	}
-	
-	
-	if(_data->kernings != NULL) {
-		for(uint32_t i = 0; i < resource.kernCount; i++) {
-			uint32_t firstIndex = (uint32_t)(resource.kernings[i] & 0x0000000000ffffff);
-			uint32_t secondIndex = (uint32_t)((resource.kernings[i] & 0x0000ffffff000000) >> 24);
-			int16_t amount = (int16_t)((resource.kernings[i] & 0xffff000000000000) >> 48);
-			if(firstIndex != 0 && secondIndex != 0 && amount != 0) {
-				if(_data->kernings[firstIndex] == NULL)
-					_data->kernings[firstIndex] = new std::map<int, int>;
-				_data->kernings[firstIndex]->insert(std::pair<int, int>((int)secondIndex, (int)amount));
-			}
-		}
-	}
-	
-	
-	
-	
-	if(_data->image.New(resource.image) == false) {
-		GSystem::Debug("ERROR: Could not create image with name font resource data!\n");
+	GImage::Resource imageResource;
+	imageResource.width = resource.imageWidth;
+	imageResource.height = resource.imageHeight;
+	imageResource.bufferSize = resource.bufferSize;
+	imageResource.buffer = resource.buffer;
+	if(_image.New(imageResource) == false) {
+		GSystem::Debug("Could not create image with font resource data!\n");
+		imageResource.buffer = nullptr;
 		return false;
+	}
+	imageResource.buffer = nullptr;
+	
+	_height = resource.height;
+	_base = resource.base;
+	
+	if(resource.charCount > 0) {
+		_rects.resize(resource.charCount);
+		_offsets.resize(resource.charCount);
+		_advances.resize(resource.charCount);
+		_has_kern.resize(resource.charCount);
+		for(int i = 0; i < resource.charCount; i++) {
+			_rects[i].x = resource.chars[i].srcX;
+			_rects[i].y = resource.chars[i].srcY;
+			_rects[i].width = resource.chars[i].srcWidth;
+			_rects[i].height = resource.chars[i].srcHeight;
+			_offsets[i].x = resource.chars[i].xOffset;
+			_offsets[i].y = resource.chars[i].yOffset;
+			_advances[i] = resource.chars[i].xAdvance;
+			_has_kern[i] = false;
+		}
+	}
+	
+	if(resource.hashCount > 0 && resource.hashCount + (1 << 7) - 1 <= resource.charCount) {
+		for(int i = 0; i < resource.hashCount; i++)
+			_hash[resource.hash[i]] = i + (1 << 7);
+	}
+	
+	if(resource.kernCount > 0) {
+		for(int i = 0; i < resource.kernCount; i++) {
+			int first = (int)(resource.kernings[i] & 0x0000000000ffffff);
+			int second = (int)((resource.kernings[i] & 0x0000ffffff000000) >> 24);
+			int amount = (int)((resource.kernings[i] & 0xffff000000000000) >> 48);
+			_kernings[std::make_pair(first, second)] = amount;
+		}
 	}
 	
 	return true;
 }
 
-bool GFont::New (const GString& resource) {
-	return New(Resource(resource));
-}
 
-void GFont::Delete () {
-	if(_data == NULL)
-		return;
-	
-	if(_data->kernings) {
-		for(int i = 0; i < _data->charCount; i++)
-			if(_data->kernings[i])
-				delete _data->kernings[i];
-		delete [] _data->kernings;
-		_data->kernings = NULL;
-	}
-	
-	if(_data->rects) {
-		delete [] _data->rects;
-		delete [] _data->offsets;
-		delete [] _data->advances;
-		_data->rects = NULL;
-		_data->offsets = NULL;
-		_data->advances = NULL;
-		_data->charCount = 0;
-	}
-	
-	if(_data->hash) {
-		delete [] _data->hash;
-		_data->hash = NULL;
-		_data->hashCount = 0;
-	}
-	
-	delete _data;
-	_data = NULL;
-}
-
-
-
-int GFont::GetLineHeight () const {
-	return (_data ? _data->height : 0);
-}
-
-int GFont::GetBaseHeight () const {
-	return (_data ? _data->base : 0);
-}
 
 GRect GFont::GetRect (const GString& text) const {
-	
-	if(_data == NULL || _data->charCount == 0 || text.IsEmpty())
+	if(text.IsEmpty() || _rects.size() < ((1 << 7) - 1))
 		return GRect();
 	
-	int x1 = 1073741824;
-	int y1 = 1073741824;
-	int x2 = -1073741824;
-	int y2 = -1073741824;
+	int left = 0;
+	int top = 0;
+	int right = 0;
+	int bottom = 0;
 	
-	int length = text.GetLength();
-	int x = 0;
-	int y = 0;
+	GPoint pos;
 	int index = 0;
-	int last = 0; // Last character rendered for kerning
+	int last = 0; // Last character rendered (used for kernings)
 	
-	for(int i = 0; i < length; i++) {
-		if(text[i] == '\n') {
-			x = 0;
-			y += _data->height;
-			last = 0;
-		} else {
+	for(int i = 0; i < text.GetLength(); i++) {
+		if(text[i] != '\n') {
 			// Find the index
 			if((uint8_t)text[i] <= 0x7f) {
 				// ASCII characters are always indexed exactly
 				index = text[i];
-			} else if((uint8_t)text[i] >= 0xc2 && (uint8_t)text[i] <= 0xdf) {
+			} else if((uint8_t)text[i] >= 0xc2 && (uint8_t)text[i] <= 0xdf && i + 1 < text.GetLength()) {
 				// Find the index of two-byte non-ASCII characters
-				index = _FindIndexFromHash(_data->hash, _data->hashCount, ((0) | (0 << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24)));
+				index = GetIndexFromHash((0) | (0 << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24));
 				i += 1;
-			} else if((uint8_t)text[i] >= 0xe0 && (uint8_t)text[i] <= 0xef) {
+			} else if((uint8_t)text[i] >= 0xe0 && (uint8_t)text[i] <= 0xef && i + 2 < text.GetLength()) {
 				// Find the index of three-byte non-ASCII characters
-				index = _FindIndexFromHash(_data->hash, _data->hashCount, ((0) | ((uint8_t)text[i + 2] << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24)));
+				index = GetIndexFromHash((0) | ((uint8_t)text[i + 2] << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24));
 				i += 2;
-			} else if((uint8_t)text[i] >= 0xf0 && (uint8_t)text[i] <= 0xf4) {
+			} else if((uint8_t)text[i] >= 0xf0 && (uint8_t)text[i] <= 0xf4 && i + 3 < text.GetLength()) {
 				// Find the index of four-byte non-ASCII characters
-				index = _FindIndexFromHash(_data->hash, _data->hashCount, (((uint8_t)text[i + 3]) | ((uint8_t)text[i + 2] << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24)));
+				index = GetIndexFromHash(((uint8_t)text[i + 3]) | ((uint8_t)text[i + 2] << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24));
 				i += 3;
 			} else {
-				GSystem::Debug("ERROR: Unknown character (%x) found while drawing font!\n", (uint8_t)text[i]);
+				GSystem::Debug("Unknown character (0x%x) found while drawing font!\n", (uint8_t)text[i]);
 			}
 			
-			// Draw the character
-			if(index != 0 && index < _data->charCount) {
-				
-				// Find the kerning value if one exists
-				int kerning = 0;
-				if(last != 0 && _data->kernings[index] != NULL) {
-					std::map<int, int>::iterator find = _data->kernings[index]->find(last);
-					if(find != _data->kernings[index]->end())
-						kerning = find->second;
-				}
-				
-				
-				if(x1 > x + _data->offsets[index].x + kerning)
-					x1 = x + _data->offsets[index].x + kerning;
-				if(y1 > y + _data->offsets[index].y)
-					y1 = y + _data->offsets[index].y;
-				
-				if(x2 < x + _data->offsets[index].x + kerning + _data->rects[index].width)
-					x2 = x + _data->offsets[index].x + kerning + _data->rects[index].width;
-				if(y2 < y + _data->offsets[index].y + _data->rects[index].height)
-					y2 = y + _data->offsets[index].y + _data->rects[index].height;
-				
-				
-				x += _data->advances[index];
-				
-				
-				
-			} else {
-				GSystem::Debug("ERROR: Index not found while drawing font!\n");
+			// Adjust for a possible kerning
+			int kerning = 0;
+			if(_has_kern[last]) {
+				std::map<std::pair<int, int>, int>::const_iterator k = _kernings.find(std::make_pair(last, index));
+				if(k != _kernings.end())
+					kerning = k->second;
 			}
 			
+			// Find the visible rendered area
+			const int renderLeft = pos.x + _offsets[index].x + kerning;
+			const int renderTop = pos.y + _offsets[index].y;
+			const int renderRight = renderLeft + _rects[index].width;
+			const int renderBottom = renderTop + _rects[index].height;
+			left = std::min(left, renderLeft);
+			top = std::min(top, renderTop);
+			right = std::max(right, renderRight);
+			bottom = std::max(bottom, renderBottom);
+			
+			// Advance the x position
+			pos.x += _advances[index];
 			last = index;
+		} else {
+			// If a new line, reset the x position to 0 and move down the height
+			pos.x = 0;
+			pos.y += _height;
 		}
 	}
 	
-	return GRect(x1, y1, x2, y2);
+	return GRect(left, top, right - left, bottom - top);
 }
 
-
-bool GFont::IsEmpty () const {
-	return _data == NULL || _data->image.IsEmpty();
-}
 
 
 void GFont::Draw (const GString& text, int x, int y, float alpha) {
-	if(_data == NULL || _data->charCount == 0 || text.IsEmpty())
+	if(text.IsEmpty() || _rects.size() < ((1 << 7) - 1))
 		return;
 	
-	int length = text.GetLength();
-	int xreset = x;
+	GPoint pos(x, y);
 	int index = 0;
-	int last = 0; // Last character rendered for kerning
+	int last = 0; // Last character rendered (used for kernings)
 	
-	for(int i = 0; i < length; i++) {
-		if(text[i] == '\n') {
-			x = xreset;
-			y += _data->height;
-			last = 0;
-		} else {
+	for(int i = 0; i < text.GetLength(); i++) {
+		if(text[i] != '\n') {
 			// Find the index
 			if((uint8_t)text[i] <= 0x7f) {
 				// ASCII characters are always indexed exactly
 				index = text[i];
-			} else if((uint8_t)text[i] >= 0xc2 && (uint8_t)text[i] <= 0xdf) {
+			} else if((uint8_t)text[i] >= 0xc2 && (uint8_t)text[i] <= 0xdf && i + 1 < text.GetLength()) {
 				// Find the index of two-byte non-ASCII characters
-				index = _FindIndexFromHash(_data->hash, _data->hashCount, ((0) | (0 << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24)));
+				index = GetIndexFromHash((0) | (0 << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24));
 				i += 1;
-			} else if((uint8_t)text[i] >= 0xe0 && (uint8_t)text[i] <= 0xef) {
+			} else if((uint8_t)text[i] >= 0xe0 && (uint8_t)text[i] <= 0xef && i + 2 < text.GetLength()) {
 				// Find the index of three-byte non-ASCII characters
-				index = _FindIndexFromHash(_data->hash, _data->hashCount, ((0) | ((uint8_t)text[i + 2] << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24)));
+				index = GetIndexFromHash((0) | ((uint8_t)text[i + 2] << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24));
 				i += 2;
-			} else if((uint8_t)text[i] >= 0xf0 && (uint8_t)text[i] <= 0xf4) {
+			} else if((uint8_t)text[i] >= 0xf0 && (uint8_t)text[i] <= 0xf4 && i + 3 < text.GetLength()) {
 				// Find the index of four-byte non-ASCII characters
-				index = _FindIndexFromHash(_data->hash, _data->hashCount, (((uint8_t)text[i + 3]) | ((uint8_t)text[i + 2] << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24)));
+				index = GetIndexFromHash(((uint8_t)text[i + 3]) | ((uint8_t)text[i + 2] << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24));
 				i += 3;
 			} else {
-				GSystem::Debug("ERROR: Unknown character (%x) found while drawing font!\n", (uint8_t)text[i]);
+				GSystem::Debug("Unknown character (0x%x) found while drawing font!\n", (uint8_t)text[i]);
 			}
 			
-			// Draw the character
-			if(index != 0 && index < _data->charCount) {
-				
-				// Find the kerning value if one exists
-				int kerning = 0;
-				if(last != 0 && _data->kernings[index] != NULL) {
-					std::map<int, int>::iterator find = _data->kernings[index]->find(last);
-					if(find != _data->kernings[index]->end())
-						kerning = find->second;
-				}
-				
-				_data->image.Draw(_data->rects[index], x + _data->offsets[index].x + kerning, y + _data->offsets[index].y, alpha);
-				
-				x += _data->advances[index];
-				
-				
-				
-			} else {
-				GSystem::Debug("ERROR: Index not found while drawing font!\n");
+			// Draw the character adjusting for a possible kerning then advance the x position
+			int kerning = 0;
+			if(_has_kern[last]) {
+				std::map<std::pair<int, int>, int>::const_iterator k = _kernings.find(std::make_pair(last, index));
+				if(k != _kernings.end())
+					kerning = k->second;
 			}
-			
+			_image.Draw(_rects[index], pos.x + _offsets[index].x + kerning, pos.y + _offsets[index].y, alpha);
+			pos.x += _advances[index];
 			last = index;
+		} else {
+			// If a new line, reset the x position and move down the height
+			pos.x = x;
+			pos.y += _height;
 		}
 	}
 }
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-GFont::Resource::Resource ()
-:	height(0)
-,	base(0)
-,	charCount(0)
-,	hashCount(0)
-,	kernCount(0)
-,	chars(NULL)
-,	hash(NULL)
-,	kernings(NULL)
-{
-}
-
-GFont::Resource::Resource (const GString& resource)
-:	height(0)
-,	base(0)
-,	charCount(0)
-,	hashCount(0)
-,	kernCount(0)
-,	chars(NULL)
-,	hash(NULL)
-,	kernings(NULL)
-{
-	New(resource);
-}
-
-GFont::Resource::~Resource () {
-	Delete();
-}
-
-
-
-
-
-
-
-bool GFont::Resource::New (const GString& resource) {
-	if(NewFromPackage(resource))
-		return true;
-	return NewFromFile(resource);
-}
-
-
-
-bool GFont::Resource::NewFromPackage (const GString& resource) {
-	
-	uint64_t archiveSize = GPackage::GetSize(resource + ".font");
-	uint8_t* archiveBuffer = new uint8_t[archiveSize];
-	if(GPackage::Read(resource + ".font", archiveBuffer, archiveSize) == false) {
-		GSystem::Debug("ERROR: Failed to read \"%s\" from packages!\n", (const char*)resource);
-		delete [] archiveBuffer;
+bool GFont::Resource::New (const GString& name) {
+	int64_t resourceSize = GSystem::ResourceSize(name + ".fnt");
+	if(resourceSize <= sizeof(Resource))
 		return false;
-	}
 	
-	uint64_t headerSize = sizeof(height) + sizeof(base) + sizeof(charCount) + sizeof(hashCount) + sizeof(kernCount);
-	memcpy(this, archiveBuffer, headerSize);
+	std::unique_ptr<uint8_t[]> resourceBuffer(new uint8_t[resourceSize]);
+	if(!GSystem::ResourceRead(name + ".fnt", resourceBuffer.get(), resourceSize))
+		return false;
+	
+	int64_t offset = 0;
+	height = *((int16_t*)(resourceBuffer.get() + offset));
+	offset += sizeof(height);
+	base = *((int16_t*)(resourceBuffer.get() + offset));
+	offset += sizeof(base);
+	charCount = *((int32_t*)(resourceBuffer.get() + offset));
+	offset += sizeof(charCount);
+	hashCount = *((int32_t*)(resourceBuffer.get() + offset));
+	offset += sizeof(hashCount);
+	kernCount = *((int32_t*)(resourceBuffer.get() + offset));
+	offset += sizeof(kernCount);
+	imageWidth = *((int32_t*)(resourceBuffer.get() + offset));
+	offset += sizeof(imageWidth);
+	imageHeight = *((int32_t*)(resourceBuffer.get() + offset));
+	offset += sizeof(imageHeight);
+	bufferSize = *((int64_t*)(resourceBuffer.get() + offset));
+	offset += sizeof(bufferSize);
+	
+	if(charCount * sizeof(Char) + hashCount * sizeof(int32_t) + kernCount * sizeof(int32_t) + bufferSize > resourceSize - offset)
+		return false;
 	
 	if(charCount > 0) {
 		chars = new Char[charCount];
-		memcpy(chars, archiveBuffer + headerSize, sizeof(Char) * charCount);
+		memcpy(chars, resourceBuffer.get() + offset, charCount * sizeof(Char));
+		offset += charCount * sizeof(Char);
 	}
 	
 	if(hashCount > 0) {
 		hash = new uint32_t[hashCount];
-		memcpy(hash, archiveBuffer + headerSize + sizeof(Char) * charCount, sizeof(uint32_t) * hashCount);
+		memcpy(hash, resourceBuffer.get() + offset, hashCount * sizeof(uint32_t));
+		offset += hashCount * sizeof(uint32_t);
 	}
 	
 	if(kernCount > 0) {
 		kernings = new uint64_t[kernCount];
-		memcpy(kernings, archiveBuffer + headerSize + sizeof(Char) * charCount + sizeof(uint32_t) * hashCount, sizeof(uint64_t) * kernCount);
+		memcpy(kernings, resourceBuffer.get() + offset, kernCount * sizeof(uint64_t));
+		offset += kernCount * sizeof(uint64_t);
 	}
 	
-	delete [] archiveBuffer;
-	
-	if(image.NewFromPackage(resource + ".font") == false) {
-		GSystem::Debug("ERROR: Failed to read \"%s\"'s image file from packages!\n", (const char*)resource);
-		return false;
+	if(bufferSize > 0) {
+		buffer = new uint8_t[bufferSize];
+		memcpy(buffer, resourceBuffer.get() + offset, bufferSize);
+		offset += bufferSize;
 	}
 	
 	return true;
@@ -461,12 +280,12 @@ bool GFont::Resource::NewFromPackage (const GString& resource) {
 // This function converts a UTF-32 (or Unicode) character to UTF-8, then converts it into a hash value combining up to 4 bytes into a
 // single 32-bit value.  This is used becuase the Font engine accepts UTF-8 strings, and to convert the UTF-8 strings to a normal unicode
 // lookup would take additional math, so this removes one layer of calculations needed when non-ASCII characters are encountered.
-static uint32_t _ConvertUnicodeToHash (uint32_t c) {
+static uint32_t ConvertUnicodeToHash (uint32_t c) {
 	if(c < (1 << 7)) { // 1-byte ASCII characters
 		return c;										// 0xxxxxxx
 	} else if(c < (1 << 11)) { // 2-byte characters
 		uint8_t utf8[2];
-		utf8[0] = (uint8_t)((c >> 6) | 0xc0);				// 110xxxxx
+		utf8[0] = (uint8_t)((c >> 6) | 0xc0);			// 110xxxxx
 		utf8[1] = (uint8_t)((c & 0x3f) | 0x80);			// 10xxxxxx
 		return ((0) | (0 << 8) | ((uint8_t)utf8[1] << 16) | ((uint8_t)utf8[0] << 24));
 	} else if(c < (1 << 16)) { // 3-byte characters
@@ -477,7 +296,7 @@ static uint32_t _ConvertUnicodeToHash (uint32_t c) {
 		return ((0) | ((uint8_t)utf8[2] << 8) | ((uint8_t)utf8[1] << 16) | ((uint8_t)utf8[0] << 24));
 	} else if(c < (1 << 21)) { // 4-byte characters
 		uint8_t utf8[4];
-		utf8[0] = (uint8_t)(((c >> 18)) | 0xF0);			// 11110xxx
+		utf8[0] = (uint8_t)(((c >> 18)) | 0xF0);		// 11110xxx
 		utf8[1] = (uint8_t)(((c >> 12) & 0x3F) | 0x80);	// 10xxxxxx
 		utf8[2] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);	// 10xxxxxx
 		utf8[3] = (uint8_t)((c & 0x3F) | 0x80);			// 10xxxxxx
@@ -488,253 +307,156 @@ static uint32_t _ConvertUnicodeToHash (uint32_t c) {
 
 
 
-bool GFont::Resource::NewFromFile (const GString& resource) {
-	
-	GFile file;
-	if(file.OpenResourceForRead(resource) == false) {
-		GSystem::Debug("ERROR: Failed to open font file \"%s\"!\n", (const char*)resource);
+bool GFont::Resource::NewFromFile (const GString& path) {
+	int64_t fileSize = GSystem::ResourceSizeFromFile(path);
+	if(fileSize <= 0)
 		return false;
-	}
 	
-	const int64_t size = file.GetSize();
-	uint8_t buffer[size + 1];
-	buffer[size] = 0;
-	if(file.Read(buffer, sizeof(uint8_t) * size) == false) {
-		GSystem::Debug("ERROR: Failed to read entire contents of font file \"%s\"!\n", (const char*)resource);
+	std::unique_ptr<uint8_t[]> fileBuffer(new uint8_t[fileSize + 2]);
+	if(!GSystem::ResourceReadFromFile(path, fileBuffer.get(), fileSize))
 		return false;
-	}
+	//for(int64_t i = 0; i < fileSize; i++)
+	//	if(!GString::isprint((char)fileBuffer[i]))
+	//		fileBuffer[i] = '\0';
+	fileBuffer[fileSize + 0] = '\0';
+	fileBuffer[fileSize + 1] = '\0';
 	
-	uint32_t charMax = 0;	// Max number of character values allowed (for in case the file is corrupted)
-	uint32_t hashMax = 0;	// Max number of hash values allowed (for in case the file is corrupted)
-	uint32_t kernMax = 0;	// Max number of kerning values allowed (for in case the file is corrupted)
+	std::vector<Char> charsList((1 << 7) - 1);
+	std::vector<uint32_t> hashList;
+	std::vector<uint64_t> kerningsList;
 	
-	uint8_t* line = buffer;
-	while(line != NULL && *line != 0) {
+	for(char* line = (char*)fileBuffer.get(); line != nullptr && *line != '\0'; line++) {
 		
-		
-		if(GString::strnicmp("info", (const char*)line, 4) == 0) {
+		// This tag holds information common to all characters.
+		if(GString::strnicmp("common ", line, 7) == 0) {
 			
-		} else if(GString::strnicmp("common", (const char*)line, 6) == 0) {
+			// This is the distance in pixels from the absolute top of the line to the next line.
+			if((line = GString::strinext(line, "lineHeight=")) != nullptr)
+				height = (int16_t)GString::strtoi(line, &line, 10);
 			
-			line = (uint8_t*)GString::strinext((const char*)line, "lineHeight=");
-			if(line)
-				height = GString::strtoi((const char*)line, (char**)&line, 10);
+			// The number of pixels from the absolute top of the line to the base of the characters (minus the spacing between lines).
+			if((line = GString::strinext(line, "base=")) != nullptr)
+				base = (int16_t)GString::strtoi(line, &line, 10);
 			
-			line = (uint8_t*)GString::strinext((const char*)line, "base=");
-			if(line)
-				base = GString::strtoi((const char*)line, (char**)&line, 10);
+		// This tag gives the name of a texture file. There is one for each page in the font.
+		} else if(GString::strnicmp("page ", line, 5) == 0) {
 			
-		} else if(GString::strnicmp("page", (const char*)line, 4) == 0) {
-			
-			line = (uint8_t*)GString::strinext((const char*)line, "file=\"");
-			if(line) {
-				
-				uint8_t* end = (uint8_t*)GString::strstr((const char*)line, "\"");
-				if(end) {
-					*end = 0;
-					
-					
-					if(image.NewFromFile(GString(resource).TrimToDirectory() + (const char*)line) == false) {
-						GSystem::Debug("ERROR: Failed to get src image for font \"%s\"!\n", (const char*)resource);
+			// The texture file name.
+			if((line = GString::strinext(line, "file=\"")) != nullptr) {
+				char* end = GString::strstr(line, "\"");
+				if(end != nullptr) {
+					*end = '\0';
+					GImage::Resource imageResource;
+					if(imageResource.NewFromFile(GString(path).TrimToDirectory() + line) == false) {
+						GSystem::Debug("Failed to read src image for font \"%s\"!\n", (const char*)path);
 						return false;
 					}
-					
-					
-					line = ++end;
+					imageWidth = imageResource.width;
+					imageHeight = imageResource.height;
+					bufferSize = imageResource.bufferSize;
+					buffer = imageResource.buffer;
+					imageResource.buffer = nullptr; // This prevents the resource from being deleted
+					*end = '\"';
 				}
-				
 			}
 			
-		} else if(GString::strnicmp("chars", (const char*)line, 5) == 0) {
+		// This tag describes one character in the font. There is one for each included character in the font.
+		} else if(GString::strnicmp("char ", line, 5) == 0) {
 			
-			line = (uint8_t*)GString::strinext((const char*)line, "count=");
-			if(line) {
-				charMax = (uint32_t)GString::strtoi((const char*)line, (char**)&line, 10);
-				chars = new Char[charMax + 127];
-				memset(chars, 0, sizeof(Char) * 127); // Only need to zero the first 127, since more might not be used
-				hashMax = charMax;
-				if(hashMax > 0)
-					hash = new uint32_t[hashMax];
-			}
+			// The character id.
+			int index;
+			if((line = GString::strinext(line, "id=")) == nullptr || (index = GString::strtoi(line, &line, 10)) <= 0)
+				continue;
 			
-		} else if(GString::strnicmp("char ", (const char*)line, 5) == 0) {
-			
-			uint32_t id = 0;
 			Char glyph;
-			memset(&glyph, 0, sizeof(Char));
-			line = (uint8_t*)GString::strinext((const char*)line, "id=");
-			if(line) id = (uint32_t)GString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8_t*)GString::strinext((const char*)line, "x=");
-			if(line) glyph.x = GString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8_t*)GString::strinext((const char*)line, "y=");
-			if(line) glyph.y = GString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8_t*)GString::strinext((const char*)line, "width=");
-			if(line) glyph.width = GString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8_t*)GString::strinext((const char*)line, "height=");
-			if(line) glyph.height = GString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8_t*)GString::strinext((const char*)line, "xoffset=");
-			if(line) glyph.xoffset = GString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8_t*)GString::strinext((const char*)line, "yoffset=");
-			if(line) glyph.yoffset = GString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8_t*)GString::strinext((const char*)line, "xadvance=");
-			if(line) glyph.xadvance = GString::strtoi((const char*)line, (char**)&line, 10);
 			
-			if((glyph.width != 0 && glyph.height != 0) || glyph.xadvance != 0) {
-				if(id < (1 << 7)) { // ASCII characters
-					chars[id] = glyph;
-				} else if(id < (1 << 21)) { // Multi-Byte UTF-8 character
-					if(hashCount < hashMax) {
-						chars[128 + hashCount] = glyph;
-						hash[hashCount++] =  _ConvertUnicodeToHash(id);
-					} else {
-						GSystem::Debug("ERROR: Too many characters found in font file \"%s\"!\n", (const char*)resource);
-					}
-				}
+			// The left position of the character image in the texture.
+			if((line = GString::strinext(line, "x=")) != nullptr)
+				glyph.srcX = (int16_t)GString::strtoi(line, &line, 10);
+			
+			// The top position of the character image in the texture.
+			if((line = GString::strinext(line, "y=")) != nullptr)
+				glyph.srcY = (int16_t)GString::strtoi(line, &line, 10);
+			
+			// The width of the character image in the texture (note that some characters have a width of 0).
+			if((line = GString::strinext(line, "width=")) != nullptr)
+			   glyph.srcWidth = (int16_t)GString::strtoi(line, &line, 10);
+			
+			// The height of the character image in the texture (note that some characters have a height of 0).
+			if((line = GString::strinext(line, "height=")) != nullptr)
+			   glyph.srcHeight = (int16_t)GString::strtoi(line, &line, 10);
+			
+			// How much the current x position should be offset when copying the image from the texture to the screen.
+			if((line = GString::strinext(line, "xoffset=")) != nullptr)
+				glyph.xOffset = (int16_t)GString::strtoi(line, &line, 10);
+			
+			// How much the current y position should be offset when copying the image from the texture to the screen.
+			if((line = GString::strinext(line, "yoffset=")) != nullptr)
+				glyph.yOffset = (int16_t)GString::strtoi(line, &line, 10);
+			
+			// How much the current position should be advanced after drawing the character.
+			if((line = GString::strinext(line, "xadvance=")) != nullptr)
+				glyph.xAdvance = (int16_t)GString::strtoi(line, &line, 10);
+			
+			// Add the character to the lists, the first 127 characters (ASCII) are always present
+			if(index < (1 << 7)) { // ASCII characters
+				charsList[index] = glyph;
+			} else if (index < (1 << 21)) { // Multi-Byte UTF-8 character
+				charsList.push_back(glyph);
+				hashList.push_back(ConvertUnicodeToHash((uint32_t)index));
 			}
 			
-		} else if(GString::strnicmp("kernings", (const char*)line, 8) == 0) {
+		// The kerning information is used to adjust the distance between certain characters, e.g. some characters should be placed closer to each other than others.
+		} else if(GString::strnicmp("kerning ", line, 8) == 0) {
 			
-			line = (uint8_t*)GString::strinext((const char*)line, "count=");
-			if(line) {
-				kernMax = (uint32_t)GString::strtoi((const char*)line, (char**)&line, 10);
-				if(kernMax > 0) {
-					kernings = new uint64_t[kernMax];
-					memset(kernings, 0, sizeof(uint64_t) * kernMax);
-				}
-			}
+			// The first character id.
+			int first;
+			if((line = GString::strinext(line, "first=")) == nullptr || (first = GString::strtoi(line, &line, 10)) <= 0)
+				continue;
 			
-		} else if(GString::strnicmp("kerning ", (const char*)line, 8) == 0) {
+			// The second character id.
+			int second;
+			if((line = GString::strinext(line, "second=")) == nullptr || (second = GString::strtoi(line, &line, 10)) <= 0)
+				continue;
 			
-			uint32_t first = 0;
-			uint32_t second = 0;
-			int16_t amount = 0;
-			line = (uint8_t*)GString::strinext((const char*)line, "first=");
-			if(line) first = (uint32_t)GString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8_t*)GString::strinext((const char*)line, "second=");
-			if(line) second = (uint32_t)GString::strtoi((const char*)line, (char**)&line, 10);
-			line = (uint8_t*)GString::strinext((const char*)line, "amount=");
-			if(line) amount = (uint16_t)GString::strtoi((const char*)line, (char**)&line, 10);
+			// How much the x position should be adjusted when drawing the second character immediately following the first.
+			int amount;
+			if((line = GString::strinext(line, "amount=")) == nullptr || (amount = GString::strtoi(line, &line, 10)) == 0)
+				continue;
 			
-			if(first != 0 && second != 0 && amount != 0) {
-				// "first" and "second" are converted into an index values, indexing into the "chars" themselves
-				// since Unicode characters only use 21 bits of information, first and second are converted to 24-bit values,
-				// allowing amount to remain in the last 16-bits
-				if(kernCount < kernMax) {
-					
-					uint32_t firstIndex = first;
-					if(firstIndex >= (1 << 7)) {
-						firstIndex = 0;
-						first = _ConvertUnicodeToHash(first);
-						for(uint32_t i = 0; i < hashCount && firstIndex == 0; i++)
-							if(first == hash[i])
-								firstIndex = 128 + i;
-					}
-					
-					uint32_t secondIndex = second;
-					if(secondIndex >= (1 << 7)) {
-						secondIndex = 0;
-						second = _ConvertUnicodeToHash(second);
-						for(uint32_t i = 0; i < hashCount && secondIndex == 0; i++)
-							if(second == hash[i])
-								secondIndex = 128 + i;
-					}
-					
-					if(firstIndex != 0 && secondIndex != 0)
-						kernings[kernCount++] = ((uint64_t)firstIndex | ((uint64_t)secondIndex << 24) | ((uint64_t)amount << 48));
-					else
-						GSystem::Debug("ERROR: Kernings \"first\" or \"second\" not found in font file \"%s\"!\n", (const char*)resource);
-					
-				} else {
-					GSystem::Debug("ERROR: Too many kerning values in font file \"%s\"!\n", (const char*)resource);
-				}
-			}
-			
-		} else if(GString::isprint(*line)) {
-			GSystem::Debug("ERROR: Unknown line found in font file \"%s\"!\n", (const char*)resource);
+			// "first" and "second are converted into hash index values (which remain the same value for ASCII characters).
+			// Since Unicode characters only use 21 bits of information, "first" and "second" are converted to 24-bit values.
+			// This leaves 16-bits remaining for the actual kerning value.
+			kerningsList.push_back(((uint64_t)ConvertUnicodeToHash((uint32_t)first) | ((uint64_t)ConvertUnicodeToHash((uint32_t)second) << 24) | ((uint64_t)amount << 48)));
 		}
 		
-		
-		if(line != NULL) {
-			while(GString::isprint(*line))
-				line++;
+		// Advance to the end of the line
+		while(line != nullptr && *line != '\0' && *line != '\n')
 			line++;
-		}
-		
 	}
 	
-	// Adjust charCount to be the actual number of characters found
-	charCount = 127 + hashCount;
-	
-	// Sort the hash values
-	if(hashCount > 0) {
-		for(uint32_t i = 0; i < hashCount; i++)
-			for(uint32_t j = i + 1; j < hashCount; j++)
-				if(hash[i] > hash[j]) {
-					uint32_t tempHash = hash[i];
-					hash[i] = hash[j];
-					hash[j] = tempHash;
-					Char tempChar = chars[128 + i];
-					chars[128 + i] = chars[128 + j];
-					chars[128 + j] = tempChar;
-				}
+	// Copy the chars list to the resrouce chars
+	if(charsList.size() > 0) {
+		charCount = (int32_t)charsList.size();
+		chars = new Char[charCount];
+		for(int i = 0; i < charCount; i++)
+			chars[i] = charsList[i];
 	}
 	
-	return true;
-}
-
-
-
-void GFont::Resource::Delete () {
-	height = 0;
-	base = 0;
-	charCount = 0;
-	hashCount = 0;
-	kernCount = 0;
-	if(chars) {
-		delete [] chars;
-		chars = NULL;
-	}
-	if(hash) {
-		delete [] hash;
-		hash = NULL;
-	}
-	if(kernings) {
-		delete [] kernings;
-		kernings = NULL;
-	}
-	image.Delete();
-}
-
-
-
-bool GFont::Resource::WriteToPackage (GPackage& package, const GString& name) {
-	
-	uint64_t headerSize = sizeof(height) + sizeof(base) + sizeof(charCount) + sizeof(hashCount) + sizeof(kernCount);
-	uint64_t archiveSize = headerSize + sizeof(Char) * charCount + sizeof(uint32_t) * hashCount + sizeof(uint64_t) * kernCount;
-	
-	uint8_t* archiveBuffer = new uint8_t[archiveSize];
-	memcpy(archiveBuffer, this, headerSize);
-	
-	if(charCount > 0)
-		memcpy(archiveBuffer + headerSize, chars, sizeof(Char) * charCount);
-	
-	if(hashCount > 0)
-		memcpy(archiveBuffer + headerSize + sizeof(Char) * charCount, hash, sizeof(uint32_t) * hashCount);
-	
-	if(kernCount > 0)
-		memcpy(archiveBuffer + headerSize + sizeof(Char) * charCount + sizeof(uint32_t) * hashCount, kernings, sizeof(uint64_t) * kernCount);
-	
-	if(package.Write(name + ".font", archiveBuffer, archiveSize) == false) {
-		GSystem::Debug("Failed to write to package resource \"%s\"!\n", (const char*)name);
-		delete [] archiveBuffer;
-		return false;
+	// Copy the hash list to the resource hash
+	if(hashList.size() > 0) {
+		hashCount = (int32_t)hashList.size();
+		hash = new uint32_t[hashCount];
+		for(int i = 0; i < hashCount; i++)
+			hash[i] = hashList[i];
 	}
 	
-	delete [] archiveBuffer;
-	
-	if(image.WriteToPackage(package, name + ".font") == false) {
-		GSystem::Debug("Failed to write to package resource \"%s\"'s image!\n", (const char*)name);
-		return false;
+	// Copy the kerning list to the resource kernings
+	if(kerningsList.size() > 0) {
+		kernCount = (int32_t)kerningsList.size();
+		kernings = new uint64_t[kernCount];
+		for(int i = 0; i < kernCount; i++)
+			kernings[i] = kerningsList[i];
 	}
 	
 	return true;
@@ -742,5 +464,32 @@ bool GFont::Resource::WriteToPackage (GPackage& package, const GString& name) {
 
 
 
-
-
+bool GFont::Resource::Write (const GString& name) {
+	const int64_t resourceSize = sizeof(height) + sizeof(base) + sizeof(charCount) + sizeof(hashCount) + sizeof(kernCount) + sizeof(imageWidth) + sizeof(imageHeight) + sizeof(bufferSize) + charCount * sizeof(Char) + hashCount * sizeof(uint32_t) + kernCount * sizeof(uint64_t) + bufferSize * sizeof(uint8_t);
+	std::unique_ptr<uint8_t[]> resourceBuffer(new uint8_t[resourceSize]);
+	int64_t offset = 0;
+	*((int16_t*)(resourceBuffer.get() + offset)) = height;
+	offset += sizeof(height);
+	*((int16_t*)(resourceBuffer.get() + offset)) = base;
+	offset += sizeof(base);
+	*((int32_t*)(resourceBuffer.get() + offset)) = charCount;
+	offset += sizeof(charCount);
+	*((int32_t*)(resourceBuffer.get() + offset)) = hashCount;
+	offset += sizeof(hashCount);
+	*((int32_t*)(resourceBuffer.get() + offset)) = kernCount;
+	offset += sizeof(kernCount);
+	*((int32_t*)(resourceBuffer.get() + offset)) = imageWidth;
+	offset += sizeof(imageWidth);
+	*((int32_t*)(resourceBuffer.get() + offset)) = imageHeight;
+	offset += sizeof(imageHeight);
+	*((int64_t*)(resourceBuffer.get() + offset)) = bufferSize;
+	offset += sizeof(bufferSize);
+	memcpy(resourceBuffer.get() + offset, chars, sizeof(Char) * charCount);
+	offset += sizeof(Char) * charCount;
+	memcpy(resourceBuffer.get() + offset, hash, sizeof(uint32_t) * hashCount);
+	offset += sizeof(uint32_t) * hashCount;
+	memcpy(resourceBuffer.get() + offset, kernings, sizeof(uint64_t) * kernCount);
+	offset += sizeof(uint64_t) * kernCount;
+	memcpy(resourceBuffer.get() + offset, buffer, sizeof(uint8_t) * bufferSize);
+	return GSystem::ResourceWrite(name + ".fnt", resourceBuffer.get(), resourceSize);
+}

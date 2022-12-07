@@ -36,8 +36,40 @@ public:
 	/// Returns the epoch time in nanoseconds.
 	static int64_t GetNanoseconds () { return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()); }
 	
-	/// Opens a C FILE to a resouce (or asset) for reading
-	static FILE* OpenResourceFileForRead (const GString& resource);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	static bool PackageOpen (const GString& resource = "Main.pkg");
+	
+	static bool PackageOpenForWrite (const GString& resource = "Main.pkg"); // Typically is not used and will fail on most platforms.  Used for tool creation.  Must call PackageCloseForWrite() to write the header.
+	
+	static bool PackageClose (); // Typically does not need to be called, the package data is automatically released at program termination.
+	
+	static bool PackageCloseForWrite (); // Must be called if package was opened with PackageOpenForWrite.
+	
+	static int64_t ResourceSize (const GString& name);
+	
+	static int64_t ResourceSizeFromFile (const GString& path);
+	
+	static bool ResourceRead (const GString& name, void* data, int64_t size);
+	
+	static bool ResourceReadFromFile (const GString& path, void* data, int64_t size);
+	
+	static bool ResourceWrite (const GString& name, void* data, int64_t size); // Will fail if package was not opened with PackageOpenForWrite.
+	
+	
+	
+	
+	
+	
+	
 	
 	/// Read save data from the appropriate place
 	static bool SaveRead (const GString& name, void* data, int64_t size);
@@ -176,10 +208,6 @@ private:
 	static inline std::map<int, void (*) (int x, int y)>	TOUCH_CALLBACKS;
 	static inline std::map<int, void (*) (int x, int y)>	TOUCHUP_CALLBACKS;
 	static inline std::map<int, void (*) (int x, int y)>	TOUCHMOVE_CALLBACKS;
-	
-	static constexpr int8_t									SAVE_VERSION = 5;
-	static constexpr char									SAVE_IDENTIFIER[] = "SAVE";
-	
 };
 
 #endif // G_SYSTEM_H_

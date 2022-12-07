@@ -10,7 +10,7 @@ extern id<MTLRenderCommandEncoder>	RENDER;
 
 
 
-struct GImage::_PrivateData {
+struct GImage::PrivateData {
 	int width, height;
 	
 	// This is temp data set by the last draw call, use width and height instead of src and dst
@@ -64,10 +64,10 @@ GImage::~GImage () {
 bool GImage::New (const Resource& resource) {
 	Delete();
 	
-	if(resource.width == 0 || resource.height == 0)
+	if(resource.width == 0 || resource.height == 0 || resource.bufferSize <= 0 || resource.buffer == nullptr)
 		return false;
 	
-	_data = new _PrivateData;
+	_data = new PrivateData;
 	_data->width = resource.width;
 	_data->height = resource.height;
 	_data->texture = nil;
@@ -378,44 +378,44 @@ void GImage::DrawVertices (const Vertex verticies[], int verticesCount, const ui
 
 
 
-GImage::Resource::Resource ()
-:	width(0)
-,	height(0)
-,	bufferSize(0)
-,	buffer(nullptr)
-{
-}
 
-GImage::Resource::Resource (const GString& resource)
-:	width(0)
-,	height(0)
-,	bufferSize(0)
-,	buffer(nullptr)
-{
-	if(New(resource) == false)
-		GSystem::Debug("ERROR: Could not load image resource \"%s\"!\n", (const char*)resource);
-}
 
-GImage::Resource::~Resource () {
-	Delete();
-}
-
-bool GImage::Resource::New (const GString& resource) {
-	if(NewFromPackage(resource))
-		return true;
-	if(NewFromFile(resource))
-		return true;
-	return false;
-}
-
-bool GImage::Resource::NewFromFile (const GString& resource) {
-	Delete();
+bool GImage::Resource::New (const GString& name) {
+	int64_t resourceSize = GSystem::ResourceSize(name + ".img");
+	if(resourceSize <= sizeof(Resource))
+		return false;
 	
-	CFStringRef string = CFStringCreateWithCString(nullptr, resource, kCFStringEncodingUTF8);
-	CFURLRef url = CFURLCreateWithFileSystemPath(nullptr, string, kCFURLPOSIXPathStyle, false);
-	CGImageSourceRef imageSource = CGImageSourceCreateWithURL(url, nullptr);
-	CFRelease(string);
-	CFRelease(url);
+	uint8_t resourceBuffer[resourceSize];
+	if(!GSystem::ResourceRead(name + ".img", resourceBuffer, resourceSize))
+		return false;
+	
+	int64_t offset = 0;
+	width = *((int32_t*)(resourceBuffer + offset));
+	offset += sizeof(width);
+	height = *((int32_t*)(resourceBuffer + offset));
+	offset += sizeof(height);
+	bufferSize = *((int64_t*)(resourceBuffer + offset));
+	offset += sizeof(bufferSize);
+	if(bufferSize <= 0 || bufferSize * sizeof(uint8_t) > resourceSize - offset)
+		return false;
+	
+	buffer = new uint8_t[bufferSize];
+	memcpy(buffer, resourceBuffer + offset, bufferSize * sizeof(uint8_t));
+	return true;
+}
+
+bool GImage::Resource::NewFromFile (const GString& path) {
+	int64_t fileSize = GSystem::ResourceSizeFromFile(path);
+	if(fileSize <= 0)
+		return false;
+	
+	uint8_t fileBuffer[fileSize];
+	if(!GSystem::ResourceReadFromFile(path, fileBuffer, fileSize))
+		return false;
+	
+	CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8*)fileBuffer, (CFIndex)fileSize, kCFAllocatorNull);
+	CGImageSourceRef imageSource = CGImageSourceCreateWithData(data, nullptr);
+	CFRelease(data);
 	if(imageSource == nullptr)
 		return false;
 	
@@ -424,127 +424,35 @@ bool GImage::Resource::NewFromFile (const GString& resource) {
 	if(image == nullptr)
 		return false;
 	
-	width = (uint32_t)CGImageGetWidth(image);
-	height = (uint32_t)CGImageGetHeight(image);
+	width = (int32_t)CGImageGetWidth(image);
+	height = (int32_t)CGImageGetHeight(image);
 	bufferSize = width * height * 4;
 	buffer = new uint8_t[bufferSize];
-	memset(buffer, 0, sizeof(uint8_t) * bufferSize);
-	
+	//memset(resource->buffer, 0, sizeof(uint8_t) * resource->bufferSize);
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	CGContextRef context = CGBitmapContextCreate(buffer, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast);
 	CGContextSetBlendMode(context, kCGBlendModeCopy);
-	
-	//CGContextTranslateCTM(context, (CGFloat)0, (CGFloat)height);
-	//CGContextScaleCTM(context, (CGFloat)1, (CGFloat)-1);
 	CGContextDrawImage(context, CGRectMake((CGFloat)0, (CGFloat)0, (CGFloat)width, (CGFloat)height), image);
-	
 	CGContextRelease(context);
 	CGColorSpaceRelease(colorSpace);
 	CGImageRelease(image);
-	
 	return true;
 }
 
-bool GImage::Resource::NewFromFileInMemory (void* resource, int size) {
-	Delete();
-	
-	@autoreleasepool {
-		CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8*)resource, (CFIndex)size, kCFAllocatorNull);
-		CGImageSourceRef imageSource = CGImageSourceCreateWithData(data, nullptr);
-		CFRelease(data);
-		if(imageSource == nullptr)
-			return false;
-		
-		CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, nullptr);
-		CFRelease(imageSource);
-		if(image == nullptr)
-			return false;
-		
-		width = (uint32_t)CGImageGetWidth(image);
-		height = (uint32_t)CGImageGetHeight(image);
-		bufferSize = width * height * 4;
-		buffer = new uint8_t[bufferSize];
-		memset(buffer, 0, sizeof(uint8_t) * bufferSize);
-		
-		CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-		CGContextRef context = CGBitmapContextCreate(buffer, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast);
-		CGContextSetBlendMode(context, kCGBlendModeCopy);
-		
-		//CGContextTranslateCTM(context, (CGFloat)0, (CGFloat)height);
-		//CGContextScaleCTM(context, (CGFloat)1, (CGFloat)-1);
-		CGContextDrawImage(context, CGRectMake((CGFloat)0, (CGFloat)0, (CGFloat)width, (CGFloat)height), image);
-		
-		CGContextRelease(context);
-		CGColorSpaceRelease(colorSpace);
-		CGImageRelease(image);
-	} // @autoreleasepool
-	
-	return true;
+bool GImage::Resource::Write (const GString& name) {
+	int64_t resourceSize = sizeof(width) + sizeof(height) + sizeof(bufferSize) + bufferSize * sizeof(uint8_t);
+	uint8_t resourceBuffer[resourceSize];
+	int64_t offset = 0;
+	*((int32_t*)(resourceBuffer + offset)) = width;
+	offset += sizeof(width);
+	*((int32_t*)(resourceBuffer + offset)) = height;
+	offset += sizeof(height);
+	*((int64_t*)(resourceBuffer + offset)) = bufferSize;
+	offset += sizeof(bufferSize);
+	memcpy(resourceBuffer + offset, buffer, bufferSize * sizeof(uint8_t));
+	return GSystem::ResourceWrite(name + ".img", resourceBuffer, resourceSize);
 }
 
-bool GImage::Resource::NewFromPackage (const GString& resource) {
-	Delete();
-	
-	uint64_t archiveSize = GPackage::GetSize(resource + ".image");
-	if(archiveSize == 0)
-		return false;
-	
-	uint8_t* archiveBuffer = new uint8_t[archiveSize];
-	
-	if(GPackage::Read(resource + ".image", archiveBuffer, archiveSize) == false) {
-		delete [] archiveBuffer;
-		return false;
-	}
-	
-	uint64_t headerSize = sizeof(width) + sizeof(height) + sizeof(bufferSize);
-	
-	memcpy(this, archiveBuffer, headerSize);
-	
-	buffer = new uint8_t[bufferSize];
-	
-	archiveSize = GArchive::Decompress(archiveBuffer + headerSize, archiveSize - headerSize, buffer, bufferSize);
-	
-	if(archiveSize != bufferSize) {
-		delete [] archiveBuffer;
-		return false;
-	}
-	
-	delete [] archiveBuffer;
-	return true;
-}
 
-void GImage::Resource::Delete () {
-	width = 0;
-	height = 0;
-	bufferSize = 0;
-	if(buffer) {
-		delete [] buffer;
-		buffer = nullptr;
-	}
-}
-
-bool GImage::Resource::WriteToPackage (GPackage& package, const GString& name) {
-	
-	uint64_t headerSize = sizeof(width) + sizeof(height) + sizeof(bufferSize);
-	uint64_t archiveSize = GArchive::GetBufferBounds(headerSize + sizeof(uint8_t) * bufferSize);
-	
-	uint8_t* archiveBuffer = new uint8_t[archiveSize];
-	memcpy(archiveBuffer, this, headerSize);
-	
-	archiveSize = GArchive::Compress(buffer, sizeof(uint8_t) * bufferSize, archiveBuffer + headerSize, archiveSize - headerSize);
-	
-	if(archiveSize == 0) {
-		delete [] archiveBuffer;
-		return false;
-	}
-	
-	if(package.Write(name + ".image", archiveBuffer, archiveSize + headerSize) == false) {
-		delete [] archiveBuffer;
-		return false;
-	}
-	
-	delete [] archiveBuffer;
-	return true;
-}
 
 #endif // __APPLE__

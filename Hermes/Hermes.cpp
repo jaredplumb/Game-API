@@ -1,6 +1,5 @@
 #include "Hermes.h"
 #include "MyXML.h"
-#include "GPackage.h"
 #include "GSound.h"
 #include "GImage.h"
 #include "GFont.h"
@@ -13,12 +12,11 @@ bool Hermes::Build (const GString& path) {
 		return false;
 	}
 	
-	GString packagePath = GString(path).TrimExtension() + ".package";
+	GString packagePath = GString(path).TrimExtension() + ".pkg";
 	GSystem::Print("Building %s...\n", (const char*)packagePath);
 	
-	GPackage package;
-	if(package.OpenForWrite(packagePath) == false) {
-		GSystem::Print("Failed to open package file!\n");
+	if(GSystem::PackageOpenForWrite(packagePath) == false) {
+		GSystem::Print("Failed to open package \"%s\"!\n", (const char*)packagePath);
 		return false;
 	}
 	
@@ -49,7 +47,7 @@ bool Hermes::Build (const GString& path) {
 		}
 		
 		// Cycle through the directory building resources
-		std::vector<GString> dir = GFile::GetFileNamesInDirectory(src);
+		std::vector<GString> dir = GSystem::GetFileNamesInDirectory(src);
 		for(int d = 0; d < dir.size(); d++) {
 			GString file = dir[d];
 			if((left.IsEmpty() && right.IsEmpty()) || (file.GetLength() >= left.GetLength() + right.GetLength() && GString::strncmp(file, left, left.GetLength()) == 0 && GString::strncmp(file + file.GetLength() - right.GetLength(), right, right.GetLength()) == 0)) {
@@ -63,41 +61,47 @@ bool Hermes::Build (const GString& path) {
 				if(GString::stricmp(i->second->tag, "images") == 0) {
 					GSystem::Print("image \"%s\"...\n", (const char*)name);
 					GImage::Resource image;
-					if(image.NewFromFile(file) == false || image.WriteToPackage(package, name) == false)
+					if(image.NewFromFile(file) == false || image.Write(name) == false)
 						GSystem::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
 				
 				// Sounds
 				} else if(GString::stricmp(i->second->tag, "sounds") == 0) {
 					GSystem::Print("sound \"%s\"...\n", (const char*)name);
 					GSound::Resource sound;
-					if(sound.NewFromFile(file) == false || sound.WriteToPackage(package, name) == false)
+					if(sound.NewFromFile(file) == false || sound.Write(name) == false)
 						GSystem::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
 				
 				// Fonts
 				} else if(GString::stricmp(i->second->tag, "fonts") == 0) {
 					GSystem::Print("font \"%s\"...\n", (const char*)name);
 					GFont::Resource font;
-					if(font.NewFromFile(file) == false || font.WriteToPackage(package, name) == false)
+					if(font.NewFromFile(file) == false || font.Write(name) == false)
 						GSystem::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
 				
 				// Data
 				} else if(GString::stricmp(i->second->tag, "data") == 0) {
 					GSystem::Print("data \"%s\"...\n", (const char*)(name + right));
-					GFile data;
-					uint8_t* buffer = NULL;
-					int64_t size = 0;
-					if(data.OpenForRead(file) == false || (size = data.GetSize()) == 0 || (buffer = new uint8_t[size]) == NULL ||
-					   data.Read(buffer, size) == false || package.Write(name + right, buffer, size) == false)
+					
+					int64_t resourceSize = GSystem::ResourceSizeFromFile(file);
+					if(resourceSize > 0) {
+						uint8_t resourceBuffer[resourceSize];
+						if(GSystem::ResourceReadFromFile(file, resourceBuffer, resourceSize) == false || GSystem::ResourceWrite(name + right, resourceBuffer, resourceSize) == false)
+							GSystem::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
+					} else {
 						GSystem::Print("Failed to create %s resource \"%s\"!\n", (const char*)i->second->tag, (const char*)name);
-					if(buffer != NULL)
-						delete [] buffer;
-				
+					}
+					
 				// Unknown
 				} else {
 					GSystem::Print("unknown file type \"%s\" (file not built)!\n", (const char*)i->second->tag);
 				}
 			}
 		}
+	}
+	
+	if(GSystem::PackageCloseForWrite() == false) {
+		GSystem::Print("Failed to close package \"%s\"!\n", (const char*)packagePath);
+		return false;
 	}
 	
 	return true;
