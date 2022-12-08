@@ -104,10 +104,10 @@ GRect GFont::GetRect (const GString& text) const {
 	if(text.IsEmpty() || _rects.size() < ((1 << 7) - 1))
 		return GRect();
 	
-	int left = 0;
-	int top = 0;
-	int right = 0;
-	int bottom = 0;
+	int left = std::numeric_limits<int>::max();
+	int top = std::numeric_limits<int>::max();
+	int right = std::numeric_limits<int>::min();
+	int bottom = std::numeric_limits<int>::min();
 	
 	GPoint pos;
 	int index = 0;

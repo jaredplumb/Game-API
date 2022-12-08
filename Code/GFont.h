@@ -7,6 +7,7 @@
 #include "GImage.h"
 #include <vector>
 #include <unordered_map>
+#include <map>
 
 class GFont {
 public:
