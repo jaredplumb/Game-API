@@ -548,7 +548,7 @@ static std::unordered_map<std::string, std::pair<int64_t, int64_t>> PACKAGE_RESO
 static const char* GetResourceDirectory () {
 	static std::string RESOURCE_DIRECTORY;
 	if(RESOURCE_DIRECTORY.empty()) {
-		if([NSBundle mainBundle] != nil && [[NSBundle mainBundle] resourceURL] != nil && [[NSBundle mainBundle] bundleURL] != nil && [[[[NSBundle mainBundle] bundleURL] absoluteString] isEqual:[[[NSBundle mainBundle] resourceURL] absoluteString]] == false)
+		if([NSBundle mainBundle] != nil && [[NSBundle mainBundle] resourceURL] != nil && [[NSBundle mainBundle] bundleIdentifier] != nil)
 			RESOURCE_DIRECTORY = std::string([[[NSBundle mainBundle] resourceURL] fileSystemRepresentation]);
 		else
 			RESOURCE_DIRECTORY = "./";
