@@ -164,7 +164,7 @@ public:
 // Why use this class over a standard c++ string?  Standard c++ strings do a lot
 // of copying and re-allocating which causes huge issues in games.  C strings are
 // preferable, although somewhat more complex.  This class simplifies a lot of the
-// c string management.
+// c string management.  NOTE: I do not believe this is true since C++17
 class GString {
 public:
 	inline GString (): _string(nullptr), _length(0) {}
