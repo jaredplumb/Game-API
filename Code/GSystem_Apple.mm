@@ -8,23 +8,22 @@
 #include <memory>
 #include <dirent.h>
 
+
+
 static GRect					SCREEN_RECT;
 static GRect					SAFE_RECT;
 static GRect					PREFERRED_RECT;
-static int						FPS		    = 60;
-static int						ARG_C			= 0;
-static char**					ARG_V			= nullptr;
-id<MTLDevice>					DEVICE			= nil; // Non-static to allow for extern access from GImage
-id<MTLRenderCommandEncoder>		RENDER			= nil; // Non-static to allow for extern access from GImage
+static int						FPS = 60;
+static int						ARG_C = 0;
+static char**					ARG_V = nullptr;
+id<MTLDevice>					DEVICE = nil; // Non-static to allow for extern access from GImage
+id<MTLRenderCommandEncoder>		RENDER = nil; // Non-static to allow for extern access from GImage
 static GMatrix32_4x4			MODEL_MATRIX;
 static GMatrix32_4x4			PROJECTION_MATRIX;
 
 
 
-
-
 #if TARGET_OS_IPHONE
-
 @interface _MyViewController : UIViewController
 @end
 
@@ -34,7 +33,6 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 @end
 
 #else // TARGET_OS_MAC
-
 @interface _MyViewController : NSViewController
 @end
 
@@ -46,14 +44,12 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 
 
 
-
-
-
 @interface _MyMetalView : MTKView <MTKViewDelegate>
 @end
 
-#if TARGET_OS_IPHONE
 
+
+#if TARGET_OS_IPHONE
 @implementation _MyViewController
 
 - (void) viewDidLoad {
@@ -83,14 +79,9 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 
 
 
-
-
-
-
 @implementation _MyAppDelegate
 
 #if TARGET_OS_IPHONE
-
 - (BOOL) application: (UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
 	
 	// Setup the window
@@ -129,7 +120,6 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 }
 
 #else // TARGET_OS_MAC
-
 - (void) applicationDidFinishLaunching: (NSNotification*)aNotification {
 	
 	// Setup the menus
@@ -176,20 +166,6 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 #endif // TARGET_OS_IPHONE // TARGET_OS_MAC
 
 @end // _MyAppDelegate
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -374,13 +350,12 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 }
 
 #if TARGET_OS_IPHONE
-
 - (void) touchesBegan: (NSSet*)touches withEvent:(UIEvent*)event {
 	for(UITouch* touch in touches) {
 		CGPoint location = [touch locationInView:self];
 		location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-		GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
+		GSystem::RunTouchCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 	}
 }
 
@@ -389,7 +364,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 		CGPoint location = [touch locationInView:self];
 		location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-		GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
+		GSystem::RunTouchMoveCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 	}
 }
 
@@ -398,7 +373,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 		CGPoint location = [touch locationInView:self];
 		location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-		GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
+		GSystem::RunTouchUpCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 	}
 }
 
@@ -407,18 +382,17 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 		CGPoint location = [touch locationInView:self];
 		location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 		location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-		GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
+		GSystem::RunTouchUpCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 	}
 }
 
 #else // TARGET_OS_MAC
-
 - (void) mouseDown: (NSEvent*)theEvent {
 	NSPoint location = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 	location.y = self.frame.size.height - location.y;
 	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-	GSystem::RunTouchCallbacks((int)location.x, (int)location.y); // [theEvent buttonNumber]
+	GSystem::RunTouchCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y); // [theEvent buttonNumber]
 }
 
 - (void) rightMouseDown: (NSEvent*)theEvent {
@@ -426,7 +400,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	location.y = self.frame.size.height - location.y;
 	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-	GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
+	GSystem::RunTouchCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 }
 
 - (void) otherMouseDown: (NSEvent*)theEvent {
@@ -434,7 +408,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	location.y = self.frame.size.height - location.y;
 	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-	GSystem::RunTouchCallbacks((int)location.x, (int)location.y);
+	GSystem::RunTouchCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 }
 
 - (void) mouseUp: (NSEvent*)theEvent {
@@ -442,7 +416,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	location.y = self.frame.size.height - location.y;
 	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
+	GSystem::RunTouchUpCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 }
 
 - (void) rightMouseUp: (NSEvent*)theEvent {
@@ -450,7 +424,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	location.y = self.frame.size.height - location.y;
 	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
+	GSystem::RunTouchUpCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 }
 
 - (void) otherMouseUp: (NSEvent*)theEvent {
@@ -458,7 +432,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	location.y = self.frame.size.height - location.y;
 	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-	GSystem::RunTouchUpCallbacks((int)location.x, (int)location.y);
+	GSystem::RunTouchUpCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 }
 
 - (void) mouseDragged: (NSEvent*)theEvent {
@@ -466,7 +440,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	location.y = self.frame.size.height - location.y;
 	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
+	GSystem::RunTouchMoveCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 }
 
 - (void) rightMouseDragged: (NSEvent*)theEvent {
@@ -474,7 +448,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	location.y = self.frame.size.height - location.y;
 	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
+	GSystem::RunTouchMoveCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 }
 
 - (void) otherMouseDragged: (NSEvent*)theEvent {
@@ -482,33 +456,12 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	location.y = self.frame.size.height - location.y;
 	location.x = location.x * (CGFloat)SCREEN_RECT.width / self.frame.size.width;
 	location.y = location.y * (CGFloat)SCREEN_RECT.height / self.frame.size.height;
-	GSystem::RunTouchMoveCallbacks((int)location.x, (int)location.y);
+	GSystem::RunTouchMoveCallbacks((int)location.x - PREFERRED_RECT.x, (int)location.y - PREFERRED_RECT.y);
 }
 
 #endif // TARGET_OS_IPHONE // TARGET_OS_MAC
 
 @end // _MyMetalView
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -530,20 +483,10 @@ int GSystem::GetFPS () {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 static FILE* PACKAGE_FILE = nullptr;
 static std::unordered_map<std::string, std::pair<int64_t, int64_t>> PACKAGE_RESOURCES;
+
+
 
 static const char* GetResourceDirectory () {
 	static std::string RESOURCE_DIRECTORY;
@@ -556,6 +499,8 @@ static const char* GetResourceDirectory () {
 	}
 	return RESOURCE_DIRECTORY.c_str();
 }
+
+
 
 bool GSystem::PackageOpen (const GString& resource) {
 	if(PACKAGE_FILE != nullptr)
@@ -648,6 +593,8 @@ bool GSystem::PackageOpen (const GString& resource) {
 	return true;
 }
 
+
+
 bool GSystem::PackageOpenForWrite (const GString& resource) {
 	if(PACKAGE_FILE != nullptr)
 		PackageCloseForWrite();
@@ -672,6 +619,8 @@ bool GSystem::PackageOpenForWrite (const GString& resource) {
 	return true;
 }
 
+
+
 bool GSystem::PackageClose () {
 	if(PACKAGE_FILE) {
 		fclose(PACKAGE_FILE);
@@ -681,6 +630,8 @@ bool GSystem::PackageClose () {
 		PACKAGE_RESOURCES.clear();
 	return true;
 }
+
+
 
 bool GSystem::PackageCloseForWrite () {
 	if(PACKAGE_FILE == nullptr) {
@@ -697,13 +648,13 @@ bool GSystem::PackageCloseForWrite () {
 	}
 	
 	int64_t bufferSize = sizeof(int64_t); // Save room for the number of resources
-	for(std::unordered_map<std::string, std::pair<int64_t, int64_t>>::iterator i = PACKAGE_RESOURCES.begin(); i != PACKAGE_RESOURCES.end(); i++)
+	for(auto i = PACKAGE_RESOURCES.begin(); i != PACKAGE_RESOURCES.end(); i++)
 		bufferSize += i->first.length() + 1 + sizeof(int64_t) + sizeof(int64_t);
 	
 	std::unique_ptr<uint8_t[]> buffer(new uint8_t[bufferSize]);
 	*((int64_t*)buffer.get()) = PACKAGE_RESOURCES.size();
 	int64_t bufferOffset = sizeof(int64_t);
-	for(std::unordered_map<std::string, std::pair<int64_t, int64_t>>::iterator i = PACKAGE_RESOURCES.begin(); i != PACKAGE_RESOURCES.end(); i++) {
+	for(auto i = PACKAGE_RESOURCES.begin(); i != PACKAGE_RESOURCES.end(); i++) {
 		GString::strcpy((char*)(buffer.get() + bufferOffset), i->first.c_str());
 		bufferOffset += i->first.length() + 1;
 		*((int64_t*)(buffer.get() + bufferOffset)) = i->second.first;
@@ -756,12 +707,16 @@ bool GSystem::PackageCloseForWrite () {
 	return true;
 }
 
+
+
 int64_t GSystem::ResourceSize (const GString& name) {
 	if(PACKAGE_FILE == nullptr) // Open default package if none exists
 		PackageOpen();
-	std::unordered_map<std::string, std::pair<int64_t, int64_t>>::const_iterator i = PACKAGE_RESOURCES.find((const char*)name);
+	auto i = PACKAGE_RESOURCES.find((const char*)name);
 	return i != PACKAGE_RESOURCES.end() ? i->second.first : ResourceSizeFromFile(name);
 }
+
+
 
 int64_t GSystem::ResourceSizeFromFile (const GString& path) {
 	FILE* file = fopen(GString().Format("%s/%s", GetResourceDirectory(), (const char*)path), "rb");
@@ -775,6 +730,8 @@ int64_t GSystem::ResourceSizeFromFile (const GString& path) {
 	return size;
 }
 
+
+
 bool GSystem::ResourceRead (const GString& name, void* data, int64_t size) {
 	if(PACKAGE_FILE == nullptr) // Open default package if none exists
 		PackageOpen();
@@ -782,7 +739,7 @@ bool GSystem::ResourceRead (const GString& name, void* data, int64_t size) {
 	if(PACKAGE_FILE == nullptr) // No package file, attempting to find the raw resource in the resource location
 		return ResourceReadFromFile(name, data, size);
 	
-	std::unordered_map<std::string, std::pair<int64_t, int64_t>>::const_iterator resource = PACKAGE_RESOURCES.find((const char*)name);
+	auto resource = PACKAGE_RESOURCES.find((const char*)name);
 	if(resource == PACKAGE_RESOURCES.end()) // Failed to find the resource in the package, attempting to find the raw resource in the resource location
 		return ResourceReadFromFile(name, data, size);
 	
@@ -813,6 +770,8 @@ bool GSystem::ResourceRead (const GString& name, void* data, int64_t size) {
 	return true;
 }
 
+
+
 bool GSystem::ResourceReadFromFile (const GString& path, void* data, int64_t size) {
 	FILE* file = fopen(GString().Format("%s/%s", GetResourceDirectory(), (const char*)path), "rb");
 	if(file == nullptr) {
@@ -836,6 +795,8 @@ bool GSystem::ResourceReadFromFile (const GString& path, void* data, int64_t siz
 	fclose(file);
 	return true;
 }
+
+
 
 bool GSystem::ResourceWrite (const GString& name, void* data, int64_t size) {
 	if(PACKAGE_FILE == nullptr) // Open default package if none exists
@@ -866,7 +827,7 @@ bool GSystem::ResourceWrite (const GString& name, void* data, int64_t size) {
 		return false;
 	}
 	
-	std::unordered_map<std::string, std::pair<int64_t, int64_t>>::const_iterator i = PACKAGE_RESOURCES.find((const char*)name);
+	auto i = PACKAGE_RESOURCES.find((const char*)name);
 	if(i != PACKAGE_RESOURCES.end()) {
 		GSystem::Debug("Resource \"%s\" already exists!\n", (const char*) name);
 		return false;
@@ -875,13 +836,6 @@ bool GSystem::ResourceWrite (const GString& name, void* data, int64_t size) {
 	PACKAGE_RESOURCES[(const char*)name] = std::make_pair(size, offset);
 	return true;
 }
-
-
-
-
-
-
-
 
 
 
@@ -896,6 +850,8 @@ static const char* GetSaveDirectory () {
 	}
 	return SAVE_DIRECTORY.c_str();
 }
+
+
 
 bool GSystem::SaveRead (const GString& name, void* data, int64_t size) {
 	
@@ -949,6 +905,8 @@ bool GSystem::SaveRead (const GString& name, void* data, int64_t size) {
 	return true;
 }
 
+
+
 bool GSystem::SaveWrite (const GString& name, const void* data, int64_t size) {
 	
 #if DEBUG
@@ -994,12 +952,6 @@ bool GSystem::SaveWrite (const GString& name, const void* data, int64_t size) {
 
 
 
-
-
-
-
-
-
 std::vector<GString> GSystem::GetFileNamesInDirectory (const GString& path) {
 	std::vector<GString> files;
 	
@@ -1037,20 +989,28 @@ std::vector<GString> GSystem::GetFileNamesInDirectory (const GString& path) {
 	return files;
 }
 
+
+
 void GSystem::RunPreferredSize (int width, int height) {
 	SCREEN_RECT = GRect(0, 0, width, height);
 	SAFE_RECT = GRect(0, 0, width, height);
 	PREFERRED_RECT = GRect(0, 0, width, height);
 }
 
+
+
 void GSystem::RunPreferredFPS (int fps) {
 	FPS = fps;
 }
+
+
 
 void GSystem::RunPreferredArgs (int argc, char* argv[]) {
 	ARG_C = argc;
 	ARG_V = argv;
 }
+
+
 
 int GSystem::Run () {
 #if TARGET_OS_IPHONE
@@ -1070,17 +1030,7 @@ int GSystem::Run () {
 
 
 
-
-
-
-
-
-
-
-
-
-
-// This is s good reference if matrix math is needed in the future
+// This is s good reference if matrix math if needed in the future
 // https://developer.apple.com/library/content/samplecode/AdoptingMetalI/Listings/MetalTexturedMesh_AAPLMathUtilities_m.html#//apple_ref/doc/uid/TP40017287-MetalTexturedMesh_AAPLMathUtilities_m-DontLinkElementID_5
 
 void GSystem::MatrixSetModelDefault () {
@@ -1123,6 +1073,8 @@ void GSystem::MatrixUpdate () {
 	}
 }
 
+
+
 void GSystem::Print (const char* message, ...) {
 	if (message) {
 		va_list args;
@@ -1131,6 +1083,8 @@ void GSystem::Print (const char* message, ...) {
 		va_end(args);
 	}
 }
+
+
 
 void GSystem::Debug (const char* message, ...) {
 #if DEBUG
@@ -1142,5 +1096,7 @@ void GSystem::Debug (const char* message, ...) {
 	}
 #endif
 }
+
+
 
 #endif // __APPLE__

@@ -1,15 +1,13 @@
 #include "GImage.h"
-#ifdef __APPLE__
-#include <cmath>
-#import <Foundation/Foundation.h>
-#import <Metal/Metal.h>
-#import <MetalKit/MetalKit.h>
+#ifdef __BIONIC__
+#include <GLES2/gl2.h>
 
 
 
-// These are defined in GSystem_Apple.mm
-extern id<MTLDevice> DEVICE;
-extern id<MTLRenderCommandEncoder> RENDER;
+// These shaders are defined in GSystem_Android.cpp
+extern GLint SHADER_XY;
+extern GLint SHADER_RGBA;
+extern GLint SHADER_UV;
 
 
 
@@ -17,12 +15,13 @@ struct GImage::Private {
 	int width, height;
 	GRect src, dst; // Temp data used by the last draw call
 	GColor color; // Temp data used by the last draw call
-	id<MTLTexture> texture;
-	std::vector<Vertex> vertices;
-	id<MTLBuffer> vertexObject;
-	std::vector<uint16_t> indices;
-	id<MTLBuffer> indexObject;
-	inline Private (): width(0), height(0) {}
+	GLuint texture;
+    std::vector<Vertex> vertices;
+	GLuint vertexObject;
+    std::vector<uint16_t> indices;
+	GLuint indexObject;
+	inline Private (): width(0), height(0), texture(0), vertexObject(0), indexObject(0) {}
+	inline ~Private () { if(indexObject) glDeleteBuffers(1, &indexObject); if(vertexObject) glDeleteBuffers(1, &vertexObject); if(texture) glDeleteTextures(1, &texture); indexObject = 0; vertexObject = 0; texture = 0; }
 };
 
 
@@ -39,29 +38,36 @@ GImage::~GImage () {}
 bool GImage::New (const Resource& resource) {
 	_data->width = 0;
 	_data->height = 0;
-	_data->texture = nil;
+	_data->texture = 0;
 	_data->vertices.clear();
-	_data->vertexObject = nil;
+	_data->vertexObject = 0;
 	_data->indices.clear();
-	_data->indexObject = nil;
-	
+	_data->indexObject = 0;
+
 	if(resource.width == 0 || resource.height == 0 || resource.bufferSize <= 0 || resource.buffer == nullptr)
 		return false;
 	
 	_data->width = resource.width;
 	_data->height = resource.height;
-	
-	MTLTextureDescriptor* textureDescriptor = [[MTLTextureDescriptor alloc] init];
-	textureDescriptor.textureType = MTLTextureType2D;
-	textureDescriptor.pixelFormat = MTLPixelFormatRGBA8Unorm;
-	textureDescriptor.width = resource.width;
-	textureDescriptor.height = resource.height;
-	_data->texture = [DEVICE newTextureWithDescriptor:textureDescriptor];
-	if(_data->texture == nil)
-		return false;
-	
-	[_data->texture replaceRegion:MTLRegionMake2D(0, 0, (NSUInteger)resource.width, (NSUInteger)resource.height) mipmapLevel:0 withBytes:resource.buffer bytesPerRow:(NSUInteger)(resource.width * 4)];
-	
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glPixelStorei(GL_PACK_ALIGNMENT, 4);
+	glGenTextures(1, &_data->texture);
+	glBindTexture(GL_TEXTURE_2D, _data->texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Required for non-power of 2 textures
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Required for non-power of 2 textures
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _data->width, _data->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, resource.buffer);
+
+	glGenBuffers(1, &_data->vertexObject);
+	glGenBuffers(1, &_data->indexObject);
+	glBindBuffer(GL_ARRAY_BUFFER, _data->vertexObject);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _data->indexObject);
+	glEnableVertexAttribArray(SHADER_XY);
+	glEnableVertexAttribArray(SHADER_RGBA);
+	glEnableVertexAttribArray(SHADER_UV);
+
 	return true;
 }
 
@@ -98,14 +104,13 @@ void GImage::Draw () {
 
 
 void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
-	if(RENDER == nil || _data->texture == nil)
+	if(!_data->texture)
 		return;
-	
+
 	if(_data->indices.size() != 6) {
 		_data->indices = {0, 1, 2, 1, 2, 3};
-		_data->indexObject = [DEVICE newBufferWithBytes:_data->indices.data() length:(sizeof(uint16_t) * _data->indices.size()) options:MTLResourceStorageModeShared];
 	}
-	
+
 	if(_data->vertices.size() != 4 || _data->src != src || _data->dst != dst || _data->color != color) {
 		_data->src = src;
 		_data->dst = dst;
@@ -143,25 +148,29 @@ void GImage::Draw (const GRect& src, const GRect& dst, const GColor& color) {
 		_data->vertices[3].rgba[1] = color.GetGreen();
 		_data->vertices[3].rgba[2] = color.GetBlue();
 		_data->vertices[3].rgba[3] = color.GetAlpha();
-		_data->vertexObject = [DEVICE newBufferWithBytes:_data->vertices.data() length:(sizeof(Vertex) * _data->vertices.size()) options:MTLResourceStorageModeShared];
 	}
-	
-	[RENDER setFragmentTexture:_data->texture atIndex:0];
-	[RENDER setVertexBuffer:_data->vertexObject offset:0 atIndex:0];
-	[RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indices.size() indexType:MTLIndexTypeUInt16 indexBuffer:_data->indexObject indexBufferOffset:0];
+
+	glBindBuffer(GL_ARRAY_BUFFER, _data->vertexObject);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * _data->vertices.size(), _data->vertices.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _data->indexObject);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _data->indices.size(), _data->indices.data(), GL_STATIC_DRAW);
+	glBindTexture(GL_TEXTURE_2D, _data->texture);
+	glVertexAttribPointer(SHADER_XY, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)0);
+	glVertexAttribPointer(SHADER_RGBA, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (const void*)(sizeof(float) * 2));
+	glVertexAttribPointer(SHADER_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)(sizeof(float) * 2 + sizeof(uint8_t) * 4));
+	glDrawElements(GL_TRIANGLES, (GLsizei)_data->indices.size(), GL_UNSIGNED_SHORT, nullptr);
 }
 
 
 
 void GImage::DrawLine (const GPoint& a, const GPoint& b, int width, const GColor& color) {
-	if(RENDER == nil || _data->texture == nil)
+	if(!_data->texture)
 		return;
-	
+
 	if(_data->indices.size() != 6) {
 		_data->indices = {0, 1, 2, 1, 2, 3};
-		_data->indexObject = [DEVICE newBufferWithBytes:_data->indices.data() length:(sizeof(uint16_t) * _data->indices.size()) options:MTLResourceStorageModeShared];
 	}
-	
+
 	GRect src(a.x, a.y, width, 0);
 	GRect dst(b.x, b.y, width, 0);
 	if(_data->vertices.size() != 4 || _data->src != src || _data->dst != dst || _data->color != color) {
@@ -204,20 +213,25 @@ void GImage::DrawLine (const GPoint& a, const GPoint& b, int width, const GColor
 		_data->vertices[3].rgba[1] = color.GetGreen();
 		_data->vertices[3].rgba[2] = color.GetBlue();
 		_data->vertices[3].rgba[3] = color.GetAlpha();
-		_data->vertexObject = [DEVICE newBufferWithBytes:_data->vertices.data() length:(sizeof(Vertex) * _data->vertices.size()) options:MTLResourceStorageModeShared];
 	}
-	
-	[RENDER setFragmentTexture:_data->texture atIndex:0];
-	[RENDER setVertexBuffer:_data->vertexObject offset:0 atIndex:0];
-	[RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indices.size() indexType:MTLIndexTypeUInt16 indexBuffer:_data->indexObject indexBufferOffset:0];
+
+	glBindBuffer(GL_ARRAY_BUFFER, _data->vertexObject);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * _data->vertices.size(), _data->vertices.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _data->indexObject);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _data->indices.size(), _data->indices.data(), GL_STATIC_DRAW);
+	glBindTexture(GL_TEXTURE_2D, _data->texture);
+	glVertexAttribPointer(SHADER_XY, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)0);
+	glVertexAttribPointer(SHADER_RGBA, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (const void*)(sizeof(float) * 2));
+	glVertexAttribPointer(SHADER_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)(sizeof(float) * 2 + sizeof(uint8_t) * 4));
+	glDrawElements(GL_TRIANGLES, (GLsizei)_data->indices.size(), GL_UNSIGNED_SHORT, nullptr);
 }
 
 
 
 void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int sides) {
-	if(RENDER == nil || _data->texture == nil)
+	if(!_data->texture)
 		return;
-	
+
 	if(_data->indices.size() != sides * 3 - 2) {
 		_data->indices.resize(sides * 3 - 2);
 		for(int i = 2; i < sides; i++) {
@@ -225,9 +239,8 @@ void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int sides
 			_data->indices[(i - 2) * 3 + 1] = i - 1;
 			_data->indices[(i - 2) * 3 + 2] = i;
 		}
-		_data->indexObject = [DEVICE newBufferWithBytes:_data->indices.data() length:(sizeof(uint16_t) * _data->indices.size()) options:MTLResourceStorageModeShared];
 	}
-	
+
 	GRect src(0, 0, _data->width, _data->height);
 	if(_data->vertices.size() != sides || _data->src != src || _data->dst != dst || _data->color != color) {
 		_data->src = src;
@@ -247,24 +260,33 @@ void GImage::DrawEllipse (const GRect& dst, const GColor& color, const int sides
 			_data->vertices[i].rgba[2] = color.GetBlue();
 			_data->vertices[i].rgba[3] = color.GetAlpha();
 		}
-		_data->vertexObject = [DEVICE newBufferWithBytes:_data->vertices.data() length:(sizeof(Vertex) * _data->vertices.size()) options:MTLResourceStorageModeShared];
 	}
-	
-	[RENDER setFragmentTexture:_data->texture atIndex:0];
-	[RENDER setVertexBuffer:_data->vertexObject offset:0 atIndex:0];
-	[RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_data->indices.size() indexType:MTLIndexTypeUInt16 indexBuffer:_data->indexObject indexBufferOffset:0];
+
+	glBindBuffer(GL_ARRAY_BUFFER, _data->vertexObject);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * _data->vertices.size(), _data->vertices.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _data->indexObject);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _data->indices.size(), _data->indices.data(), GL_STATIC_DRAW);
+	glBindTexture(GL_TEXTURE_2D, _data->texture);
+	glVertexAttribPointer(SHADER_XY, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)0);
+	glVertexAttribPointer(SHADER_RGBA, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (const void*)(sizeof(float) * 2));
+	glVertexAttribPointer(SHADER_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)(sizeof(float) * 2 + sizeof(uint8_t) * 4));
+	glDrawElements(GL_TRIANGLES, (GLsizei)_data->indices.size(), GL_UNSIGNED_SHORT, nullptr);
 }
 
 
 
 void GImage::DrawVertices (const std::vector<Vertex>& vertices_, const std::vector<uint16_t>& indices_) {
-	if(RENDER != nil && _data->texture != nil) {
-		_data->indexObject = [DEVICE newBufferWithBytes:indices_.data() length:(sizeof(uint16_t) * indices_.size()) options:MTLResourceStorageModeShared];
-		_data->vertexObject = [DEVICE newBufferWithBytes:vertices_.data() length:(sizeof(Vertex) * vertices_.size()) options:MTLResourceStorageModeShared];
-		[RENDER setFragmentTexture:_data->texture atIndex:0];
-		[RENDER setVertexBuffer:_data->vertexObject offset:0 atIndex:0];
-		[RENDER drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:indices_.size() indexType:MTLIndexTypeUInt16 indexBuffer:_data->indexObject indexBufferOffset:0];
-	}
+	if(!_data->texture)
+		return;
+	glBindBuffer(GL_ARRAY_BUFFER, _data->vertexObject);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices_.size(), vertices_.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _data->indexObject);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * indices_.size(), indices_.data(), GL_STATIC_DRAW);
+	glBindTexture(GL_TEXTURE_2D, _data->texture);
+	glVertexAttribPointer(SHADER_XY, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)0);
+	glVertexAttribPointer(SHADER_RGBA, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (const void*)(sizeof(float) * 2));
+	glVertexAttribPointer(SHADER_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)(sizeof(float) * 2 + sizeof(uint8_t) * 4));
+	glDrawElements(GL_TRIANGLES, (GLsizei)indices_.size(), GL_UNSIGNED_SHORT, nullptr);
 }
 
 
@@ -278,31 +300,31 @@ bool GImage::Resource::NewFromFile (const GString& path) {
 	if(!GSystem::ResourceReadFromFile(path, fileBuffer.get(), fileSize))
 		return false;
 	
-	CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8*)fileBuffer.get(), (CFIndex)fileSize, kCFAllocatorNull);
-	CGImageSourceRef imageSource = CGImageSourceCreateWithData(data, nullptr);
-	CFRelease(data);
-	if(imageSource == nullptr)
-		return false;
+	//CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8*)fileBuffer.get(), (CFIndex)fileSize, kCFAllocatorNull);
+	//CGImageSourceRef imageSource = CGImageSourceCreateWithData(data, nullptr);
+	//CFRelease(data);
+	//if(imageSource == nullptr)
+	//	return false;
 	
-	CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, nullptr);
-	CFRelease(imageSource);
-	if(image == nullptr)
-		return false;
+	//CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, nullptr);
+	//CFRelease(imageSource);
+	//if(image == nullptr)
+	//	return false;
 	
-	width = (int32_t)CGImageGetWidth(image);
-	height = (int32_t)CGImageGetHeight(image);
-	bufferSize = width * height * 4;
-	buffer = new uint8_t[bufferSize];
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	CGContextRef context = CGBitmapContextCreate(buffer, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast);
-	CGContextSetBlendMode(context, kCGBlendModeCopy);
-	CGContextDrawImage(context, CGRectMake((CGFloat)0, (CGFloat)0, (CGFloat)width, (CGFloat)height), image);
-	CGContextRelease(context);
-	CGColorSpaceRelease(colorSpace);
-	CGImageRelease(image);
+	//width = (int32_t)CGImageGetWidth(image);
+	//height = (int32_t)CGImageGetHeight(image);
+	//bufferSize = width * height * 4;
+	//buffer = new uint8_t[bufferSize];
+	//CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	//CGContextRef context = CGBitmapContextCreate(buffer, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast);
+	//CGContextSetBlendMode(context, kCGBlendModeCopy);
+	//CGContextDrawImage(context, CGRectMake((CGFloat)0, (CGFloat)0, (CGFloat)width, (CGFloat)height), image);
+	//CGContextRelease(context);
+	//CGColorSpaceRelease(colorSpace);
+	//CGImageRelease(image);
 	return true;
 }
 
 
 
-#endif // __APPLE__
+#endif // __BIONIC__

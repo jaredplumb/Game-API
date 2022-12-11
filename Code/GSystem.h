@@ -89,8 +89,8 @@ public:
 	static int Run ();
 	
 	// Typical usage is to set the matrix to default, then scale, then rotate, then translate, then update the matrix
-	static void MatrixSetModelDefault ();		// Set model to identity
-	static void MatrixSetProjectionDefault ();	// Set projection to an ortho 2D view
+	static inline void MatrixSetModelDefault (); // Set model to identity
+	static void MatrixSetProjectionDefault (); // Set projection to an ortho 2D view
 	static void MatrixTranslateModel (float x, float y);
 	static void MatrixTranslateProjection (float x, float y);
 	static void MatrixScaleModel (float x, float y);
@@ -129,18 +129,21 @@ public:
 		return ref;
 	}
 	
+	// Touch locations are relative to the preferred rect
 	static inline int NewTouchCallback (void (* callback) (int x, int y)) {
 		int ref = GetUniqueRef();
 		TOUCH_CALLBACKS.insert(std::make_pair(ref, callback));
 		return ref;
 	}
 	
+	// Touch locations are relative to the preferred rect
 	static inline int NewTouchUpCallback (void (* callback) (int x, int y)) {
 		int ref = GetUniqueRef();
 		TOUCHUP_CALLBACKS.insert(std::make_pair(ref, callback));
 		return ref;
 	}
 	
+	// Touch locations are relative to the preferred rect
 	static inline int NewTouchMoveCallback (void (* callback) (int x, int y)) {
 		int ref = GetUniqueRef();
 		TOUCHMOVE_CALLBACKS.insert(std::make_pair(ref, callback));

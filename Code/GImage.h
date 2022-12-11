@@ -3,6 +3,8 @@
 
 #include "GTypes.h"
 #include "GSystem.h"
+#include <cstdint>
+#include <memory>
 
 class GImage {
 public:
@@ -16,9 +18,8 @@ public:
 	~GImage ();
 	
 	bool New (const Resource& resource);
-	bool New (const GString& resource);
+	inline bool New (const GString& resource) { return New(Resource(resource)); }
 	bool New (const GColor& color = GColor::WHITE);
-	void Delete ();
 	
 	int GetWidth () const;
 	int GetHeight () const;
@@ -29,6 +30,7 @@ public:
 	void Draw (const GRect& src, const GRect& dst, const GColor& color = GColor::WHITE);
 	void DrawLine (const GPoint& a, const GPoint& b, int width, const GColor& color = GColor::WHITE);
 	void DrawEllipse (const GRect& dst, const GColor& color = GColor::WHITE, const int sides = 45);
+	void DrawVertices (const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices);
 	
 	// These are inline overload functions to allow for more drawing options
 	inline void Draw (int x, int y, float alpha = 1.0f)								{ Draw(GetRect(), GetRect().Offset(x, y), GColor(0xff, 0xff, 0xff, (uint8_t)(alpha * 255.0f))); }
@@ -36,10 +38,6 @@ public:
 	inline void Draw (const GRect& src, int x, int y, float alpha = 1.0f)			{ Draw(src, GRect(x, y, src.width, src.height), GColor(0xff, 0xff, 0xff, (uint8_t)(alpha * 255.0f))); }
 	inline void Draw (const GRect& dst, float alpha = 1.0f)							{ Draw(GetRect(), dst, GColor(0xff, 0xff, 0xff, (uint8_t)(alpha * 255.0f))); }
 	inline void DrawRect (const GRect& dst, const GColor& color = GColor::WHITE)	{ Draw(GetRect(), dst, color); }
-	
-	// DrawQuad will always reset the vertex data, and DrawVertices will always reset the vertex and index data
-	void DrawQuad (const float vertices[8], const float coords[8], const GColor& color = GColor::WHITE);
-	void DrawVertices (const Vertex verticies[], int verticesCount, const uint16_t indicies[], int indiciesCount);
 	
 	struct Vertex {
 		float xy[2];
@@ -61,8 +59,8 @@ public:
 	};
 	
 private:
-	struct PrivateData;
-	PrivateData* _data;
+	struct Private;
+	std::unique_ptr<Private> _data;
 };
 
 #endif // G_IMAGE_H_

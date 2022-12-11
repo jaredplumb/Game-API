@@ -8,6 +8,9 @@
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
+#include <unordered_map>
+
+
 
 static GRect			SCREEN_RECT;
 static GRect			SAFE_RECT;
@@ -28,7 +31,11 @@ GLint					SHADER_RGBA = 0; // Non-static to allow for extern access from GImage
 GLint					SHADER_UV = 0; // Non-static to allow for extern access from GImage
 static GLint			SHADER_TEXTURE = 0;
 
+
+
 extern int main (int argc, char* argv[]);
+
+
 
 static GLuint AndroidLoadShader (GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
@@ -53,6 +60,8 @@ static GLuint AndroidLoadShader (GLenum type, const char* source) {
     }
     return shader;
 }
+
+
 
 static void AndroidStartupOpenGL () {
     DISPLAY = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -215,6 +224,8 @@ static void AndroidStartupOpenGL () {
     glUniform1i(SHADER_TEXTURE, 0);
 }
 
+
+
 static void AndroidShutdownOpenGL () {
     glDeleteShader(VERTEX_SHADER);
     glDeleteShader(FRAGMENT_SHADER);
@@ -224,6 +235,8 @@ static void AndroidShutdownOpenGL () {
     eglDestroySurface(DISPLAY, SURFACE);
     eglTerminate(DISPLAY);
 }
+
+
 
 static void AndroidCommandHandler (android_app* app, int32_t cmd) {
     switch (cmd) {
@@ -238,11 +251,14 @@ static void AndroidCommandHandler (android_app* app, int32_t cmd) {
     }
 }
 
-static void AndroidInputHandler () {
-    for(int i = 0; i < ANDROID_APP->motionEventsCount; i++) {
 
-    }
+
+static void AndroidInputHandler () {
+    //for(int i = 0; i < ANDROID_APP->motionEventsCount; i++) {
+    //}
 }
+
+
 
 static void AndroidGraphicsHandler () {
     eglMakeCurrent(DISPLAY, SURFACE, SURFACE, CONTEXT);
@@ -256,7 +272,6 @@ static void AndroidGraphicsHandler () {
     GSystem::RunDrawCallbacks();
     eglSwapBuffers(DISPLAY, SURFACE);
 }
-
 
 
 
@@ -276,23 +291,488 @@ int GSystem::GetFPS () {
 	return FPS;
 }
 
-void GSystem::SetDefaultWD () {
-    // Android's working directory is root, so it should not be used
-    // and the asset manager should be used, which is setup in GFile
-}
 
-const GString& GSystem::GetSaveDirectory () {
-	static GString DIRECTORY;
-	//if(DIRECTORY.IsEmpty()) {
-	//	NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-	//	if([paths count] > 0)
-	//		_DIRECTORY.New([[paths objectAtIndex:0] fileSystemRepresentation]);
+
+static FILE* PACKAGE_FILE = nullptr;
+static std::unordered_map<std::string, std::pair<int64_t, int64_t>> PACKAGE_RESOURCES;
+
+
+
+static const char* GetResourceDirectory () {
+	static std::string RESOURCE_DIRECTORY;
+	//if(RESOURCE_DIRECTORY.empty()) {
+	//	if([NSBundle mainBundle] != nil && [[NSBundle mainBundle] resourceURL] != nil && [[NSBundle mainBundle] bundleIdentifier] != nil)
+	//		RESOURCE_DIRECTORY = std::string([[[NSBundle mainBundle] resourceURL] fileSystemRepresentation]);
+	//	else
+	//		RESOURCE_DIRECTORY = "./";
+	//	GSystem::Debug("Resources: %s ... ", RESOURCE_DIRECTORY.c_str());
 	//}
-	return DIRECTORY;
+	return RESOURCE_DIRECTORY.c_str();
 }
 
 
 
+bool GSystem::PackageOpen (const GString& resource) {
+	if(PACKAGE_FILE != nullptr)
+		PackageClose();
+	
+	GSystem::Debug("Opening package \"%s\"... ", (const char*)resource);
+	
+	PACKAGE_FILE = fopen(GString().Format("%s/%s", GetResourceDirectory(), (const char*)resource), "rb");
+	if(PACKAGE_FILE == nullptr) {
+		GSystem::Debug("Failed to open package for reading!\n");
+		return false;
+	}
+	
+	int64_t headerOffset;
+	if(fread(&headerOffset, sizeof(headerOffset), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to read package header offset!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	if(fseeko(PACKAGE_FILE, headerOffset, SEEK_SET) != 0) { // The header is actually at the end of the file
+		GSystem::Debug("Failed to set package position to header!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	int64_t bufferSize;
+	if(fread(&bufferSize, sizeof(bufferSize), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to read package header buffer size!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	int64_t archiveSize;
+	if(fread(&archiveSize, sizeof(archiveSize), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to read package header archive size!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	off_t current = ftello(PACKAGE_FILE);
+	if(fseeko(PACKAGE_FILE, 0, SEEK_END) != 0 || ftello(PACKAGE_FILE) - current < archiveSize) {
+		GSystem::Debug("Package file is corrupt!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	fseeko(PACKAGE_FILE, current, SEEK_SET);
+	
+	std::unique_ptr<uint8_t[]> archive(new uint8_t[archiveSize]);
+	if(fread(archive.get(), archiveSize * sizeof(uint8_t), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to read package header archive!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	std::unique_ptr<uint8_t[]> buffer(new uint8_t[bufferSize]);
+	if(GArchive::Decompress(archive.get(), archiveSize * sizeof(uint8_t), buffer.get(), bufferSize * sizeof(uint8_t)) != bufferSize) {
+		GSystem::Debug("Failed to decompress package header data!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	int64_t count = *((int64_t*)(buffer.get()));
+	if(count <= 0) {
+		GSystem::Debug("Package contains no resources!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return true;
+	}
+	
+	int64_t bufferOffset = sizeof(count);
+	for(int64_t i = 0; i < count; i++) {
+		char* resourceName = (char*)(buffer.get() + bufferOffset);
+		bufferOffset += GString::strlen(resourceName) + 1;
+		int64_t resourceSize = *((int64_t*)(buffer.get() + bufferOffset));
+		bufferOffset += sizeof(resourceSize);
+		int64_t resourceOffset = *((int64_t*)(buffer.get() + bufferOffset));
+		bufferOffset += sizeof(resourceOffset);
+		PACKAGE_RESOURCES[resourceName] = std::make_pair(resourceSize, resourceOffset);
+	}
+	
+	GSystem::Debug("Done\n");
+	return true;
+}
+
+
+
+bool GSystem::PackageOpenForWrite (const GString& resource) {
+	/*
+    if(PACKAGE_FILE != nullptr)
+		PackageCloseForWrite();
+	
+	GSystem::Debug("Opening package \"%s\" for writing... ", (const char*)resource);
+	
+	PACKAGE_FILE = fopen(GString().Format("%s/%s", GetResourceDirectory(), (const char*)resource), "wb+");
+	if(PACKAGE_FILE == nullptr) {
+		GSystem::Debug("Failed to open package for writing!\n");
+		return false;
+	}
+	
+	int64_t headerOffset;
+	if(fwrite(&headerOffset, sizeof(headerOffset), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to write placeholder package header offset!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	GSystem::Debug("Done\n");
+	 */
+	return true;
+}
+
+
+
+bool GSystem::PackageClose () {
+	if(PACKAGE_FILE) {
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+	}
+	if(!PACKAGE_RESOURCES.empty())
+		PACKAGE_RESOURCES.clear();
+	return true;
+}
+
+
+
+bool GSystem::PackageCloseForWrite () {
+	/*
+    if(PACKAGE_FILE == nullptr) {
+		GSystem::Debug("Package is not open for writing!\n");
+		return false;
+	}
+	
+	int64_t headerOffset = ftello(PACKAGE_FILE);
+	if(headerOffset <= sizeof(headerOffset) || PACKAGE_RESOURCES.empty()) {
+		GSystem::Debug("No resources were written to the package!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	int64_t bufferSize = sizeof(int64_t); // Save room for the number of resources
+	for(auto i = PACKAGE_RESOURCES.begin(); i != PACKAGE_RESOURCES.end(); i++)
+		bufferSize += i->first.length() + 1 + sizeof(int64_t) + sizeof(int64_t);
+	
+	std::unique_ptr<uint8_t[]> buffer(new uint8_t[bufferSize]);
+	*((int64_t*)buffer.get()) = PACKAGE_RESOURCES.size();
+	int64_t bufferOffset = sizeof(int64_t);
+	for(auto i = PACKAGE_RESOURCES.begin(); i != PACKAGE_RESOURCES.end(); i++) {
+		GString::strcpy((char*)(buffer.get() + bufferOffset), i->first.c_str());
+		bufferOffset += i->first.length() + 1;
+		*((int64_t*)(buffer.get() + bufferOffset)) = i->second.first;
+		bufferOffset += sizeof(int64_t);
+		*((int64_t*)(buffer.get() + bufferOffset)) = i->second.second;
+		bufferOffset += sizeof(int64_t);
+	}
+	
+	int64_t archiveSize = GArchive::GetBufferBounds(bufferSize);
+	std::unique_ptr<uint8_t[]> archive(new uint8_t[archiveSize]);
+	archiveSize = GArchive::Compress(buffer.get(), bufferSize * sizeof(uint8_t), archive.get(), archiveSize * sizeof(uint8_t));
+	if(archiveSize == 0) {
+		GSystem::Debug("Failed to compress package header data!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	if(fwrite(&bufferSize, sizeof(bufferSize), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to write package header buffer size!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	if(fwrite(&archiveSize, sizeof(archiveSize), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to write package header archive size!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	if(fwrite(archive.get(), archiveSize * sizeof(uint8_t), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to write package header archive!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	if(fseeko(PACKAGE_FILE, 0, SEEK_SET) != 0 || fwrite(&headerOffset, sizeof(headerOffset), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to write package header offset!\n");
+		fclose(PACKAGE_FILE);
+		PACKAGE_FILE = nullptr;
+		return false;
+	}
+	
+	fclose(PACKAGE_FILE);
+	PACKAGE_FILE = nullptr;
+	PACKAGE_RESOURCES.clear();
+	 */
+	return true;
+}
+
+
+
+int64_t GSystem::ResourceSize (const GString& name) {
+	if(PACKAGE_FILE == nullptr) // Open default package if none exists
+		PackageOpen();
+	auto i = PACKAGE_RESOURCES.find((const char*)name);
+	return i != PACKAGE_RESOURCES.end() ? i->second.first : ResourceSizeFromFile(name);
+}
+
+
+
+int64_t GSystem::ResourceSizeFromFile (const GString& path) {
+	FILE* file = fopen(GString().Format("%s/%s", GetResourceDirectory(), (const char*)path), "rb");
+	if(file == nullptr) {
+		GSystem::Debug("Failed to find resource \"%s\"!\n", (const char*)path);
+		return 0;
+	}
+	fseeko(file, 0, SEEK_END);
+	int64_t size = ftello(file);
+	fclose(file);
+	return size;
+}
+
+
+
+bool GSystem::ResourceRead (const GString& name, void* data, int64_t size) {
+	if(PACKAGE_FILE == nullptr) // Open default package if none exists
+		PackageOpen();
+	
+	if(PACKAGE_FILE == nullptr) // No package file, attempting to find the raw resource in the resource location
+		return ResourceReadFromFile(name, data, size);
+	
+	auto resource = PACKAGE_RESOURCES.find((const char*)name);
+	if(resource == PACKAGE_RESOURCES.end()) // Failed to find the resource in the package, attempting to find the raw resource in the resource location
+		return ResourceReadFromFile(name, data, size);
+	
+	int64_t archiveSize;
+	if(fseeko(PACKAGE_FILE, resource->second.second, SEEK_SET) != 0 || fread(&archiveSize, sizeof(archiveSize), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to read archive size for resource \"%s\"!\n", (const char*)name);
+		return false;
+	}
+	
+	off_t current = ftello(PACKAGE_FILE);
+	if(fseeko(PACKAGE_FILE, 0, SEEK_END) != 0 || ftello(PACKAGE_FILE) - current < archiveSize) {
+		GSystem::Debug("Package is corrupt for resource \"%s\"!\n", (const char*)name);
+		return false;
+	}
+	fseeko(PACKAGE_FILE, current, SEEK_SET);
+	
+	std::unique_ptr<uint8_t[]> archive(new uint8_t[archiveSize]);
+	if(fread(archive.get(), archiveSize * sizeof(uint8_t), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to read archive for resource \"%s\"!\n", (const char*)name);
+		return false;
+	}
+	
+	if(GArchive::Decompress(archive.get(), archiveSize, data, size) != size) {
+		GSystem::Debug("Failed to decompress resource \"%s\"!\n", (const char*)name);
+		return false;
+	}
+	
+	return true;
+}
+
+
+
+bool GSystem::ResourceReadFromFile (const GString& path, void* data, int64_t size) {
+	FILE* file = fopen(GString().Format("%s/%s", GetResourceDirectory(), (const char*)path), "rb");
+	if(file == nullptr) {
+		GSystem::Debug("Failed to open resource \"%s\"!\n", (const char*)path);
+		return false;
+	}
+	
+	if(fseeko(file, 0, SEEK_END) != 0 || ftello(file) < size) {
+		GSystem::Debug("Resource \"%s\" is larger than data buffer!\n", (const char*)path);
+		fclose(file);
+		return false;
+	}
+	fseeko(file, 0, SEEK_SET);
+	
+	if(fread(data, size, 1, file) != 1) {
+		GSystem::Debug("Failed to read resource \"%s\"!\n", (const char*)path);
+		fclose(file);
+		return false;
+	}
+	
+	fclose(file);
+	return true;
+}
+
+
+
+bool GSystem::ResourceWrite (const GString& name, void* data, int64_t size) {
+	/*
+    if(PACKAGE_FILE == nullptr) // Open default package if none exists
+		PackageOpenForWrite();
+	
+	if(PACKAGE_FILE == nullptr) {
+		GSystem::Debug("Package file is not open for writing!\n");
+		return false;
+	}
+	
+	int64_t archiveSize = GArchive::GetBufferBounds(size);
+	std::unique_ptr<uint8_t[]> archive(new uint8_t[archiveSize]);
+	archiveSize = GArchive::Compress(data, size, archive.get(), archiveSize);
+	if(archiveSize == 0) {
+		GSystem::Debug("Failed to compress resource data!\n");
+		return false;
+	}
+	
+	int64_t offset = ftello(PACKAGE_FILE);
+	
+	if(fwrite(&archiveSize, sizeof(archiveSize), 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to write resource data archive size!\n");
+		return false;
+	}
+	
+	if(fwrite(archive.get(), archiveSize, 1, PACKAGE_FILE) != 1) {
+		GSystem::Debug("Failed to write resource data archive!\n");
+		return false;
+	}
+	
+	auto i = PACKAGE_RESOURCES.find((const char*)name);
+	if(i != PACKAGE_RESOURCES.end()) {
+		GSystem::Debug("Resource \"%s\" already exists!\n", (const char*) name);
+		return false;
+	}
+	
+	PACKAGE_RESOURCES[(const char*)name] = std::make_pair(size, offset);
+	 */
+	return true;
+}
+
+
+
+static const char* GetSaveDirectory () {
+	static std::string SAVE_DIRECTORY;
+	//if(SAVE_DIRECTORY.empty()) {
+	//	NSURL* support = [[[NSFileManager defaultManager] URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil] URLByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
+	//	if([[NSFileManager defaultManager] fileExistsAtPath:[support path]] == NO)
+	//		[[NSFileManager defaultManager] createDirectoryAtPath:[support path] withIntermediateDirectories:YES attributes:nil error:nil];
+	//	SAVE_DIRECTORY = std::string([support fileSystemRepresentation]);
+	//	GSystem::Debug("Saves: \"%s\"\n", SAVE_DIRECTORY.c_str());
+	//}
+	return SAVE_DIRECTORY.c_str();
+}
+
+
+
+bool GSystem::SaveRead (const GString& name, void* data, int64_t size) {
+	/*
+#if DEBUG
+	GetSaveDirectory(); // This is to make the debug output in GetSaveDirectory happen before the debug output in this function
+	GSystem::Debug("Reading save \"%s\" ... ", (const char*)name);
+	int64_t elapse = GSystem::GetMilliseconds();
+#endif
+	
+	FILE* file = fopen(GString().Format("%s/%s.sav", GetSaveDirectory(), (const char*)name), "rb");
+	if(file == nullptr) {
+		GSystem::Debug("Failed to open save for reading!\n");
+		return false;
+	}
+	
+	int64_t archiveSize;
+	if(fread(&archiveSize, sizeof(archiveSize), 1, file) != 1 || archiveSize <= 0) {
+		GSystem::Debug("Failed to read save data archive size!\n");
+		fclose(file);
+		return false;
+	}
+	
+	off_t current = ftello(file);
+	if(fseeko(file, 0, SEEK_END) != 0 || ftello(file) - current < archiveSize) {
+		GSystem::Debug("Save file is corrupt!\n");
+		fclose(file);
+		return false;
+	}
+	fseeko(file, current, SEEK_SET);
+	
+	std::unique_ptr<uint8_t[]> archive(new uint8_t[archiveSize]);
+	if(fread(archive.get(), archiveSize * sizeof(uint8_t), 1, file) != 1) {
+		GSystem::Debug("Failed to read save data archive!\n");
+		fclose(file);
+		return false;
+	}
+	
+	if(GArchive::Decompress(archive.get(), archiveSize, data, size) != size) {
+		GSystem::Debug("Failed to decompress save data!\n");
+		fclose(file);
+		return false;
+	}
+	
+	fclose(file);
+	
+#if DEBUG
+	elapse = GSystem::GetMilliseconds() - elapse;
+	GSystem::Debug("Done (%d ms)\n", (int)elapse);
+#endif
+	*/
+	return true;
+}
+
+
+
+bool GSystem::SaveWrite (const GString& name, const void* data, int64_t size) {
+	/*
+#if DEBUG
+	GSystem::Debug("Writing save \"%s\" ... ", (const char*)name);
+	int64_t elapse = GSystem::GetMilliseconds();
+#endif
+	
+	int64_t archiveSize = GArchive::GetBufferBounds(size);
+	std::unique_ptr<uint8_t[]> archive(new uint8_t[archiveSize]);
+	archiveSize = GArchive::Compress(data, size, archive.get(), archiveSize);
+	if(archiveSize == 0) {
+		GSystem::Debug("Failed to compress save data!\n");
+		return false;
+	}
+	
+	FILE* file = fopen(GString().Format("%s/%s.sav", (const char*)GetSaveDirectory(), (const char*)name), "wb+");
+	if(file == nullptr) {
+		GSystem::Debug("Failed to open save for writing!\n");
+		return false;
+	}
+	
+	if(fwrite(&archiveSize, sizeof(archiveSize), 1, file) != 1) {
+		GSystem::Debug("Failed to write save data archive size!\n");
+		fclose(file);
+		return false;
+	}
+	
+	if(fwrite(archive.get(), archiveSize, 1, file) != 1) {
+		GSystem::Debug("Failed to write save data archive!\n");
+		fclose(file);
+		return false;
+	}
+	
+	fclose(file);
+	
+#if DEBUG
+	elapse = GSystem::GetMilliseconds() - elapse;
+	GSystem::Debug("Done (%d bytes compressed to %d bytes in %d ms)\n", (int)size, (int)archiveSize, (int)elapse);
+#endif
+	*/
+	return true;
+}
+
+
+
+
+
+std::vector<GString> GSystem::GetFileNamesInDirectory (const GString& path) {
+	return std::vector<GString>{};
+}
 
 
 
@@ -328,16 +808,6 @@ int GSystem::Run () {
     }
 	return EXIT_SUCCESS;
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
