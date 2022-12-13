@@ -120,14 +120,14 @@ void GNode::SetBlocking (bool blocking) {
 void GNode::SetNodeAsFront () {
 	if(_parent) {
 		if(_parent->_children.front() != this) {
-			std::list<GNode*>::iterator i = std::find(_parent->_children.begin(), _parent->_children.end(), this);
+			auto i = std::find(_parent->_children.begin(), _parent->_children.end(), this);
 			if(i != _parent->_children.end())
 				_parent->_children.splice(_parent->_children.begin(), _parent->_children, i);
 		}
 		_parent->SetNodeAsFront();
 	} else {
 		if(_ROOT_NODE_LIST.front() != this) {
-			std::list<GNode*>::iterator i = std::find(_ROOT_NODE_LIST.begin(), _ROOT_NODE_LIST.end(), this);
+			auto i = std::find(_ROOT_NODE_LIST.begin(), _ROOT_NODE_LIST.end(), this);
 			if(i != _ROOT_NODE_LIST.end())
 				_ROOT_NODE_LIST.splice(_ROOT_NODE_LIST.begin(), _ROOT_NODE_LIST, i);
 		}
@@ -147,7 +147,7 @@ bool GNode::IsBlocking () const {
 }
 
 GNode* GNode::NewNode (const GString& name) {
-	std::unordered_map<std::string, GNode* (*) ()>::const_iterator i = _FACTORY_MAP.find((const char*)name);
+	auto i = _FACTORY_MAP.find((const char*)name);
 	if(i != _FACTORY_MAP.end())
 		return i->second();
 	GSystem::Debug("Node factory map does not contain \"%s\"!\n", (const char*)name);
@@ -220,7 +220,7 @@ void GNode::SendDraw () {
 	
 	if(_exit && SendExit()) {
 		if(!_next.IsEmpty())
-			_AUTO_RUN_LIST.push_back((const char*)_next);
+			_AUTO_RUN_LIST.emplace_back((const char*)_next);
 		if(_parent)
 			_parent->RemoveNode(*this);
 		if(_alloc)
@@ -308,15 +308,15 @@ void GNode::_DrawCallback () {
 		_AUTO_RUN_LIST.erase(_AUTO_RUN_LIST.begin());
 	}
 	
-	for(std::list<GNode*>::iterator i = _ROOT_NODE_LIST.begin(); i != _ROOT_NODE_LIST.end(); i++)
+	for(auto i = _ROOT_NODE_LIST.begin(); i != _ROOT_NODE_LIST.end(); i++)
 		(*i)->SendDraw();
 	
 	while(!_AUTO_DELETE_LIST.empty()) {
 		_AUTO_DELETE_LIST.unique();
 		GNode* node = _AUTO_DELETE_LIST.front();
-		std::list<GNode*>::iterator i = std::find(_ROOT_NODE_LIST.begin(), _ROOT_NODE_LIST.end(), node);
+		auto i = std::find(_ROOT_NODE_LIST.begin(), _ROOT_NODE_LIST.end(), node);
 		if(i != _ROOT_NODE_LIST.end())
-		_ROOT_NODE_LIST.erase(i);
+			_ROOT_NODE_LIST.erase(i);
 		delete node;
 		_AUTO_DELETE_LIST.erase(_AUTO_DELETE_LIST.begin());
 	}
