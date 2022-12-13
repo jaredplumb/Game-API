@@ -21,6 +21,8 @@ static GMatrix32_4x4	MODEL_MATRIX;
 static GMatrix32_4x4	PROJECTION_MATRIX;
 static EGLDisplay       DISPLAY = EGL_NO_DISPLAY;
 static EGLSurface		SURFACE = EGL_NO_SURFACE;
+static EGLint           SURFACE_WIDTH = 0;
+static EGLint           SURFACE_HEIGHT = 0;
 static EGLContext		CONTEXT = EGL_NO_CONTEXT;
 static GLuint			PROGRAM = 0;
 static GLuint           VERTEX_SHADER = 0;
@@ -51,7 +53,7 @@ static GLuint AndroidLoadShader (GLenum type, const char* source) {
             if(infoLen > 1) {
                 auto* infoLog = new GLchar[infoLen + 1];
                 glGetShaderInfoLog(shader, infoLen, nullptr, infoLog);
-                GSystem::Print("Failed to compile shader: %s\n", infoLog);
+                GSystem::Debug("Failed to compile shader: %s\n", infoLog);
                 delete [] infoLog;
             }
             glDeleteShader(shader);
@@ -64,21 +66,24 @@ static GLuint AndroidLoadShader (GLenum type, const char* source) {
 
 
 static void AndroidStartupOpenGL () {
+
+    //ANativeWindow_setFrameRate(ANDROID_APP->window, (float)FPS, ANATIVEWINDOW_FRAME_RATE_COMPATIBILITY_DEFAULT);
+
     DISPLAY = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if(DISPLAY == EGL_NO_DISPLAY) {
-        GSystem::Print("Could not find OpenGL display!\n");
+        GSystem::Debug("Could not find OpenGL display!\n");
         return;
     }
 
     EGLBoolean result = eglInitialize(DISPLAY, nullptr, nullptr);
     if(result != EGL_TRUE) {
-        GSystem::Print("Could not initialize OpenGL display!\n");
+        GSystem::Debug("Could not initialize OpenGL display!\n");
         return;
     }
 
     constexpr EGLint attribs[] = {
-            //EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-            //EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
             EGL_RED_SIZE,       8,
             EGL_GREEN_SIZE,     8,
             EGL_BLUE_SIZE,      8,
@@ -90,13 +95,13 @@ static void AndroidStartupOpenGL () {
     EGLint numConfigs;
     result = eglChooseConfig(DISPLAY, attribs, &config, 1, &numConfigs);
     if(result != EGL_TRUE || numConfigs != 1) {
-        GSystem::Print("Could not choose OpenGL configuration!\n");
+        GSystem::Debug("Could not choose OpenGL configuration!\n");
         return;
     }
 
     SURFACE = eglCreateWindowSurface(DISPLAY, config, ANDROID_APP->window, nullptr);
     if(SURFACE == EGL_NO_SURFACE) {
-        GSystem::Print("Could not create OpenGL window surface!\n");
+        GSystem::Debug("Could not create OpenGL window surface!\n");
         return;
     }
 
@@ -106,13 +111,13 @@ static void AndroidStartupOpenGL () {
     };
     CONTEXT = eglCreateContext(DISPLAY, config, EGL_NO_CONTEXT, contextAttribs);
     if(CONTEXT == EGL_NO_CONTEXT) {
-        GSystem::Print("Could not create OpenGL context!\n");
+        GSystem::Debug("Could not create OpenGL context!\n");
         return;
     }
 
     result = eglMakeCurrent(DISPLAY, SURFACE, SURFACE, CONTEXT);
     if(result != EGL_TRUE) {
-        GSystem::Print("Could not make OpenGL display, surface, and context current!\n");
+        GSystem::Debug("Could not make OpenGL display, surface, and context current!\n");
         return;
     }
 
@@ -121,13 +126,20 @@ static void AndroidStartupOpenGL () {
 #endif
 
     // Find the screen size
-    SCREEN_RECT.x = ANDROID_APP->contentRect.left;
-    SCREEN_RECT.y = ANDROID_APP->contentRect.top;
-    SCREEN_RECT.width = ANDROID_APP->contentRect.right - ANDROID_APP->contentRect.left;
-    SCREEN_RECT.height = ANDROID_APP->contentRect.bottom - ANDROID_APP->contentRect.top;
+    eglQuerySurface(DISPLAY, SURFACE, EGL_WIDTH, &SURFACE_WIDTH);
+    eglQuerySurface(DISPLAY, SURFACE, EGL_HEIGHT, &SURFACE_HEIGHT);
+    SCREEN_RECT.x = 0;
+    SCREEN_RECT.y = 0;
+    SCREEN_RECT.width = SURFACE_WIDTH;
+    SCREEN_RECT.height = SURFACE_HEIGHT;
 
     // Find the safe area within the screen
-    SAFE_RECT = SCREEN_RECT; // TODO: This needs to be adjusted for the insets and navigation areas
+    ARect windowInsets;
+    GameActivity_getWindowInsets(ANDROID_APP->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &windowInsets);
+    SAFE_RECT.x = windowInsets.left;
+    SAFE_RECT.y = windowInsets.top;
+    SAFE_RECT.width = SCREEN_RECT.width - windowInsets.left - windowInsets.right;
+    SAFE_RECT.height = SCREEN_RECT.height - windowInsets.top - windowInsets.bottom;
 
     // If no preferred rect is set, use the safe rect as the preferred rect
     if(PREFERRED_RECT.width == 0 || PREFERRED_RECT.height == 0) {
@@ -137,8 +149,7 @@ static void AndroidStartupOpenGL () {
         PREFERRED_RECT.height = SAFE_RECT.height;
     }
 
-    // Adjust the rect and safe rect if they are not sized correctly for the preferred rect
-    // The preferred rect should entirely fit within the safe rect, and maximize the safe rect to that size
+    // The screen rect and safe rect are adjusted to fit the preferred rect as best as possible
     if(SAFE_RECT.width != PREFERRED_RECT.width) {
         SCREEN_RECT.x = SCREEN_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
         SCREEN_RECT.y = SCREEN_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
@@ -175,7 +186,7 @@ static void AndroidStartupOpenGL () {
     // Create the main shader object
     PROGRAM = glCreateProgram();
     if(PROGRAM == 0) {
-        GSystem::Print("Could not create OpenGL program object!\n");
+        GSystem::Debug("Could not create OpenGL program object!\n");
         return;
     }
 
@@ -208,7 +219,7 @@ static void AndroidStartupOpenGL () {
     glLinkProgram(PROGRAM);
 
     // Setup remaining OpenGL functions
-    glViewport(0, 0, SCREEN_RECT.width, SCREEN_RECT.height);
+    glViewport(0, 0, SURFACE_WIDTH, SURFACE_HEIGHT);
     glActiveTexture(GL_TEXTURE0);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_BLEND);
@@ -253,24 +264,49 @@ static void AndroidCommandHandler (android_app* app, int32_t cmd) {
 
 
 
-static void AndroidInputHandler () {
-    //for(int i = 0; i < ANDROID_APP->motionEventsCount; i++) {
-    //}
+static bool AndroidMotionEventFilter (const GameActivityMotionEvent* event) {
+    if(event) {
+        const GameActivityPointerAxes& pointer = event->pointers[(event->action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT];
+        int x = (int)GameActivityPointerAxes_getX(&pointer) * SCREEN_RECT.width / SURFACE_WIDTH;
+        int y = (int)GameActivityPointerAxes_getY(&pointer) * SCREEN_RECT.height / SURFACE_HEIGHT;
+        switch(event->action & AMOTION_EVENT_ACTION_MASK) {
+            case AMOTION_EVENT_ACTION_DOWN:
+            case AMOTION_EVENT_ACTION_POINTER_DOWN:
+                GSystem::RunTouchCallbacks(x - PREFERRED_RECT.x, y - PREFERRED_RECT.y);
+                break;
+            case AMOTION_EVENT_ACTION_UP:
+            case AMOTION_EVENT_ACTION_CANCEL:
+            case AMOTION_EVENT_ACTION_POINTER_UP:
+                GSystem::RunTouchUpCallbacks(x - PREFERRED_RECT.x, y - PREFERRED_RECT.y);
+                break;
+            case AMOTION_EVENT_ACTION_MOVE:
+            case AMOTION_EVENT_ACTION_HOVER_MOVE:
+                GSystem::RunTouchMoveCallbacks(x - PREFERRED_RECT.x, y - PREFERRED_RECT.y);
+                break;
+            default:
+                break;
+        }
+    }
+    return false;
 }
 
 
 
 static void AndroidGraphicsHandler () {
-    eglMakeCurrent(DISPLAY, SURFACE, SURFACE, CONTEXT);
-    glViewport(0, 0, SCREEN_RECT.width, SCREEN_RECT.height);
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(PROGRAM);
-    GSystem::MatrixSetModelDefault();
-    GSystem::MatrixSetProjectionDefault();
-    GSystem::MatrixUpdate();
-    GSystem::RunDrawCallbacks();
-    eglSwapBuffers(DISPLAY, SURFACE);
+    if(DISPLAY != EGL_NO_DISPLAY && SURFACE != EGL_NO_SURFACE && CONTEXT != EGL_NO_CONTEXT) {
+        eglMakeCurrent(DISPLAY, SURFACE, SURFACE, CONTEXT);
+        eglQuerySurface(DISPLAY, SURFACE, EGL_WIDTH, &SURFACE_WIDTH);
+        eglQuerySurface(DISPLAY, SURFACE, EGL_HEIGHT, &SURFACE_HEIGHT);
+        glViewport(0, 0, SURFACE_WIDTH, SURFACE_HEIGHT);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(PROGRAM);
+        GSystem::MatrixSetModelDefault();
+        GSystem::MatrixSetProjectionDefault();
+        GSystem::MatrixUpdate();
+        GSystem::RunDrawCallbacks();
+        eglSwapBuffers(DISPLAY, SURFACE);
+    }
 }
 
 
@@ -298,16 +334,14 @@ static std::unordered_map<std::string, std::pair<int64_t, int64_t>> PACKAGE_RESO
 
 
 
-static const char* GetResourceDirectory () {
-	static std::string RESOURCE_DIRECTORY;
-	//if(RESOURCE_DIRECTORY.empty()) {
-	//	if([NSBundle mainBundle] != nil && [[NSBundle mainBundle] resourceURL] != nil && [[NSBundle mainBundle] bundleIdentifier] != nil)
-	//		RESOURCE_DIRECTORY = std::string([[[NSBundle mainBundle] resourceURL] fileSystemRepresentation]);
-	//	else
-	//		RESOURCE_DIRECTORY = "./";
-	//	GSystem::Debug("Resources: %s ... ", RESOURCE_DIRECTORY.c_str());
-	//}
-	return RESOURCE_DIRECTORY.c_str();
+static FILE* AndroidAssetOpen (const char* path) {
+    AAsset* asset = AAssetManager_open(ANDROID_APP->activity->assetManager, path, 0);
+    return asset != nullptr ? funopen(asset,
+        [](void* cookie, char* buf, int size) { return AAsset_read((AAsset*)cookie, buf, size); },
+        [](void* cookie, const char* buf, int size) { return 0; },
+        [](void* cookie, fpos_t offset, int whence) { return AAsset_seek((AAsset*)cookie, offset, whence); },
+        [](void* cookie) { AAsset_close((AAsset*)cookie); return 0; }
+        ) : nullptr;
 }
 
 
@@ -318,7 +352,7 @@ bool GSystem::PackageOpen (const GString& resource) {
 	
 	GSystem::Debug("Opening package \"%s\"... ", (const char*)resource);
 	
-	PACKAGE_FILE = fopen(GString().Format("%s/%s", GetResourceDirectory(), (const char*)resource), "rb");
+	PACKAGE_FILE = AndroidAssetOpen(resource);
 	if(PACKAGE_FILE == nullptr) {
 		GSystem::Debug("Failed to open package for reading!\n");
 		return false;
@@ -533,7 +567,7 @@ int64_t GSystem::ResourceSize (const GString& name) {
 
 
 int64_t GSystem::ResourceSizeFromFile (const GString& path) {
-	FILE* file = fopen(GString().Format("%s/%s", GetResourceDirectory(), (const char*)path), "rb");
+	FILE* file = AndroidAssetOpen(path);
 	if(file == nullptr) {
 		GSystem::Debug("Failed to find resource \"%s\"!\n", (const char*)path);
 		return 0;
@@ -587,7 +621,7 @@ bool GSystem::ResourceRead (const GString& name, void* data, int64_t size) {
 
 
 bool GSystem::ResourceReadFromFile (const GString& path, void* data, int64_t size) {
-	FILE* file = fopen(GString().Format("%s/%s", GetResourceDirectory(), (const char*)path), "rb");
+	FILE* file = AndroidAssetOpen(path);
 	if(file == nullptr) {
 		GSystem::Debug("Failed to open resource \"%s\"!\n", (const char*)path);
 		return false;
@@ -791,20 +825,26 @@ void GSystem::RunPreferredFPS (int fps) {
 }
 
 void GSystem::RunPreferredArgs (int argc, char* argv[]) {
-    // Nothing is needed from this on Android
+    // Ths function does nothing on Android
 }
 
 int GSystem::Run () {
     GSystem::Debug("Running Android Application...\n");
 
     ANDROID_APP->onAppCmd = AndroidCommandHandler;
+    android_app_set_motion_event_filter(ANDROID_APP, AndroidMotionEventFilter);
+
     int events;
     android_poll_source* source;
     while(!ANDROID_APP->destroyRequested) {
-        if (ALooper_pollAll(0, nullptr, &events, (void **) &source) >= 0 && source)
+        if(ALooper_pollAll(0, nullptr, &events, (void **)&source) >= 0 && source)
             source->process(ANDROID_APP, source);
-        AndroidInputHandler();
+
+        //static int64_t last = 0;
+        //if(GetMilliseconds() - last >= 1000 / FPS) {
+        //    last = GetMilliseconds();
         AndroidGraphicsHandler();
+        //}
     }
 	return EXIT_SUCCESS;
 }
@@ -849,7 +889,6 @@ void GSystem::MatrixRotateProjection (float degrees) {
 void GSystem::MatrixUpdate () {
     if(PROGRAM != 0) {
         GMatrix32_4x4 matrix = PROJECTION_MATRIX * MODEL_MATRIX;
-        //glUniformMatrix4fv(SHADER_MATRIX, 1, GL_FALSE, &matrix.numbers[0][0]);
         glUniformMatrix4fv(SHADER_MATRIX, 1, GL_FALSE, &matrix.numbers[0][0]);
     }
 }

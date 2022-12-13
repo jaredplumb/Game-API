@@ -1,7 +1,7 @@
 #include "GImage.h"
 #ifdef __BIONIC__
 #include <GLES2/gl2.h>
-
+#include <cmath>
 
 
 // These shaders are defined in GSystem_Android.cpp
@@ -36,6 +36,12 @@ GImage::~GImage () {}
 
 
 bool GImage::New (const Resource& resource) {
+	if(_data->indexObject)
+		glDeleteBuffers(1, &_data->indexObject);
+	if(_data->vertexObject)
+		glDeleteBuffers(1, &_data->vertexObject);
+	if(_data->texture)
+		glDeleteTextures(1, &_data->texture);
 	_data->width = 0;
 	_data->height = 0;
 	_data->texture = 0;
