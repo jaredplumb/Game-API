@@ -1,27 +1,31 @@
 #include "GSound.h"
-#if defined(__APPLE__)
+#if __APPLE__
+#include "GSystem.h"
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
+
 
 
 static ALCdevice* AL_DEVICE = nullptr;
 static ALCcontext* AL_CONTEXT = nullptr;
 
 
-struct GSound::PrivateData {
+
+struct GSound::Private {
 	ALuint buffer;
 	ALuint source;
+	inline Private (): buffer(0), source(0) {}
+	inline ~Private () { if(source) alDeleteSources(1, &source); if(buffer) alDeleteBuffers(1, &buffer); buffer = 0; source = 0; }
 };
+
 
 
 // Startup and Shutdown could be re-used in other classes such as GMusic to allow for complete self-encapsulation
 void GSound::Startup () {
-	
-	// If already open and created do nothing
 	if(AL_DEVICE && AL_CONTEXT)
 		return;
 	
-	// Use a context and device if they already exist
+	// If a context and device already exist, use them and return
 	AL_CONTEXT = alcGetCurrentContext();
 	if(AL_CONTEXT) {
 		AL_DEVICE = alcGetContextsDevice(AL_CONTEXT);
@@ -29,22 +33,21 @@ void GSound::Startup () {
 			return;
 	}
 	
-	// Open and create a new OpenAL devine and context
-	AL_DEVICE = alcOpenDevice(NULL);
-	if(AL_DEVICE) {
-		AL_CONTEXT = alcCreateContext(AL_DEVICE, NULL);
-		if(AL_CONTEXT) {
-			alcMakeContextCurrent(AL_CONTEXT);
-		} else {
-			GSystem::Print("Could not create OpenAL context! (%s)\n", alGetString(alGetError()));
-			alcCloseDevice(AL_DEVICE);
-			AL_DEVICE = NULL;
-			return;
-		}
-	} else {
-		GSystem::Print("Could not open OpenAL device! (%s)\n", alGetString(alGetError()));
+	AL_DEVICE = alcOpenDevice(nullptr);
+	if(AL_DEVICE == nullptr) {
+		GSystem::Debug("Could not open OpenAL device! (%s)\n", alGetString(alGetError()));
 		return;
 	}
+	
+	AL_CONTEXT = alcCreateContext(AL_DEVICE, nullptr);
+	if(AL_CONTEXT == nullptr) {
+		GSystem::Debug("Could not create OpenAL context! (%s)\n", alGetString(alGetError()));
+		alcCloseDevice(AL_DEVICE);
+		AL_DEVICE = nullptr;
+		return;
+	}
+	
+	alcMakeContextCurrent(AL_CONTEXT);
 	
 	// Set the default listen position and volume
 	ALfloat listenerPos[] = {0.0, 0.0, 1.0};
@@ -60,53 +63,36 @@ void GSound::Startup () {
 }
 
 void GSound::Shutdown () {
-	
-	if(AL_CONTEXT) {
+	if(AL_CONTEXT)
 		alcDestroyContext(AL_CONTEXT);
-		AL_CONTEXT = NULL;
-	}
-	
-	if(AL_DEVICE) {
+	if(AL_DEVICE)
 		alcCloseDevice(AL_DEVICE);
-		AL_DEVICE = NULL;
-	}
+	AL_CONTEXT = nullptr;
+	AL_DEVICE = nullptr;
 }
 
-GSound::GSound ()
-:	_data(NULL)
-{
-}
 
-GSound::GSound (const Resource& resource)
-:	_data(NULL)
-{
-	if(New(resource) == false)
-		GSystem::Debug("ERROR: Could not load sound from resource!\n");
-}
 
-GSound::GSound (const GString& resource)
-:	_data(NULL)
-{
-	if(New(resource) == false)
-		GSystem::Debug("ERROR: Could not load sound \"%s\"!\n", (const char*)resource);
-}
+// These are required to be here to satisfy the hidden struct that is pointed to by the unique_ptr
+GSound::GSound (): _data(new Private) {}
+GSound::GSound (const Resource& resource): _data(new Private) { New(resource); }
+GSound::GSound (const GString& resource): _data(new Private) { New(resource); }
+GSound::~GSound () {}
 
-GSound::~GSound () {
-	Delete();
-}
+
 
 bool GSound::New (const Resource& resource) {
 	Startup();
-	
-	Delete();
+	if(_data->source)
+		alDeleteSources(1, &_data->source);
+	if(_data->buffer)
+		alDeleteBuffers(1, &_data->buffer);
+	_data->buffer = 0;
+	_data->source = 0;
 	
 	// Not a WAV file because there is no header
 	if(resource.bufferSize < 44)
 		return false;
-	
-	_data = new PrivateData;
-	_data->buffer = 0;
-	_data->source = 0;
 	
 	ALsizei offset = 22; // Ignore up to the channels
 	
@@ -162,49 +148,37 @@ bool GSound::New (const Resource& resource) {
 	return true;
 }
 
-bool GSound::New (const GString& resource) {
-	return New(Resource(resource));
-}
 
-void GSound::Delete () {
-	if(_data) {
-		if(_data->source != 0)
-			alDeleteSources(1, &_data->source);
-		if(_data->buffer != 0)
-			alDeleteBuffers(1, &_data->buffer);
-		delete _data;
-		_data = NULL;
-	}
-}
 
 void GSound::Play () {
-	if(_data && _data->source != 0)
+	if(_data->source != 0)
 		alSourcePlay(_data->source);
 }
 
+
+
 void GSound::Stop () {
-	if(_data && _data->source != 0)
+	if(_data->source != 0)
 		alSourceRewind(_data->source);
 }
 
+
+
 void GSound::Pause () {
-	if(_data && _data->source != 0)
+	if(_data->source != 0)
 		alSourcePause(_data->source);
 }
 
+
+
 bool GSound::IsPlaying () {
-	if(_data && _data->source != 0) {
+	if(_data->source != 0) {
 		ALint state;
 		alGetSourcei(_data->source, AL_SOURCE_STATE, &state);
 		return state == AL_PLAYING;
 	}
 	return false;
 }
-
-
-
-
-
 
 
 
@@ -228,6 +202,8 @@ bool GSound::Resource::New (const GString& name) {
 	return true;
 }
 
+
+
 bool GSound::Resource::NewFromFile (const GString& path) {
 	bufferSize = GSystem::ResourceSizeFromFile(path);
 	if(bufferSize <= 0) {
@@ -244,6 +220,8 @@ bool GSound::Resource::NewFromFile (const GString& path) {
 	return true;
 }
 
+
+
 bool GSound::Resource::Write (const GString& name) {
 	const int64_t resourceSize = sizeof(bufferSize) + bufferSize * sizeof(uint8_t);
 	std::unique_ptr<uint8_t[]> resourceBuffer(new uint8_t[resourceSize]);
@@ -251,7 +229,9 @@ bool GSound::Resource::Write (const GString& name) {
 	*((int64_t*)(resourceBuffer.get() + offset)) = bufferSize;
 	offset += sizeof(bufferSize);
 	memcpy(resourceBuffer.get() + offset, buffer, bufferSize);
-	return GSystem::ResourceWrite(name + ".snd", resourceBuffer.get(), resourceSize * sizeof(uint8_t));
+	return GSystem::ResourceWrite(name + ".snd", resourceBuffer.get(), resourceSize);
 }
 
-#endif // defined(__APPLE__)
+
+
+#endif // __APPLE__

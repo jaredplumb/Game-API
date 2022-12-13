@@ -2,7 +2,7 @@
 #define G_SOUND_H_
 
 #include "GTypes.h"
-#include "GSystem.h"
+#include <memory>
 
 // NOTE: To self contain GSound, the audio engine is turned on when accessed and shuts down 
 // automatically upon exit of the application.  If there is a long pause accessing the first 
@@ -23,8 +23,7 @@ public:
 	~GSound ();
 	
 	bool New (const Resource& resource);
-	bool New (const GString& resource);
-	void Delete ();
+	inline bool New (const GString& resource) { return New(Resource(resource)); }
 	
 	void Play ();
 	void Stop ();
@@ -44,8 +43,8 @@ public:
 	};
 	
 private:
-	struct PrivateData;
-	PrivateData* _data;
+	struct Private;
+	std::unique_ptr<Private> _data;
 };
 
 #endif // G_SOUND_H_
