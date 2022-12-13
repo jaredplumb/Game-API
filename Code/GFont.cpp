@@ -54,7 +54,7 @@ bool GFont::New (const Resource& resource) {
 	imageResource.height = resource.imageHeight;
 	imageResource.bufferSize = resource.bufferSize;
 	imageResource.buffer = resource.buffer;
-	if(_image.New(imageResource) == false) {
+	if(!_image.New(imageResource)) {
 		GSystem::Debug("Could not create image with font resource data!\n");
 		imageResource.buffer = nullptr;
 		return false;
@@ -102,7 +102,7 @@ bool GFont::New (const Resource& resource) {
 
 GRect GFont::GetRect (const GString& text) const {
 	if(text.IsEmpty() || _rects.size() < ((1 << 7) - 1))
-		return GRect();
+		return {};
 	
 	int left = std::numeric_limits<int>::max();
 	int top = std::numeric_limits<int>::max();
@@ -118,7 +118,7 @@ GRect GFont::GetRect (const GString& text) const {
 			// Find the index
 			if((uint8_t)text[i] <= 0x7f) {
 				// ASCII characters are always indexed exactly
-				index = text[i];
+				index = (int)(uint8_t)text[i];
 			} else if((uint8_t)text[i] >= 0xc2 && (uint8_t)text[i] <= 0xdf && i + 1 < text.GetLength()) {
 				// Find the index of two-byte non-ASCII characters
 				index = GetIndexFromHash((0) | (0 << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24));
@@ -138,7 +138,7 @@ GRect GFont::GetRect (const GString& text) const {
 			// Adjust for a possible kerning
 			int kerning = 0;
 			if(_has_kern[last]) {
-				std::map<std::pair<int, int>, int>::const_iterator k = _kernings.find(std::make_pair(last, index));
+				auto k = _kernings.find(std::make_pair(last, index));
 				if(k != _kernings.end())
 					kerning = k->second;
 			}
@@ -163,7 +163,7 @@ GRect GFont::GetRect (const GString& text) const {
 		}
 	}
 	
-	return GRect(left, top, right - left, bottom - top);
+	return {left, top, right - left, bottom - top};
 }
 
 
@@ -181,7 +181,7 @@ void GFont::Draw (const GString& text, int x, int y, float alpha) {
 			// Find the index
 			if((uint8_t)text[i] <= 0x7f) {
 				// ASCII characters are always indexed exactly
-				index = text[i];
+				index = (int)(uint8_t)text[i];
 			} else if((uint8_t)text[i] >= 0xc2 && (uint8_t)text[i] <= 0xdf && i + 1 < text.GetLength()) {
 				// Find the index of two-byte non-ASCII characters
 				index = GetIndexFromHash((0) | (0 << 8) | ((uint8_t)text[i + 1] << 16) | ((uint8_t)text[i] << 24));
@@ -201,7 +201,7 @@ void GFont::Draw (const GString& text, int x, int y, float alpha) {
 			// Draw the character adjusting for a possible kerning then advance the x position
 			int kerning = 0;
 			if(_has_kern[last]) {
-				std::map<std::pair<int, int>, int>::const_iterator k = _kernings.find(std::make_pair(last, index));
+				auto k = _kernings.find(std::make_pair(last, index));
 				if(k != _kernings.end())
 					kerning = k->second;
 			}
@@ -436,7 +436,7 @@ bool GFont::Resource::NewFromFile (const GString& path) {
 	}
 	
 	// Copy the chars list to the resrouce chars
-	if(charsList.size() > 0) {
+	if(!charsList.empty()) {
 		charCount = (int32_t)charsList.size();
 		chars = new Char[charCount];
 		for(int i = 0; i < charCount; i++)
@@ -444,7 +444,7 @@ bool GFont::Resource::NewFromFile (const GString& path) {
 	}
 	
 	// Copy the hash list to the resource hash
-	if(hashList.size() > 0) {
+	if(!hashList.empty()) {
 		hashCount = (int32_t)hashList.size();
 		hash = new uint32_t[hashCount];
 		for(int i = 0; i < hashCount; i++)
@@ -452,7 +452,7 @@ bool GFont::Resource::NewFromFile (const GString& path) {
 	}
 	
 	// Copy the kerning list to the resource kernings
-	if(kerningsList.size() > 0) {
+	if(!kerningsList.empty()) {
 		kernCount = (int32_t)kerningsList.size();
 		kernings = new uint64_t[kernCount];
 		for(int i = 0; i < kernCount; i++)
