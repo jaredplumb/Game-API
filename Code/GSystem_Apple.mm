@@ -10,6 +10,8 @@
 
 
 
+static int						SCREEN_NATIVE_WIDTH = 0;
+static int						SCREEN_NATIVE_HEIGHT = 0;
 static GRect					SCREEN_RECT;
 static GRect					SAFE_RECT;
 static GRect					PREFERRED_RECT;
@@ -133,7 +135,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	[appMenu addItem:quitMenuItem];
 	[NSApp setMainMenu:mainMenu];
 	
-	// If the preferred rect is not set, use a 1080p window (note that the window is resizable and will fit correctly in the window if this is too big)
+	// If the preferred rect is not set, use a 1080p window (note that the system window is resizable and will fit correctly in the window if this size is too big for the screen)
 	if(PREFERRED_RECT.width == 0 || PREFERRED_RECT.height == 0) {
 		PREFERRED_RECT.x = 0;
 		PREFERRED_RECT.y = 0;
@@ -172,15 +174,14 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 @implementation _MyMetalView {
 	id<MTLCommandQueue> _commandQueue;
 	id<MTLRenderPipelineState> _pipelineState;
-	vector_uint2 _viewport;
 }
 
 - (id) initWithFrame: (CGRect)frameRect {
 	
 #if TARGET_OS_IPHONE
-	frameRect = [[UIScreen mainScreen] nativeBounds]; // Convert the view to use the full pixel coordinates of the screen (retina)
+	frameRect = [[UIScreen mainScreen] nativeBounds]; // Convert the view to use the full pixel coordinates of the screen (retna)
 #else // TARGET_OS_MAC
-	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect]; // Convert the view to use the full pixel coordinates of the screen (retina)
+	frameRect = [[NSScreen mainScreen] convertRectToBacking:frameRect]; // Convert the view to use the full pixel coordinates of the screen (retna)
 #endif // TARGET_OS_IPHONE //TARGET_OS_MAC
 	
 	DEVICE = MTLCreateSystemDefaultDevice();
@@ -252,7 +253,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	MTLRenderPassDescriptor* renderPassDescriptor = view.currentRenderPassDescriptor;
 	if(renderPassDescriptor != nil) {
 		RENDER = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-		[RENDER setViewport:(MTLViewport){(double)0, (double)0, (double)_viewport.x, (double)_viewport.y, (double)-1, (double)1}];
+		[RENDER setViewport:(MTLViewport){(double)0, (double)0, (double)SCREEN_NATIVE_WIDTH, (double)SCREEN_NATIVE_HEIGHT, (double)-1, (double)1}];
 		[RENDER setRenderPipelineState:_pipelineState];
 		GSystem::MatrixSetModelDefault();
 		GSystem::MatrixSetProjectionDefault();
@@ -265,28 +266,30 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 }
 
 - (void) mtkView:(nonnull MTKView*)view drawableSizeWillChange:(CGSize)size {
-	_viewport.x = size.width;
-	_viewport.y = size.height;
+	// The screen uses native pixels, but the window uses points, which makes a pixel to point someting line 3 to 1 depending on hardware
+	SCREEN_NATIVE_WIDTH = (int)size.width;
+	SCREEN_NATIVE_HEIGHT = (int)size.height;
 	
-	// Set the rect used for drawing, this includes the entire viewport including hidden areas because of curved edges or notches
+#if TARGET_OS_IPHONE
+	// Set the screen rect to the window so that the screen rect and safe rect have the same pixel correlation
 	SCREEN_RECT.x = 0;
 	SCREEN_RECT.y = 0;
-	SCREEN_RECT.width = _viewport.x;
-	SCREEN_RECT.height = _viewport.y;
+	SCREEN_RECT.width = (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
+	SCREEN_RECT.height = (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
 	
-	// The safe area is a subsection of the screen that is fully visible and does not interfere with device interactions such as swiping areas (initially set to the entire window/screen)
-#if TARGET_OS_IPHONE
-	// Get the safe area insets from the edge of the screen already part of iOS and set the safe rect using them
-	int left = SCREEN_RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.left / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
-	int top = SCREEN_RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.top / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
-	int right = SCREEN_RECT.width * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.right / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.width;
-	int bottom = SCREEN_RECT.height * (int)UIApplication.sharedApplication.windows.firstObject.safeAreaInsets.bottom / (int)UIApplication.sharedApplication.windows.firstObject.bounds.size.height;
-	SAFE_RECT.x = left;
-	SAFE_RECT.y = top;
-	SAFE_RECT.width = SCREEN_RECT.width - left - right;
-	SAFE_RECT.height = SCREEN_RECT.height - top - bottom;
+	// The safe area is a subsection of the screen that is fully visible and does not interfere with device interactions such as swiping areas, the safe rect is in window points (not pixels)
+	const UIEdgeInsets windowInsets = UIApplication.sharedApplication.windows.firstObject.safeAreaInsets;
+	SAFE_RECT.x = (int)(UIApplication.sharedApplication.windows.firstObject.bounds.origin.x + windowInsets.left);
+	SAFE_RECT.y = (int)(UIApplication.sharedApplication.windows.firstObject.bounds.origin.y + windowInsets.top);
+	SAFE_RECT.width = (int)(UIApplication.sharedApplication.windows.firstObject.bounds.size.width - windowInsets.left - windowInsets.right);
+	SAFE_RECT.height = (int)(UIApplication.sharedApplication.windows.firstObject.bounds.size.height - windowInsets.top - windowInsets.bottom);
+	
 #else
-	// On Mac the safe rect is the screen rect
+	// On Mac the screen rect and safe rect is the size of the native window
+	SCREEN_RECT.x = 0;
+	SCREEN_RECT.y = 0;
+	SCREEN_RECT.width = SCREEN_NATIVE_WIDTH;
+	SCREEN_RECT.height = SCREEN_NATIVE_HEIGHT;
 	SAFE_RECT = SCREEN_RECT;
 #endif
 	
@@ -298,39 +301,26 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 		PREFERRED_RECT.height = SAFE_RECT.height;
 	}
 	
-	// The screen rect and safe rect are adjusted to fit the preferred rect as best as possible
-	if(SAFE_RECT.width != PREFERRED_RECT.width) {
-		SCREEN_RECT.x = SCREEN_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
-		SCREEN_RECT.y = SCREEN_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
-		SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.width / SAFE_RECT.width;
-		SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
-		SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
-		SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
-		SAFE_RECT.height = SAFE_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
-		SAFE_RECT.width = PREFERRED_RECT.width; // This must be last because it is used for the aspect ratio
-	}
-	if(SAFE_RECT.height < PREFERRED_RECT.height) {
-		SCREEN_RECT.x = SCREEN_RECT.x * PREFERRED_RECT.height / SAFE_RECT.height;
-		SCREEN_RECT.y = SCREEN_RECT.y * PREFERRED_RECT.height / SAFE_RECT.height;
+	// Adjust the safe rect to the relative preferred rect size using the pixel size of the preferred rect and adjust the screen rect and safe rect accordingly
+	if(PREFERRED_RECT.width * SAFE_RECT.height <= SAFE_RECT.width * PREFERRED_RECT.height) {
 		SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.height / SAFE_RECT.height;
 		SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.height / SAFE_RECT.height;
 		SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.height / SAFE_RECT.height;
 		SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.height / SAFE_RECT.height;
 		SAFE_RECT.width = SAFE_RECT.width * PREFERRED_RECT.height / SAFE_RECT.height;
-		SAFE_RECT.height = PREFERRED_RECT.height; // This must be last because it is used for the aspect ratio
+		SAFE_RECT.height = PREFERRED_RECT.height;
+	} else {
+		SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.width / SAFE_RECT.width;
+		SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
+		SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
+		SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
+		SAFE_RECT.height = SAFE_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
+		SAFE_RECT.width = PREFERRED_RECT.width;
 	}
 	
-	// Center the preferred rect within the screen rect then adjust to fit within the safe rect
-	PREFERRED_RECT.x = SCREEN_RECT.width / 2 - PREFERRED_RECT.width / 2;
-	PREFERRED_RECT.y = SCREEN_RECT.height / 2 - PREFERRED_RECT.height / 2;
-	if(PREFERRED_RECT.x < SAFE_RECT.x)
-		PREFERRED_RECT.x = SAFE_RECT.x;
-	if(PREFERRED_RECT.y < SAFE_RECT.y)
-		PREFERRED_RECT.y = SAFE_RECT.y;
-	if(PREFERRED_RECT.x + PREFERRED_RECT.width > SAFE_RECT.x + SAFE_RECT.width)
-		PREFERRED_RECT.x = SAFE_RECT.x + SAFE_RECT.width - PREFERRED_RECT.width;
-	if(PREFERRED_RECT.y + PREFERRED_RECT.height > SAFE_RECT.y + SAFE_RECT.height)
-		PREFERRED_RECT.y = SAFE_RECT.y + SAFE_RECT.height - PREFERRED_RECT.height;
+	// Center the preferred rect inside of the safe rect
+	PREFERRED_RECT.x = SAFE_RECT.x + (SAFE_RECT.width - PREFERRED_RECT.width) / 2;
+	PREFERRED_RECT.y = SAFE_RECT.y + (SAFE_RECT.height - PREFERRED_RECT.height) / 2;
 }
 
 - (void) encodeWithCoder:(nonnull NSCoder*)aCoder { 
@@ -992,8 +982,6 @@ std::vector<GString> GSystem::GetFileNamesInDirectory (const GString& path) {
 
 
 void GSystem::RunPreferredSize (int width, int height) {
-	SCREEN_RECT = GRect(0, 0, width, height);
-	SAFE_RECT = GRect(0, 0, width, height);
 	PREFERRED_RECT = GRect(0, 0, width, height);
 }
 

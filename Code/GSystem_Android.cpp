@@ -12,6 +12,8 @@
 
 
 
+static GLint			SCREEN_NATIVE_WIDTH = 0;
+static GLint			SCREEN_NATIVE_HEIGHT = 0;
 static GRect			SCREEN_RECT;
 static GRect			SAFE_RECT;
 static GRect			PREFERRED_RECT;
@@ -21,8 +23,6 @@ static GMatrix32_4x4	MODEL_MATRIX;
 static GMatrix32_4x4	PROJECTION_MATRIX;
 static EGLDisplay       DISPLAY = EGL_NO_DISPLAY;
 static EGLSurface		SURFACE = EGL_NO_SURFACE;
-static EGLint           SURFACE_WIDTH = 0;
-static EGLint           SURFACE_HEIGHT = 0;
 static EGLContext		CONTEXT = EGL_NO_CONTEXT;
 static GLuint			PROGRAM = 0;
 static GLuint           VERTEX_SHADER = 0;
@@ -126,12 +126,12 @@ static void AndroidStartupOpenGL () {
 #endif
 
     // Find the screen size
-    eglQuerySurface(DISPLAY, SURFACE, EGL_WIDTH, &SURFACE_WIDTH);
-    eglQuerySurface(DISPLAY, SURFACE, EGL_HEIGHT, &SURFACE_HEIGHT);
+    eglQuerySurface(DISPLAY, SURFACE, EGL_WIDTH, &SCREEN_NATIVE_WIDTH);
+    eglQuerySurface(DISPLAY, SURFACE, EGL_HEIGHT, &SCREEN_NATIVE_HEIGHT);
     SCREEN_RECT.x = 0;
     SCREEN_RECT.y = 0;
-    SCREEN_RECT.width = SURFACE_WIDTH;
-    SCREEN_RECT.height = SURFACE_HEIGHT;
+    SCREEN_RECT.width = SCREEN_NATIVE_WIDTH;
+    SCREEN_RECT.height = SCREEN_NATIVE_HEIGHT;
 
     // Find the safe area within the screen
     ARect windowInsets;
@@ -149,39 +149,32 @@ static void AndroidStartupOpenGL () {
         PREFERRED_RECT.height = SAFE_RECT.height;
     }
 
-    // The screen rect and safe rect are adjusted to fit the preferred rect as best as possible
-    if(SAFE_RECT.width != PREFERRED_RECT.width) {
-        SCREEN_RECT.x = SCREEN_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
-        SCREEN_RECT.y = SCREEN_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
-        SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.width / SAFE_RECT.width;
-        SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
-        SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
-        SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
-        SAFE_RECT.height = SAFE_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
-        SAFE_RECT.width = PREFERRED_RECT.width; // This must be last because it is used for the aspect ratio
-    }
-    if(SAFE_RECT.height < PREFERRED_RECT.height) {
-        SCREEN_RECT.x = SCREEN_RECT.x * PREFERRED_RECT.height / SAFE_RECT.height;
-        SCREEN_RECT.y = SCREEN_RECT.y * PREFERRED_RECT.height / SAFE_RECT.height;
+    // Adjust the safe rect to the relative preferred rect size using the pixel size of the preferred rect and adjust the screen rect and safe rect accordingly
+    if(PREFERRED_RECT.width * SAFE_RECT.height <= SAFE_RECT.width * PREFERRED_RECT.height) {
         SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.height / SAFE_RECT.height;
         SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.height / SAFE_RECT.height;
         SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.height / SAFE_RECT.height;
         SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.height / SAFE_RECT.height;
         SAFE_RECT.width = SAFE_RECT.width * PREFERRED_RECT.height / SAFE_RECT.height;
-        SAFE_RECT.height = PREFERRED_RECT.height; // This must be last because it is used for the aspect ratio
+        SAFE_RECT.height = PREFERRED_RECT.height;
+    } else {
+        SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.width / SAFE_RECT.width;
+        SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
+        SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
+        SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
+        SAFE_RECT.height = SAFE_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
+        SAFE_RECT.width = PREFERRED_RECT.width;
     }
 
-    // Center the preferred rect within the screen rect then adjust to fit within the safe rect
-    PREFERRED_RECT.x = SCREEN_RECT.width / 2 - PREFERRED_RECT.width / 2;
-    PREFERRED_RECT.y = SCREEN_RECT.height / 2 - PREFERRED_RECT.height / 2;
-    if(PREFERRED_RECT.x < SAFE_RECT.x)
-        PREFERRED_RECT.x = SAFE_RECT.x;
-    if(PREFERRED_RECT.y < SAFE_RECT.y)
-        PREFERRED_RECT.y = SAFE_RECT.y;
-    if(PREFERRED_RECT.x + PREFERRED_RECT.width > SAFE_RECT.x + SAFE_RECT.width)
-        PREFERRED_RECT.x = SAFE_RECT.x + SAFE_RECT.width - PREFERRED_RECT.width;
-    if(PREFERRED_RECT.y + PREFERRED_RECT.height > SAFE_RECT.y + SAFE_RECT.height)
-        PREFERRED_RECT.y = SAFE_RECT.y + SAFE_RECT.height - PREFERRED_RECT.height;
+    // Center the preferred rect inside of the safe rect
+    PREFERRED_RECT.x = SAFE_RECT.x + (SAFE_RECT.width - PREFERRED_RECT.width) / 2;
+    PREFERRED_RECT.y = SAFE_RECT.y + (SAFE_RECT.height - PREFERRED_RECT.height) / 2;
+
+
+
+
+
+
 
     // Create the main shader object
     PROGRAM = glCreateProgram();
@@ -219,7 +212,7 @@ static void AndroidStartupOpenGL () {
     glLinkProgram(PROGRAM);
 
     // Setup remaining OpenGL functions
-    glViewport(0, 0, SURFACE_WIDTH, SURFACE_HEIGHT);
+    glViewport(0, 0, SCREEN_NATIVE_WIDTH, SCREEN_NATIVE_HEIGHT);
     glActiveTexture(GL_TEXTURE0);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_BLEND);
@@ -267,8 +260,8 @@ static void AndroidCommandHandler (android_app* app, int32_t cmd) {
 static bool AndroidMotionEventFilter (const GameActivityMotionEvent* event) {
     if(event) {
         const GameActivityPointerAxes& pointer = event->pointers[(event->action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT];
-        int x = (int)GameActivityPointerAxes_getX(&pointer) * SCREEN_RECT.width / SURFACE_WIDTH;
-        int y = (int)GameActivityPointerAxes_getY(&pointer) * SCREEN_RECT.height / SURFACE_HEIGHT;
+        int x = (int)GameActivityPointerAxes_getX(&pointer) * SCREEN_RECT.width / SCREEN_NATIVE_WIDTH;
+        int y = (int)GameActivityPointerAxes_getY(&pointer) * SCREEN_RECT.height / SCREEN_NATIVE_HEIGHT;
         switch(event->action & AMOTION_EVENT_ACTION_MASK) {
             case AMOTION_EVENT_ACTION_DOWN:
             case AMOTION_EVENT_ACTION_POINTER_DOWN:
@@ -295,9 +288,10 @@ static bool AndroidMotionEventFilter (const GameActivityMotionEvent* event) {
 static void AndroidGraphicsHandler () {
     if(DISPLAY != EGL_NO_DISPLAY && SURFACE != EGL_NO_SURFACE && CONTEXT != EGL_NO_CONTEXT) {
         eglMakeCurrent(DISPLAY, SURFACE, SURFACE, CONTEXT);
-        eglQuerySurface(DISPLAY, SURFACE, EGL_WIDTH, &SURFACE_WIDTH);
-        eglQuerySurface(DISPLAY, SURFACE, EGL_HEIGHT, &SURFACE_HEIGHT);
-        glViewport(0, 0, SURFACE_WIDTH, SURFACE_HEIGHT);
+        // TODO: These two queries should be moved to the updated screen size function
+        eglQuerySurface(DISPLAY, SURFACE, EGL_WIDTH, &SCREEN_NATIVE_WIDTH);
+        eglQuerySurface(DISPLAY, SURFACE, EGL_HEIGHT, &SCREEN_NATIVE_HEIGHT);
+        glViewport(0, 0, SCREEN_NATIVE_WIDTH, SCREEN_NATIVE_HEIGHT);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(PROGRAM);
@@ -815,8 +809,6 @@ std::vector<GString> GSystem::GetFileNamesInDirectory (const GString& path) {
 
 
 void GSystem::RunPreferredSize (int width, int height) {
-	SCREEN_RECT.Set(0, 0, width, height);
-	SAFE_RECT.Set(0, 0, width, height);
 	PREFERRED_RECT.Set(0, 0, width, height);
 }
 
@@ -827,6 +819,14 @@ void GSystem::RunPreferredFPS (int fps) {
 void GSystem::RunPreferredArgs (int argc, char* argv[]) {
     // Ths function does nothing on Android
 }
+
+//onNativeWindowCreated)(GameActivity *activity, ANativeWindow *window)
+//onNativeWindowDestroyed)(GameActivity *activity, ANativeWindow *window)
+//onNativeWindowResized)(GameActivity *activity, ANativeWindow *window, int32_t newWidth, int32_t newHeight)
+//onWindowInsetsChanged)(GameActivity *activity)
+//onTouchEvent)(GameActivity *activity, const GameActivityMotionEvent *event)
+//onTextInputEvent)(GameActivity *activity, const GameTextInputState *state)
+//onSaveInstanceState)(GameActivity *activity, SaveInstanceStateRecallback recallback, void *context)
 
 int GSystem::Run () {
     GSystem::Debug("Running Android Application...\n");
