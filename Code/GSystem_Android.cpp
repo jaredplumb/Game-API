@@ -63,11 +63,9 @@ static GLuint AndroidLoadShader (GLenum type, const char* source) {
     return shader;
 }
 
-
-
 static void AndroidStartupOpenGL () {
 
-    //ANativeWindow_setFrameRate(ANDROID_APP->window, (float)FPS, ANATIVEWINDOW_FRAME_RATE_COMPATIBILITY_DEFAULT);
+    ANativeWindow_setFrameRate(ANDROID_APP->window, (float)FPS, ANATIVEWINDOW_FRAME_RATE_COMPATIBILITY_FIXED_SOURCE);
 
     DISPLAY = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if(DISPLAY == EGL_NO_DISPLAY) {
@@ -130,8 +128,10 @@ static void AndroidStartupOpenGL () {
     eglQuerySurface(DISPLAY, SURFACE, EGL_HEIGHT, &SCREEN_NATIVE_HEIGHT);
     SCREEN_RECT.x = 0;
     SCREEN_RECT.y = 0;
-    SCREEN_RECT.width = SCREEN_NATIVE_WIDTH;
-    SCREEN_RECT.height = SCREEN_NATIVE_HEIGHT;
+    //SCREEN_RECT.width = SCREEN_NATIVE_WIDTH;
+    //SCREEN_RECT.height = SCREEN_NATIVE_HEIGHT;
+    SCREEN_RECT.width = ANativeWindow_getWidth(ANDROID_APP->window);
+    SCREEN_RECT.height = ANativeWindow_getHeight(ANDROID_APP->window);
 
     // Find the safe area within the screen
     ARect windowInsets;
@@ -242,18 +242,7 @@ static void AndroidShutdownOpenGL () {
 
 
 
-static void AndroidCommandHandler (android_app* app, int32_t cmd) {
-    switch (cmd) {
-        case APP_CMD_INIT_WINDOW:
-            AndroidStartupOpenGL();
-            break;
-        case APP_CMD_TERM_WINDOW:
-            AndroidShutdownOpenGL();
-            break;
-        default:
-            break;
-    }
-}
+
 
 
 
@@ -820,23 +809,79 @@ void GSystem::RunPreferredArgs (int argc, char* argv[]) {
     // Ths function does nothing on Android
 }
 
-//onNativeWindowCreated)(GameActivity *activity, ANativeWindow *window)
-//onNativeWindowDestroyed)(GameActivity *activity, ANativeWindow *window)
-//onNativeWindowResized)(GameActivity *activity, ANativeWindow *window, int32_t newWidth, int32_t newHeight)
-//onWindowInsetsChanged)(GameActivity *activity)
-//onTouchEvent)(GameActivity *activity, const GameActivityMotionEvent *event)
-//onTextInputEvent)(GameActivity *activity, const GameTextInputState *state)
-//onSaveInstanceState)(GameActivity *activity, SaveInstanceStateRecallback recallback, void *context)
+
+
+
+
+
+static void OnAppCmd (struct android_app* app, int32_t cmd) {
+    switch (cmd) {
+        case APP_CMD_INIT_WINDOW:
+            GSystem::Debug("APP_CMD_INIT_WINDOW\n");
+            AndroidStartupOpenGL();
+            break;
+        case APP_CMD_TERM_WINDOW:
+            GSystem::Debug("APP_CMD_TERM_WINDOW\n");
+            AndroidShutdownOpenGL();
+            break;
+        case APP_CMD_WINDOW_RESIZED:
+            GSystem::Debug("APP_CMD_WINDOW_RESIZED\n");
+            break;
+        case APP_CMD_WINDOW_INSETS_CHANGED:
+            GSystem::Debug("APP_CMD_WINDOW_INSETS_CHANGED\n");
+            break;
+        default:
+            break;
+    }
+}
+
+static void OnNativeWindowCreated (GameActivity* activity, ANativeWindow* window) {
+    GSystem::Debug("OnNativeWindowCreated\n");
+    //ANativeWindow_setFrameRate()
+    //ANATIVEWINDOW_FRAME_RATE_COMPATIBILITY_DEFAULT
+}
+
+static void OnNativeWindowDestroyed (GameActivity* activity, ANativeWindow* window) {
+    GSystem::Debug("OnNativeWindowDestroyed\n");
+}
+
+static void OnNativeWindowResized (GameActivity* activity, ANativeWindow* window, int32_t width, int32_t height) {
+    GSystem::Debug("OnNativeWindowResized\n");
+}
+
+static void OnWindowInsetsChanged (GameActivity* activity) {
+    GSystem::Debug("OnWindowInsetsChanged\n");
+}
+
+static bool OnTouchEvent (GameActivity* activity, const GameActivityMotionEvent* event) {
+    GSystem::Debug("OnTouchEvent\n");
+    return true;
+}
+
+static void OnTextInputEvent (GameActivity* activity, const GameTextInputState* state) {
+    GSystem::Debug("OnTextInputEvent\n");
+}
+
+
 
 int GSystem::Run () {
     GSystem::Debug("Running Android Application...\n");
 
-    ANDROID_APP->onAppCmd = AndroidCommandHandler;
+    ANDROID_APP->onAppCmd = OnAppCmd;
+    //ANDROID_APP->activity->callbacks->onNativeWindowCreated = OnNativeWindowCreated;
+    //ANDROID_APP->activity->callbacks->onNativeWindowDestroyed = OnNativeWindowDestroyed;
+    //ANDROID_APP->activity->callbacks->onNativeWindowResized = OnNativeWindowResized;
+    //ANDROID_APP->activity->callbacks->onWindowInsetsChanged = OnWindowInsetsChanged;
+    //ANDROID_APP->activity->callbacks->onTouchEvent = OnTouchEvent;
+    //ANDROID_APP->activity->callbacks->onTextInputEvent = OnTextInputEvent;
+
+
+
     android_app_set_motion_event_filter(ANDROID_APP, AndroidMotionEventFilter);
 
-    int events;
-    android_poll_source* source;
     while(!ANDROID_APP->destroyRequested) {
+        int events;
+        android_poll_source* source;
         if(ALooper_pollAll(0, nullptr, &events, (void **)&source) >= 0 && source)
             source->process(ANDROID_APP, source);
 
@@ -848,6 +893,19 @@ int GSystem::Run () {
     }
 	return EXIT_SUCCESS;
 }
+
+
+
+void android_main (struct android_app* app) {
+    ANDROID_APP = app;
+    main(0, nullptr); // This is done for compatibility with other platforms
+}
+
+
+
+
+
+
 
 
 
@@ -929,9 +987,6 @@ void GSystem::Debug (const char* message, ...) {
 #endif
 }
 
-void android_main (struct android_app* app) {
-    ANDROID_APP = app;
-    main(0, nullptr); // This is done for compatibility with other platforms
-}
+
 
 #endif // __BIONIC__
