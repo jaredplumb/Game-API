@@ -158,7 +158,7 @@ protected:
 }; // class GNode
 
 
-// These templace classes use the curiously recurring template pattern
+// These template classes use the curiously recurring template pattern
 // https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
 
 

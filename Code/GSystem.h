@@ -28,23 +28,13 @@ public:
 	static int GetFPS ();
 	
 	/// Returns the epoch time in milliseconds.
-	static int64_t GetMilliseconds () { return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()); }
+	static inline int64_t GetMilliseconds () { return (int64_t)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(); }
 	
 	/// Returns the epoch time in microseconds.
-	static int64_t GetMicroseconds () { return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()); }
+	static inline int64_t GetMicroseconds () { return (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(); }
 	
 	/// Returns the epoch time in nanoseconds.
-	static int64_t GetNanoseconds () { return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()); }
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	static inline int64_t GetNanoseconds () { return (int64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(); }
 	
 	static bool PackageOpen (const GString& resource = "Main.pkg");
 	
@@ -63,13 +53,6 @@ public:
 	static bool ResourceReadFromFile (const GString& path, void* data, int64_t size);
 	
 	static bool ResourceWrite (const GString& name, void* data, int64_t size); // Will fail if package was not opened with PackageOpenForWrite.
-	
-	
-	
-	
-	
-	
-	
 	
 	/// Read save data from the appropriate place
 	static bool SaveRead (const GString& name, void* data, int64_t size);
@@ -100,10 +83,7 @@ public:
 	static void MatrixUpdate ();
 	
 	/// Returns a new unique integer, per application session.
-	static inline int GetUniqueRef () {
-		static int REF = 1;
-		return REF++;
-	}
+	static inline int GetUniqueRef () { static int REF = 1; return REF++; }
 	
 	/// Prints a formatted string to the console.
 	static void Print (const char* message, ...);
@@ -111,98 +91,25 @@ public:
 	/// Prints a formatted string to the console in debug builds only.
 	static void Debug (const char* message, ...);
 	
-	static inline int NewStartupCallback (void (* callback) ()) {
-		int ref = GetUniqueRef();
-		STARTUP_CALLBACKS.insert(std::make_pair(ref, callback));
-		return ref;
-	}
-	
-	static inline int NewShutdownCallback (void (* callback) ()) {
-		int ref = GetUniqueRef();
-		SHUTDOWN_CALLBACKS.insert(std::make_pair(ref, callback));
-		return ref;
-	}
-	
-	static inline int NewDrawCallback (void (* callback) ()) {
-		int ref = GetUniqueRef();
-		DRAW_CALLBACKS.insert(std::make_pair(ref, callback));
-		return ref;
-	}
-	
 	// Touch locations are relative to the preferred rect
-	static inline int NewTouchCallback (void (* callback) (int x, int y)) {
-		int ref = GetUniqueRef();
-		TOUCH_CALLBACKS.insert(std::make_pair(ref, callback));
-		return ref;
-	}
-	
-	// Touch locations are relative to the preferred rect
-	static inline int NewTouchUpCallback (void (* callback) (int x, int y)) {
-		int ref = GetUniqueRef();
-		TOUCHUP_CALLBACKS.insert(std::make_pair(ref, callback));
-		return ref;
-	}
-	
-	// Touch locations are relative to the preferred rect
-	static inline int NewTouchMoveCallback (void (* callback) (int x, int y)) {
-		int ref = GetUniqueRef();
-		TOUCHMOVE_CALLBACKS.insert(std::make_pair(ref, callback));
-		return ref;
-	}
-	
-	static inline void DeleteStartupCallback (int ref) {
-		STARTUP_CALLBACKS.erase(STARTUP_CALLBACKS.find(ref));
-	}
-	
-	static inline void DeleteShutdownCallback (int ref) {
-		SHUTDOWN_CALLBACKS.erase(SHUTDOWN_CALLBACKS.find(ref));
-	}
-	
-	static inline void DeleteDrawCallback (int ref) {
-		DRAW_CALLBACKS.erase(DRAW_CALLBACKS.find(ref));
-	}
-	
-	static inline void DeleteTouchCallback (int ref) {
-		TOUCH_CALLBACKS.erase(TOUCH_CALLBACKS.find(ref));
-	}
-	
-	static inline void DeleteTouchUpCallback (int ref) {
-		TOUCHUP_CALLBACKS.erase(TOUCHUP_CALLBACKS.find(ref));
-	}
-	
-	static inline void DeleteTouchMoveCallback (int ref) {
-		TOUCHMOVE_CALLBACKS.erase(TOUCHMOVE_CALLBACKS.find(ref));
-	}
-	
-	static inline void RunStartupCallbacks () {
-		for(std::map<int, void (*) ()>::iterator i = STARTUP_CALLBACKS.begin(); i != STARTUP_CALLBACKS.end(); i++)
-			i->second();
-	}
-	
-	static inline void RunShutdownCallbacks () {
-		for(std::map<int, void (*) ()>::iterator i = SHUTDOWN_CALLBACKS.begin(); i != SHUTDOWN_CALLBACKS.end(); i++)
-			i->second();
-	}
-	
-	static inline void RunDrawCallbacks () {
-		for(std::map<int, void (*) ()>::iterator i = DRAW_CALLBACKS.begin(); i != DRAW_CALLBACKS.end(); i++)
-			i->second();
-	}
-	
-	static inline void RunTouchCallbacks (int x, int y) {
-		for(std::map<int, void (*) (int, int)>::iterator i = TOUCH_CALLBACKS.begin(); i != TOUCH_CALLBACKS.end(); i++)
-			i->second(x, y);
-	}
-	
-	static inline void RunTouchUpCallbacks (int x, int y) {
-		for(std::map<int, void (*) (int, int)>::iterator i = TOUCHUP_CALLBACKS.begin(); i != TOUCHUP_CALLBACKS.end(); i++)
-			i->second(x, y);
-	}
-	
-	static inline void RunTouchMoveCallbacks (int x, int y) {
-		for(std::map<int, void (*) (int, int)>::iterator i = TOUCHMOVE_CALLBACKS.begin(); i != TOUCHMOVE_CALLBACKS.end(); i++)
-			i->second(x, y);
-	}
+	static inline int NewStartupCallback (void (* callback) ()) { int ref = GetUniqueRef(); STARTUP_CALLBACKS.insert(std::make_pair(ref, callback)); return ref; }
+	static inline int NewShutdownCallback (void (* callback) ()) { int ref = GetUniqueRef(); SHUTDOWN_CALLBACKS.insert(std::make_pair(ref, callback)); return ref; }
+	static inline int NewDrawCallback (void (* callback) ()) { int ref = GetUniqueRef(); DRAW_CALLBACKS.insert(std::make_pair(ref, callback)); return ref; }
+	static inline int NewTouchCallback (void (* callback) (int x, int y)) { int ref = GetUniqueRef(); TOUCH_CALLBACKS.insert(std::make_pair(ref, callback)); return ref; }
+	static inline int NewTouchUpCallback (void (* callback) (int x, int y)) { int ref = GetUniqueRef(); TOUCHUP_CALLBACKS.insert(std::make_pair(ref, callback)); return ref; }
+	static inline int NewTouchMoveCallback (void (* callback) (int x, int y)) { int ref = GetUniqueRef(); TOUCHMOVE_CALLBACKS.insert(std::make_pair(ref, callback)); return ref; }
+	static inline void DeleteStartupCallback (int ref) { STARTUP_CALLBACKS.erase(STARTUP_CALLBACKS.find(ref)); }
+	static inline void DeleteShutdownCallback (int ref) { SHUTDOWN_CALLBACKS.erase(SHUTDOWN_CALLBACKS.find(ref)); }
+	static inline void DeleteDrawCallback (int ref) { DRAW_CALLBACKS.erase(DRAW_CALLBACKS.find(ref)); }
+	static inline void DeleteTouchCallback (int ref) { TOUCH_CALLBACKS.erase(TOUCH_CALLBACKS.find(ref)); }
+	static inline void DeleteTouchUpCallback (int ref) { TOUCHUP_CALLBACKS.erase(TOUCHUP_CALLBACKS.find(ref)); }
+	static inline void DeleteTouchMoveCallback (int ref) { TOUCHMOVE_CALLBACKS.erase(TOUCHMOVE_CALLBACKS.find(ref)); }
+	static inline void RunStartupCallbacks () { for(auto i = STARTUP_CALLBACKS.begin(); i != STARTUP_CALLBACKS.end(); i++) i->second(); }
+	static inline void RunShutdownCallbacks () { for(auto i = SHUTDOWN_CALLBACKS.begin(); i != SHUTDOWN_CALLBACKS.end(); i++) i->second(); }
+	static inline void RunDrawCallbacks () { for(auto i = DRAW_CALLBACKS.begin(); i != DRAW_CALLBACKS.end(); i++) i->second(); }
+	static inline void RunTouchCallbacks (int x, int y) { for(auto i = TOUCH_CALLBACKS.begin(); i != TOUCH_CALLBACKS.end(); i++) i->second(x, y); }
+	static inline void RunTouchUpCallbacks (int x, int y) { for(auto i = TOUCHUP_CALLBACKS.begin(); i != TOUCHUP_CALLBACKS.end(); i++) i->second(x, y); }
+	static inline void RunTouchMoveCallbacks (int x, int y) { for(auto i = TOUCHMOVE_CALLBACKS.begin(); i != TOUCHMOVE_CALLBACKS.end(); i++) i->second(x, y); }
 	
 private:
 	static inline std::map<int, void (*) ()>				STARTUP_CALLBACKS;
