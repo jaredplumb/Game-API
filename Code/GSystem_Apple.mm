@@ -512,7 +512,7 @@ bool GSystem::PackageOpen (const GString& resource) {
 		return false;
 	}
 	
-	if(fseeko(PACKAGE_FILE, headerOffset, SEEK_SET) != 0) { // The header is actually at the end of the file
+	if(fseeko(PACKAGE_FILE, (off_t)headerOffset, SEEK_SET) != 0) { // The header is actually at the end of the file
 		GSystem::Debug("Failed to set package position to header!\n");
 		fclose(PACKAGE_FILE);
 		PACKAGE_FILE = nullptr;
@@ -734,7 +734,7 @@ bool GSystem::ResourceRead (const GString& name, void* data, int64_t size) {
 		return ResourceReadFromFile(name, data, size);
 	
 	int64_t archiveSize;
-	if(fseeko(PACKAGE_FILE, resource->second.second, SEEK_SET) != 0 || fread(&archiveSize, sizeof(archiveSize), 1, PACKAGE_FILE) != 1) {
+	if(fseeko(PACKAGE_FILE, (off_t)resource->second.second, SEEK_SET) != 0 || fread(&archiveSize, sizeof(archiveSize), 1, PACKAGE_FILE) != 1) {
 		GSystem::Debug("Failed to read archive size for resource \"%s\"!\n", (const char*)name);
 		return false;
 	}

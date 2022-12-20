@@ -24,7 +24,7 @@ static GMatrix32_4x4	PROJECTION_MATRIX;
 static EGLDisplay       DISPLAY = EGL_NO_DISPLAY;
 static EGLSurface		SURFACE = EGL_NO_SURFACE;
 static EGLContext		CONTEXT = EGL_NO_CONTEXT;
-static GLuint			PROGRAM = 0;
+static GLuint			SHADER_PROGRAM = 0;
 static GLuint           VERTEX_SHADER = 0;
 static GLuint           FRAGMENT_SHADER = 0;
 static GLint			SHADER_MATRIX = 0;
@@ -63,234 +63,8 @@ static GLuint AndroidLoadShader (GLenum type, const char* source) {
     return shader;
 }
 
-static void AndroidStartupOpenGL () {
-
-    ANativeWindow_setFrameRate(ANDROID_APP->window, (float)FPS, ANATIVEWINDOW_FRAME_RATE_COMPATIBILITY_FIXED_SOURCE);
-
-    DISPLAY = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if(DISPLAY == EGL_NO_DISPLAY) {
-        GSystem::Debug("Could not find OpenGL display!\n");
-        return;
-    }
-
-    EGLBoolean result = eglInitialize(DISPLAY, nullptr, nullptr);
-    if(result != EGL_TRUE) {
-        GSystem::Debug("Could not initialize OpenGL display!\n");
-        return;
-    }
-
-    constexpr EGLint attribs[] = {
-            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_RED_SIZE,       8,
-            EGL_GREEN_SIZE,     8,
-            EGL_BLUE_SIZE,      8,
-            EGL_ALPHA_SIZE,     8,
-            EGL_DEPTH_SIZE,     8,
-            EGL_NONE
-    };
-    EGLConfig config;
-    EGLint numConfigs;
-    result = eglChooseConfig(DISPLAY, attribs, &config, 1, &numConfigs);
-    if(result != EGL_TRUE || numConfigs != 1) {
-        GSystem::Debug("Could not choose OpenGL configuration!\n");
-        return;
-    }
-
-    SURFACE = eglCreateWindowSurface(DISPLAY, config, ANDROID_APP->window, nullptr);
-    if(SURFACE == EGL_NO_SURFACE) {
-        GSystem::Debug("Could not create OpenGL window surface!\n");
-        return;
-    }
-
-    constexpr EGLint contextAttribs[] = {
-            EGL_CONTEXT_CLIENT_VERSION, 2,
-            EGL_NONE
-    };
-    CONTEXT = eglCreateContext(DISPLAY, config, EGL_NO_CONTEXT, contextAttribs);
-    if(CONTEXT == EGL_NO_CONTEXT) {
-        GSystem::Debug("Could not create OpenGL context!\n");
-        return;
-    }
-
-    result = eglMakeCurrent(DISPLAY, SURFACE, SURFACE, CONTEXT);
-    if(result != EGL_TRUE) {
-        GSystem::Debug("Could not make OpenGL display, surface, and context current!\n");
-        return;
-    }
-
-#if DEBUG
-    GSystem::Debug("OpenGL Vendor=%s Renderer=%s Version=%s\n", (const char*)glGetString(GL_VENDOR), (const char*)glGetString(GL_RENDERER), (const char*)glGetString(GL_VERSION));
-#endif
-
-    // Find the screen size
-    eglQuerySurface(DISPLAY, SURFACE, EGL_WIDTH, &SCREEN_NATIVE_WIDTH);
-    eglQuerySurface(DISPLAY, SURFACE, EGL_HEIGHT, &SCREEN_NATIVE_HEIGHT);
-    SCREEN_RECT.x = 0;
-    SCREEN_RECT.y = 0;
-    //SCREEN_RECT.width = SCREEN_NATIVE_WIDTH;
-    //SCREEN_RECT.height = SCREEN_NATIVE_HEIGHT;
-    SCREEN_RECT.width = ANativeWindow_getWidth(ANDROID_APP->window);
-    SCREEN_RECT.height = ANativeWindow_getHeight(ANDROID_APP->window);
-
-    // Find the safe area within the screen
-    ARect windowInsets;
-    GameActivity_getWindowInsets(ANDROID_APP->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &windowInsets);
-    SAFE_RECT.x = windowInsets.left;
-    SAFE_RECT.y = windowInsets.top;
-    SAFE_RECT.width = SCREEN_RECT.width - windowInsets.left - windowInsets.right;
-    SAFE_RECT.height = SCREEN_RECT.height - windowInsets.top - windowInsets.bottom;
-
-    // If no preferred rect is set, use the safe rect as the preferred rect
-    if(PREFERRED_RECT.width == 0 || PREFERRED_RECT.height == 0) {
-        PREFERRED_RECT.x = 0;
-        PREFERRED_RECT.y = 0;
-        PREFERRED_RECT.width = SAFE_RECT.width;
-        PREFERRED_RECT.height = SAFE_RECT.height;
-    }
-
-    // Adjust the safe rect to the relative preferred rect size using the pixel size of the preferred rect and adjust the screen rect and safe rect accordingly
-    if(PREFERRED_RECT.width * SAFE_RECT.height <= SAFE_RECT.width * PREFERRED_RECT.height) {
-        SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.height / SAFE_RECT.height;
-        SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.height / SAFE_RECT.height;
-        SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.height / SAFE_RECT.height;
-        SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.height / SAFE_RECT.height;
-        SAFE_RECT.width = SAFE_RECT.width * PREFERRED_RECT.height / SAFE_RECT.height;
-        SAFE_RECT.height = PREFERRED_RECT.height;
-    } else {
-        SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.width / SAFE_RECT.width;
-        SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
-        SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
-        SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
-        SAFE_RECT.height = SAFE_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
-        SAFE_RECT.width = PREFERRED_RECT.width;
-    }
-
-    // Center the preferred rect inside of the safe rect
-    PREFERRED_RECT.x = SAFE_RECT.x + (SAFE_RECT.width - PREFERRED_RECT.width) / 2;
-    PREFERRED_RECT.y = SAFE_RECT.y + (SAFE_RECT.height - PREFERRED_RECT.height) / 2;
 
 
-
-
-
-
-
-    // Create the main shader object
-    PROGRAM = glCreateProgram();
-    if(PROGRAM == 0) {
-        GSystem::Debug("Could not create OpenGL program object!\n");
-        return;
-    }
-
-    constexpr const char* VERTEX_STRING =
-            "uniform mat4 u_matrix;\n"
-            "attribute vec2 in_xy;\n"
-            "attribute vec4 in_rgba;\n"
-            "attribute vec2 in_uv;\n"
-            "varying vec4 out_rgba;\n"
-            "varying vec2 out_uv;\n"
-            "void main() {\n"
-            "	gl_Position = u_matrix * vec4(in_xy.xy, 0, 1);\n"
-            "	out_rgba = in_rgba;\n"
-            "	out_uv = in_uv;\n"
-            "}\n";
-    VERTEX_SHADER = AndroidLoadShader(GL_VERTEX_SHADER, VERTEX_STRING);
-    glAttachShader(PROGRAM, VERTEX_SHADER);
-
-    constexpr const char* FRAGMENT_STRING =
-            "precision mediump float;\n"
-            "varying vec4 out_rgba;\n"
-            "varying vec2 out_uv;\n"
-            "uniform sampler2D u_texture;\n"
-            "void main() {\n"
-            "	gl_FragColor = out_rgba * texture2D(u_texture, out_uv);\n"
-            "}\n";
-    FRAGMENT_SHADER = AndroidLoadShader(GL_FRAGMENT_SHADER, FRAGMENT_STRING);
-    glAttachShader(PROGRAM, FRAGMENT_SHADER);
-
-    glLinkProgram(PROGRAM);
-
-    // Setup remaining OpenGL functions
-    glViewport(0, 0, SCREEN_NATIVE_WIDTH, SCREEN_NATIVE_HEIGHT);
-    glActiveTexture(GL_TEXTURE0);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Setup OpenGL Shaders
-    glUseProgram(PROGRAM);
-    SHADER_MATRIX = glGetUniformLocation(PROGRAM, "u_matrix");
-    SHADER_XY = glGetAttribLocation(PROGRAM, "in_xy");
-    SHADER_RGBA = glGetAttribLocation(PROGRAM, "in_rgba");
-    SHADER_UV = glGetAttribLocation(PROGRAM, "in_uv");
-    SHADER_TEXTURE = glGetUniformLocation(PROGRAM, "u_texture");
-    glUniform1i(SHADER_TEXTURE, 0);
-}
-
-
-
-static void AndroidShutdownOpenGL () {
-    glDeleteShader(VERTEX_SHADER);
-    glDeleteShader(FRAGMENT_SHADER);
-    glDeleteProgram(PROGRAM);
-    eglMakeCurrent(DISPLAY, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroyContext(DISPLAY, CONTEXT);
-    eglDestroySurface(DISPLAY, SURFACE);
-    eglTerminate(DISPLAY);
-}
-
-
-
-
-
-
-
-static bool AndroidMotionEventFilter (const GameActivityMotionEvent* event) {
-    if(event) {
-        const GameActivityPointerAxes& pointer = event->pointers[(event->action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT];
-        int x = (int)GameActivityPointerAxes_getX(&pointer) * SCREEN_RECT.width / SCREEN_NATIVE_WIDTH;
-        int y = (int)GameActivityPointerAxes_getY(&pointer) * SCREEN_RECT.height / SCREEN_NATIVE_HEIGHT;
-        switch(event->action & AMOTION_EVENT_ACTION_MASK) {
-            case AMOTION_EVENT_ACTION_DOWN:
-            case AMOTION_EVENT_ACTION_POINTER_DOWN:
-                GSystem::RunTouchCallbacks(x - PREFERRED_RECT.x, y - PREFERRED_RECT.y);
-                break;
-            case AMOTION_EVENT_ACTION_UP:
-            case AMOTION_EVENT_ACTION_CANCEL:
-            case AMOTION_EVENT_ACTION_POINTER_UP:
-                GSystem::RunTouchUpCallbacks(x - PREFERRED_RECT.x, y - PREFERRED_RECT.y);
-                break;
-            case AMOTION_EVENT_ACTION_MOVE:
-            case AMOTION_EVENT_ACTION_HOVER_MOVE:
-                GSystem::RunTouchMoveCallbacks(x - PREFERRED_RECT.x, y - PREFERRED_RECT.y);
-                break;
-            default:
-                break;
-        }
-    }
-    return false;
-}
-
-
-
-static void AndroidGraphicsHandler () {
-    if(DISPLAY != EGL_NO_DISPLAY && SURFACE != EGL_NO_SURFACE && CONTEXT != EGL_NO_CONTEXT) {
-        eglMakeCurrent(DISPLAY, SURFACE, SURFACE, CONTEXT);
-        // TODO: These two queries should be moved to the updated screen size function
-        eglQuerySurface(DISPLAY, SURFACE, EGL_WIDTH, &SCREEN_NATIVE_WIDTH);
-        eglQuerySurface(DISPLAY, SURFACE, EGL_HEIGHT, &SCREEN_NATIVE_HEIGHT);
-        glViewport(0, 0, SCREEN_NATIVE_WIDTH, SCREEN_NATIVE_HEIGHT);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glUseProgram(PROGRAM);
-        GSystem::MatrixSetModelDefault();
-        GSystem::MatrixSetProjectionDefault();
-        GSystem::MatrixUpdate();
-        GSystem::RunDrawCallbacks();
-        eglSwapBuffers(DISPLAY, SURFACE);
-    }
-}
 
 
 
@@ -349,7 +123,7 @@ bool GSystem::PackageOpen (const GString& resource) {
 		return false;
 	}
 	
-	if(fseeko(PACKAGE_FILE, headerOffset, SEEK_SET) != 0) { // The header is actually at the end of the file
+	if(fseeko(PACKAGE_FILE, (off_t)headerOffset, SEEK_SET) != 0) { // The header is actually at the end of the file
 		GSystem::Debug("Failed to set package position to header!\n");
 		fclose(PACKAGE_FILE);
 		PACKAGE_FILE = nullptr;
@@ -423,29 +197,8 @@ bool GSystem::PackageOpen (const GString& resource) {
 
 
 bool GSystem::PackageOpenForWrite (const GString& resource) {
-	/*
-    if(PACKAGE_FILE != nullptr)
-		PackageCloseForWrite();
-	
-	GSystem::Debug("Opening package \"%s\" for writing... ", (const char*)resource);
-	
-	PACKAGE_FILE = fopen(GString().Format("%s/%s", GetResourceDirectory(), (const char*)resource), "wb+");
-	if(PACKAGE_FILE == nullptr) {
-		GSystem::Debug("Failed to open package for writing!\n");
-		return false;
-	}
-	
-	int64_t headerOffset;
-	if(fwrite(&headerOffset, sizeof(headerOffset), 1, PACKAGE_FILE) != 1) {
-		GSystem::Debug("Failed to write placeholder package header offset!\n");
-		fclose(PACKAGE_FILE);
-		PACKAGE_FILE = nullptr;
-		return false;
-	}
-	
-	GSystem::Debug("Done\n");
-	 */
-	return true;
+	GSystem::Debug("Opening a package for write is not supported on Android!\n");
+	return false;
 }
 
 
@@ -463,79 +216,8 @@ bool GSystem::PackageClose () {
 
 
 bool GSystem::PackageCloseForWrite () {
-	/*
-    if(PACKAGE_FILE == nullptr) {
-		GSystem::Debug("Package is not open for writing!\n");
-		return false;
-	}
-	
-	int64_t headerOffset = ftello(PACKAGE_FILE);
-	if(headerOffset <= sizeof(headerOffset) || PACKAGE_RESOURCES.empty()) {
-		GSystem::Debug("No resources were written to the package!\n");
-		fclose(PACKAGE_FILE);
-		PACKAGE_FILE = nullptr;
-		return false;
-	}
-	
-	int64_t bufferSize = sizeof(int64_t); // Save room for the number of resources
-	for(auto i = PACKAGE_RESOURCES.begin(); i != PACKAGE_RESOURCES.end(); i++)
-		bufferSize += i->first.length() + 1 + sizeof(int64_t) + sizeof(int64_t);
-	
-	std::unique_ptr<uint8_t[]> buffer(new uint8_t[bufferSize]);
-	*((int64_t*)buffer.get()) = PACKAGE_RESOURCES.size();
-	int64_t bufferOffset = sizeof(int64_t);
-	for(auto i = PACKAGE_RESOURCES.begin(); i != PACKAGE_RESOURCES.end(); i++) {
-		GString::strcpy((char*)(buffer.get() + bufferOffset), i->first.c_str());
-		bufferOffset += i->first.length() + 1;
-		*((int64_t*)(buffer.get() + bufferOffset)) = i->second.first;
-		bufferOffset += sizeof(int64_t);
-		*((int64_t*)(buffer.get() + bufferOffset)) = i->second.second;
-		bufferOffset += sizeof(int64_t);
-	}
-	
-	int64_t archiveSize = GArchive::GetBufferBounds(bufferSize);
-	std::unique_ptr<uint8_t[]> archive(new uint8_t[archiveSize]);
-	archiveSize = GArchive::Compress(buffer.get(), bufferSize * sizeof(uint8_t), archive.get(), archiveSize * sizeof(uint8_t));
-	if(archiveSize == 0) {
-		GSystem::Debug("Failed to compress package header data!\n");
-		fclose(PACKAGE_FILE);
-		PACKAGE_FILE = nullptr;
-		return false;
-	}
-	
-	if(fwrite(&bufferSize, sizeof(bufferSize), 1, PACKAGE_FILE) != 1) {
-		GSystem::Debug("Failed to write package header buffer size!\n");
-		fclose(PACKAGE_FILE);
-		PACKAGE_FILE = nullptr;
-		return false;
-	}
-	
-	if(fwrite(&archiveSize, sizeof(archiveSize), 1, PACKAGE_FILE) != 1) {
-		GSystem::Debug("Failed to write package header archive size!\n");
-		fclose(PACKAGE_FILE);
-		PACKAGE_FILE = nullptr;
-		return false;
-	}
-	
-	if(fwrite(archive.get(), archiveSize * sizeof(uint8_t), 1, PACKAGE_FILE) != 1) {
-		GSystem::Debug("Failed to write package header archive!\n");
-		fclose(PACKAGE_FILE);
-		PACKAGE_FILE = nullptr;
-		return false;
-	}
-	
-	if(fseeko(PACKAGE_FILE, 0, SEEK_SET) != 0 || fwrite(&headerOffset, sizeof(headerOffset), 1, PACKAGE_FILE) != 1) {
-		GSystem::Debug("Failed to write package header offset!\n");
-		fclose(PACKAGE_FILE);
-		PACKAGE_FILE = nullptr;
-		return false;
-	}
-	
-	fclose(PACKAGE_FILE);
-	PACKAGE_FILE = nullptr;
-	PACKAGE_RESOURCES.clear();
-	 */
-	return true;
+    GSystem::Debug("Closing a package for write is not supported on Android!\n");
+	return false;
 }
 
 
@@ -575,7 +257,7 @@ bool GSystem::ResourceRead (const GString& name, void* data, int64_t size) {
 		return ResourceReadFromFile(name, data, size);
 	
 	int64_t archiveSize;
-	if(fseeko(PACKAGE_FILE, resource->second.second, SEEK_SET) != 0 || fread(&archiveSize, sizeof(archiveSize), 1, PACKAGE_FILE) != 1) {
+	if(fseeko(PACKAGE_FILE, (off_t)resource->second.second, SEEK_SET) != 0 || fread(&archiveSize, sizeof(archiveSize), 1, PACKAGE_FILE) != 1) {
 		GSystem::Debug("Failed to read archive size for resource \"%s\"!\n", (const char*)name);
 		return false;
 	}
@@ -630,44 +312,8 @@ bool GSystem::ResourceReadFromFile (const GString& path, void* data, int64_t siz
 
 
 bool GSystem::ResourceWrite (const GString& name, void* data, int64_t size) {
-	/*
-    if(PACKAGE_FILE == nullptr) // Open default package if none exists
-		PackageOpenForWrite();
-	
-	if(PACKAGE_FILE == nullptr) {
-		GSystem::Debug("Package file is not open for writing!\n");
-		return false;
-	}
-	
-	int64_t archiveSize = GArchive::GetBufferBounds(size);
-	std::unique_ptr<uint8_t[]> archive(new uint8_t[archiveSize]);
-	archiveSize = GArchive::Compress(data, size, archive.get(), archiveSize);
-	if(archiveSize == 0) {
-		GSystem::Debug("Failed to compress resource data!\n");
-		return false;
-	}
-	
-	int64_t offset = ftello(PACKAGE_FILE);
-	
-	if(fwrite(&archiveSize, sizeof(archiveSize), 1, PACKAGE_FILE) != 1) {
-		GSystem::Debug("Failed to write resource data archive size!\n");
-		return false;
-	}
-	
-	if(fwrite(archive.get(), archiveSize, 1, PACKAGE_FILE) != 1) {
-		GSystem::Debug("Failed to write resource data archive!\n");
-		return false;
-	}
-	
-	auto i = PACKAGE_RESOURCES.find((const char*)name);
-	if(i != PACKAGE_RESOURCES.end()) {
-		GSystem::Debug("Resource \"%s\" already exists!\n", (const char*) name);
-		return false;
-	}
-	
-	PACKAGE_RESOURCES[(const char*)name] = std::make_pair(size, offset);
-	 */
-	return true;
+    GSystem::Debug("Writing to a resource package is not supported on Android!\n");
+	return false;
 }
 
 
@@ -788,6 +434,7 @@ bool GSystem::SaveWrite (const GString& name, const void* data, int64_t size) {
 
 
 std::vector<GString> GSystem::GetFileNamesInDirectory (const GString& path) {
+    // TODO:
 	return std::vector<GString>{};
 }
 
@@ -814,82 +461,284 @@ void GSystem::RunPreferredArgs (int argc, char* argv[]) {
 
 
 
-static void OnAppCmd (struct android_app* app, int32_t cmd) {
+
+
+
+static void AndroidOnStartup () {
+    ANativeWindow_setFrameRate(ANDROID_APP->window, (float)FPS, ANATIVEWINDOW_FRAME_RATE_COMPATIBILITY_FIXED_SOURCE);
+
+    DISPLAY = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if(DISPLAY == EGL_NO_DISPLAY) {
+        GSystem::Debug("Could not find OpenGL display!\n");
+        return;
+    }
+
+    EGLBoolean result = eglInitialize(DISPLAY, nullptr, nullptr);
+    if(result != EGL_TRUE) {
+        GSystem::Debug("Could not initialize OpenGL display!\n");
+        return;
+    }
+
+    constexpr EGLint attribs[] = {
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_RED_SIZE,       8,
+            EGL_GREEN_SIZE,     8,
+            EGL_BLUE_SIZE,      8,
+            EGL_ALPHA_SIZE,     8,
+            EGL_DEPTH_SIZE,     8,
+            EGL_NONE
+    };
+    EGLConfig config;
+    EGLint numConfigs;
+    result = eglChooseConfig(DISPLAY, attribs, &config, 1, &numConfigs);
+    if(result != EGL_TRUE || numConfigs != 1) {
+        GSystem::Debug("Could not choose OpenGL configuration!\n");
+        return;
+    }
+
+    SURFACE = eglCreateWindowSurface(DISPLAY, config, ANDROID_APP->window, nullptr);
+    if(SURFACE == EGL_NO_SURFACE) {
+        GSystem::Debug("Could not create OpenGL window surface!\n");
+        return;
+    }
+
+    constexpr EGLint contextAttribs[] = {
+            EGL_CONTEXT_CLIENT_VERSION, 2,
+            EGL_NONE
+    };
+    CONTEXT = eglCreateContext(DISPLAY, config, EGL_NO_CONTEXT, contextAttribs);
+    if(CONTEXT == EGL_NO_CONTEXT) {
+        GSystem::Debug("Could not create OpenGL context!\n");
+        return;
+    }
+
+    result = eglMakeCurrent(DISPLAY, SURFACE, SURFACE, CONTEXT);
+    if(result != EGL_TRUE) {
+        GSystem::Debug("Could not make OpenGL display, surface, and context current!\n");
+        return;
+    }
+
+#if DEBUG
+    GSystem::Debug("OpenGL Vendor=%s Renderer=%s Version=%s\n", (const char*)glGetString(GL_VENDOR), (const char*)glGetString(GL_RENDERER), (const char*)glGetString(GL_VERSION));
+#endif
+
+    // Create the main shader object
+    SHADER_PROGRAM = glCreateProgram();
+    if(SHADER_PROGRAM == 0) {
+        GSystem::Debug("Could not create OpenGL program object!\n");
+        return;
+    }
+
+    constexpr const char* VERTEX_STRING =
+            "uniform mat4 u_matrix;\n"
+            "attribute vec2 in_xy;\n"
+            "attribute vec4 in_rgba;\n"
+            "attribute vec2 in_uv;\n"
+            "varying vec4 out_rgba;\n"
+            "varying vec2 out_uv;\n"
+            "void main() {\n"
+            "	gl_Position = u_matrix * vec4(in_xy.xy, 0, 1);\n"
+            "	out_rgba = in_rgba;\n"
+            "	out_uv = in_uv;\n"
+            "}\n";
+    VERTEX_SHADER = AndroidLoadShader(GL_VERTEX_SHADER, VERTEX_STRING);
+    glAttachShader(SHADER_PROGRAM, VERTEX_SHADER);
+
+    constexpr const char* FRAGMENT_STRING =
+            "precision mediump float;\n"
+            "varying vec4 out_rgba;\n"
+            "varying vec2 out_uv;\n"
+            "uniform sampler2D u_texture;\n"
+            "void main() {\n"
+            "	gl_FragColor = out_rgba * texture2D(u_texture, out_uv);\n"
+            "}\n";
+    FRAGMENT_SHADER = AndroidLoadShader(GL_FRAGMENT_SHADER, FRAGMENT_STRING);
+    glAttachShader(SHADER_PROGRAM, FRAGMENT_SHADER);
+
+    glLinkProgram(SHADER_PROGRAM);
+
+    // Setup remaining OpenGL functions
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Setup OpenGL Shaders
+    glUseProgram(SHADER_PROGRAM);
+    SHADER_MATRIX = glGetUniformLocation(SHADER_PROGRAM, "u_matrix");
+    SHADER_XY = glGetAttribLocation(SHADER_PROGRAM, "in_xy");
+    SHADER_RGBA = glGetAttribLocation(SHADER_PROGRAM, "in_rgba");
+    SHADER_UV = glGetAttribLocation(SHADER_PROGRAM, "in_uv");
+    SHADER_TEXTURE = glGetUniformLocation(SHADER_PROGRAM, "u_texture");
+    glUniform1i(SHADER_TEXTURE, 0);
+}
+
+static void AndroidOnShutdown () {
+    if(VERTEX_SHADER)
+        glDeleteShader(VERTEX_SHADER);
+    if(FRAGMENT_SHADER)
+        glDeleteShader(FRAGMENT_SHADER);
+    if(SHADER_PROGRAM)
+        glDeleteProgram(SHADER_PROGRAM);
+    if(DISPLAY != EGL_NO_DISPLAY) {
+        eglMakeCurrent(DISPLAY, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        if(CONTEXT != EGL_NO_CONTEXT)
+            eglDestroyContext(DISPLAY, CONTEXT);
+        if(SURFACE != EGL_NO_SURFACE)
+            eglDestroySurface(DISPLAY, SURFACE);
+        eglTerminate(DISPLAY);
+    }
+    VERTEX_SHADER = 0;
+    FRAGMENT_SHADER = 0;
+    SHADER_PROGRAM = 0;
+    DISPLAY = EGL_NO_DISPLAY;
+    CONTEXT = EGL_NO_CONTEXT;
+    SURFACE = EGL_NO_SURFACE;
+}
+
+static void AndroidOnResize () {
+    if(DISPLAY == EGL_NO_DISPLAY || SURFACE == EGL_NO_SURFACE || ANDROID_APP->window == nullptr)
+        return;
+
+    eglQuerySurface(DISPLAY, SURFACE, EGL_WIDTH, &SCREEN_NATIVE_WIDTH);
+    eglQuerySurface(DISPLAY, SURFACE, EGL_HEIGHT, &SCREEN_NATIVE_HEIGHT);
+
+    // Find the screen size
+    SCREEN_RECT.x = 0;
+    SCREEN_RECT.y = 0;
+    SCREEN_RECT.width = ANativeWindow_getWidth(ANDROID_APP->window);
+    SCREEN_RECT.height = ANativeWindow_getHeight(ANDROID_APP->window);
+
+    // Find the safe area within the screen
+    ARect windowInsets;
+    GameActivity_getWindowInsets(ANDROID_APP->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &windowInsets);
+    SAFE_RECT.x = windowInsets.left;
+    SAFE_RECT.y = windowInsets.top;
+    SAFE_RECT.width = SCREEN_RECT.width - windowInsets.left - windowInsets.right;
+    SAFE_RECT.height = SCREEN_RECT.height - windowInsets.top - windowInsets.bottom;
+
+    // If no preferred rect is set, use the safe rect as the preferred rect
+    if(PREFERRED_RECT.width == 0 || PREFERRED_RECT.height == 0) {
+        PREFERRED_RECT.x = 0;
+        PREFERRED_RECT.y = 0;
+        PREFERRED_RECT.width = SAFE_RECT.width;
+        PREFERRED_RECT.height = SAFE_RECT.height;
+    }
+
+    // Adjust the safe rect to the relative preferred rect size using the pixel size of the preferred rect and adjust the screen rect and safe rect accordingly
+    if(PREFERRED_RECT.width * SAFE_RECT.height <= SAFE_RECT.width * PREFERRED_RECT.height) {
+        SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.height / SAFE_RECT.height;
+        SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.height / SAFE_RECT.height;
+        SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.height / SAFE_RECT.height;
+        SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.height / SAFE_RECT.height;
+        SAFE_RECT.width = SAFE_RECT.width * PREFERRED_RECT.height / SAFE_RECT.height;
+        SAFE_RECT.height = PREFERRED_RECT.height;
+    } else {
+        SCREEN_RECT.width = SCREEN_RECT.width * PREFERRED_RECT.width / SAFE_RECT.width;
+        SCREEN_RECT.height = SCREEN_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
+        SAFE_RECT.x = SAFE_RECT.x * PREFERRED_RECT.width / SAFE_RECT.width;
+        SAFE_RECT.y = SAFE_RECT.y * PREFERRED_RECT.width / SAFE_RECT.width;
+        SAFE_RECT.height = SAFE_RECT.height * PREFERRED_RECT.width / SAFE_RECT.width;
+        SAFE_RECT.width = PREFERRED_RECT.width;
+    }
+
+    // Center the preferred rect inside of the safe rect
+    PREFERRED_RECT.x = SAFE_RECT.x + (SAFE_RECT.width - PREFERRED_RECT.width) / 2;
+    PREFERRED_RECT.y = SAFE_RECT.y + (SAFE_RECT.height - PREFERRED_RECT.height) / 2;
+}
+
+static void AndroidOnDraw () {
+    //static int64_t last = 0;
+    //if((GetMilliseconds() - last) * FPS >= 1000) {
+    //    last = GetMilliseconds();
+    //}
+
+    if(DISPLAY != EGL_NO_DISPLAY && SURFACE != EGL_NO_SURFACE && CONTEXT != EGL_NO_CONTEXT) {
+        eglMakeCurrent(DISPLAY, SURFACE, SURFACE, CONTEXT);
+        glViewport(0, 0, SCREEN_NATIVE_WIDTH, SCREEN_NATIVE_HEIGHT);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(SHADER_PROGRAM);
+        GSystem::MatrixSetModelDefault();
+        GSystem::MatrixSetProjectionDefault();
+        GSystem::MatrixUpdate();
+        GSystem::RunDrawCallbacks();
+        eglSwapBuffers(DISPLAY, SURFACE);
+    }
+}
+
+
+
+static void AndroidOnAppCmd (struct android_app* app, int32_t cmd) {
     switch (cmd) {
         case APP_CMD_INIT_WINDOW:
-            GSystem::Debug("APP_CMD_INIT_WINDOW\n");
-            AndroidStartupOpenGL();
+            AndroidOnStartup();
+            AndroidOnResize();
             break;
         case APP_CMD_TERM_WINDOW:
-            GSystem::Debug("APP_CMD_TERM_WINDOW\n");
-            AndroidShutdownOpenGL();
+            AndroidOnShutdown();
+            break;
+        case APP_CMD_WINDOW_REDRAW_NEEDED:
+            AndroidOnDraw();
             break;
         case APP_CMD_WINDOW_RESIZED:
-            GSystem::Debug("APP_CMD_WINDOW_RESIZED\n");
-            break;
+        case APP_CMD_CONTENT_RECT_CHANGED:
         case APP_CMD_WINDOW_INSETS_CHANGED:
-            GSystem::Debug("APP_CMD_WINDOW_INSETS_CHANGED\n");
+            AndroidOnResize();
             break;
         default:
             break;
     }
 }
 
-static void OnNativeWindowCreated (GameActivity* activity, ANativeWindow* window) {
-    GSystem::Debug("OnNativeWindowCreated\n");
-    //ANativeWindow_setFrameRate()
-    //ANATIVEWINDOW_FRAME_RATE_COMPATIBILITY_DEFAULT
-}
 
-static void OnNativeWindowDestroyed (GameActivity* activity, ANativeWindow* window) {
-    GSystem::Debug("OnNativeWindowDestroyed\n");
-}
 
-static void OnNativeWindowResized (GameActivity* activity, ANativeWindow* window, int32_t width, int32_t height) {
-    GSystem::Debug("OnNativeWindowResized\n");
-}
-
-static void OnWindowInsetsChanged (GameActivity* activity) {
-    GSystem::Debug("OnWindowInsetsChanged\n");
-}
-
-static bool OnTouchEvent (GameActivity* activity, const GameActivityMotionEvent* event) {
-    GSystem::Debug("OnTouchEvent\n");
+static bool AndroidKeyEventFilter (const GameActivityKeyEvent* event) {
+    GSystem::Debug("AndroidKeyEventFilter\n");
     return true;
 }
 
-static void OnTextInputEvent (GameActivity* activity, const GameTextInputState* state) {
-    GSystem::Debug("OnTextInputEvent\n");
+
+
+static bool AndroidMotionEventFilter (const GameActivityMotionEvent* event) {
+    if(event) {
+        const GameActivityPointerAxes& pointer = event->pointers[(event->action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT];
+        int x = (int)GameActivityPointerAxes_getX(&pointer) * SCREEN_RECT.width / SCREEN_NATIVE_WIDTH;
+        int y = (int)GameActivityPointerAxes_getY(&pointer) * SCREEN_RECT.height / SCREEN_NATIVE_HEIGHT;
+        switch(event->action & AMOTION_EVENT_ACTION_MASK) {
+            case AMOTION_EVENT_ACTION_DOWN:
+            case AMOTION_EVENT_ACTION_POINTER_DOWN:
+                GSystem::RunTouchCallbacks(x - PREFERRED_RECT.x, y - PREFERRED_RECT.y);
+                return false;
+            case AMOTION_EVENT_ACTION_UP:
+            case AMOTION_EVENT_ACTION_CANCEL:
+            case AMOTION_EVENT_ACTION_POINTER_UP:
+                GSystem::RunTouchUpCallbacks(x - PREFERRED_RECT.x, y - PREFERRED_RECT.y);
+                return false;
+            case AMOTION_EVENT_ACTION_MOVE:
+            case AMOTION_EVENT_ACTION_HOVER_MOVE:
+                GSystem::RunTouchMoveCallbacks(x - PREFERRED_RECT.x, y - PREFERRED_RECT.y);
+                return false;
+            default:
+                return true;
+        }
+    }
+    return true;
 }
 
 
 
 int GSystem::Run () {
     GSystem::Debug("Running Android Application...\n");
-
-    ANDROID_APP->onAppCmd = OnAppCmd;
-    //ANDROID_APP->activity->callbacks->onNativeWindowCreated = OnNativeWindowCreated;
-    //ANDROID_APP->activity->callbacks->onNativeWindowDestroyed = OnNativeWindowDestroyed;
-    //ANDROID_APP->activity->callbacks->onNativeWindowResized = OnNativeWindowResized;
-    //ANDROID_APP->activity->callbacks->onWindowInsetsChanged = OnWindowInsetsChanged;
-    //ANDROID_APP->activity->callbacks->onTouchEvent = OnTouchEvent;
-    //ANDROID_APP->activity->callbacks->onTextInputEvent = OnTextInputEvent;
-
-
-
+    ANDROID_APP->onAppCmd = AndroidOnAppCmd;
+    android_app_set_key_event_filter(ANDROID_APP, AndroidKeyEventFilter);
     android_app_set_motion_event_filter(ANDROID_APP, AndroidMotionEventFilter);
-
     while(!ANDROID_APP->destroyRequested) {
         int events;
         android_poll_source* source;
         if(ALooper_pollAll(0, nullptr, &events, (void **)&source) >= 0 && source)
             source->process(ANDROID_APP, source);
-
-        //static int64_t last = 0;
-        //if(GetMilliseconds() - last >= 1000 / FPS) {
-        //    last = GetMilliseconds();
-        AndroidGraphicsHandler();
-        //}
+        AndroidOnDraw();
     }
 	return EXIT_SUCCESS;
 }
@@ -945,7 +794,7 @@ void GSystem::MatrixRotateProjection (float degrees) {
 }
 
 void GSystem::MatrixUpdate () {
-    if(PROGRAM != 0) {
+    if(SHADER_PROGRAM != 0) {
         GMatrix32_4x4 matrix = PROJECTION_MATRIX * MODEL_MATRIX;
         glUniformMatrix4fv(SHADER_MATRIX, 1, GL_FALSE, &matrix.numbers[0][0]);
     }
