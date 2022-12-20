@@ -6,11 +6,7 @@ void UITransition::New (eTransition transition, GNode* parent) {
 		case NONE:
 			break;
 		case FADE_BLACK:
-			_image.New(GColor::BLACK);
-			break;
 		case FADE_IN_BLACK:
-			_image.New(GColor::BLACK);
-			break;
 		case FADE_OUT_BLACK:
 			_image.New(GColor::BLACK);
 			break;
@@ -72,7 +68,7 @@ bool UITransition::OnExit () {
 		case FADE_OUT_BLACK:
 			if(_timer <= 0)
 				_timer = GetMilliseconds();
-			return (GetMilliseconds() - _timer >= FADE_TIME) ? true : false;
+			return GetMilliseconds() - _timer >= FADE_TIME;
 	}
 	return true;
 }
