@@ -163,7 +163,7 @@ GRect GFont::GetRect (const GString& text) const {
 		}
 	}
 	
-	return {left, top, right - left, bottom - top};
+	return GRect(left, top, right - left, bottom - top);
 }
 
 
