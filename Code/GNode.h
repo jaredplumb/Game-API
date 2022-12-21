@@ -1,5 +1,5 @@
-#ifndef _GNODE_H_
-#define _GNODE_H_
+#ifndef G_NODE_H_
+#define G_NODE_H_
 
 #include "GTypes.h"
 #include "GSystem.h"
@@ -22,6 +22,7 @@ public:
 	int GetX () const;
 	int GetY () const;
 	GRect GetRect () const;							// Returns this node's rect (the default rect is at 0,0 with a width and height equal to the system's preferred rect, all node locations are relative to the system's preferred rect)
+	GRect GetParentRect () const;					// Returns the parent's rect relative to this node (or the preferred rect if no parent)
 	GRect GetScreenRect () const;					// Returns the screen rect relative to this node
 	GRect GetSafeRect () const;						// Returns the safe rect relative to this node
 	GRect GetPreferredRect () const;				// Returns the preferred rect relative to this node
@@ -179,4 +180,4 @@ public:
 };
 
 
-#endif // _GNODE_H_
+#endif // G_NODE_H_

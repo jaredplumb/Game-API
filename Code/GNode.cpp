@@ -54,6 +54,10 @@ GRect GNode::GetRect() const {
 	return _rect;
 }
 
+GRect GNode::GetParentRect () const {
+	return _parent ? (GRect){-_rect.x, -_rect.y, _parent->_rect.width, _parent->_rect.height} : GetPreferredRect();
+}
+
 GRect GNode::GetScreenRect () const {
 	GRect screen = GSystem::GetScreenRect();
 	GRect preferred = GSystem::GetPreferredRect();
