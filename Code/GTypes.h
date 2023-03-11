@@ -2,7 +2,7 @@
 #define GTYPES_H_
 
 #include <cstdint>
-#include <math.h>
+#include <cmath>
 #include <vector>
 
 
@@ -104,12 +104,12 @@ public:
 	inline GVector& operator-= (const GVector& p)					{ x -= p.x; y -= p.y; return *this; }
 	inline GVector& operator*= (float t)							{ x *= t; y *= t; return *this; }
 	inline GVector& operator/= (float t)							{ x /= t; y /= t; return *this; }
-	inline float GetDistance (const GVector& v) const				{ return sqrt((x - v.x) * (x - v.x) + (y - v.y) * (y - v.y)); }
+	inline float GetDistance (const GVector& v) const				{ return std::sqrt((x - v.x) * (x - v.x) + (y - v.y) * (y - v.y)); }
 	inline float GetDistance2 (const GVector& v) const				{ return (x - v.x) * (x - v.x) + (y - v.y) * (y - v.y); }
 	inline float GetDot (const GVector& v) const					{ return x * v.x + y * v.y; }
-	inline float GetMagnitude () const								{ return sqrt(x * x + y * y); }
+	inline float GetMagnitude () const								{ return std::sqrt(x * x + y * y); }
 	inline float GetMagnitude2 () const								{ return x * x + y * y; } // For those times when you don't need the sqrt
-	inline float GetLength () const									{ return sqrt(x * x + y * y); } // Yes, Magnitue and Length are the same
+	inline float GetLength () const									{ return std::sqrt(x * x + y * y); } // Yes, Magnitue and Length are the same
 	inline GVector& Offset (const GVector& p)						{ x += p.x; y += p.y; return *this; }
 	inline GVector& Offset (float x_, float y_)						{ x += x_; y += y_; return *this; }
 	inline GVector& Normalize ()									{ float t = GetLength(); if(t) { x /= t; y /= t; } return *this; }
@@ -156,7 +156,7 @@ public:
 	inline void SetOrtho2D (float left, float right, float bottom, float top, float nearZ, float farZ)	{ *this = (GMatrix32_4x4){{{2.0f / (right - left), 0.0f, 0.0f, 0.0f}, {0.0f, 2.0f / (top - bottom), 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f / (farZ - nearZ), 0.0f}, {(left + right) / (left - right), (top + bottom) / (bottom - top), nearZ / (nearZ - farZ), 1.0f}}}; }
 	inline void SetTranslation (float tx, float ty, float tz)											{ *this = (GMatrix32_4x4){{{numbers[0][0], numbers[0][1], numbers[0][2], numbers[0][3]}, {numbers[1][0], numbers[1][1], numbers[1][2], numbers[1][3]}, {numbers[2][0], numbers[2][1], numbers[2][2], numbers[2][3]}, {numbers[0][0] * tx + numbers[1][0] * ty + numbers[2][0] * tz + numbers[3][0], numbers[0][1] * tx + numbers[1][1] * ty + numbers[2][1] * tz + numbers[3][1], numbers[0][2] * tx + numbers[1][2] * ty + numbers[2][2] * tz + numbers[3][2], numbers[0][3] * tx + numbers[1][3] * ty + numbers[2][3] * tz + numbers[3][3]}}}; }
 	inline void SetScale (float sx, float sy, float sz)													{ *this = (GMatrix32_4x4){{{numbers[0][0] * sx + numbers[1][0] * sy + numbers[2][0] * sz + numbers[3][0], numbers[0][1], numbers[0][2], numbers[0][3]}, {numbers[1][0], numbers[0][1] * sx + numbers[1][1] * sy + numbers[2][1] * sz + numbers[3][1], numbers[1][2], numbers[1][3]}, {numbers[2][0], numbers[2][1], numbers[0][2] * sx + numbers[1][2] * sy + numbers[2][2] * sz + numbers[3][2], numbers[2][3]}, {numbers[3][0], numbers[3][1], numbers[3][2], numbers[3][3]}}}; }
-	inline void SetRotation (float radians)																{ float s = (float)sinf(radians); float c = (float)cosf(radians); *this = (GMatrix32_4x4){{{numbers[0][0] * c + numbers[0][1] * (-s), numbers[0][0] * s + numbers[0][1] * c, numbers[0][2], numbers[0][3]}, {numbers[1][0] * c + numbers[1][1] * (-s), numbers[1][0] * s + numbers[1][1] * c, numbers[1][2], numbers[1][3]}, {numbers[2][0] * c + numbers[2][1] * (-s), numbers[2][0] * s + numbers[2][1] * c, numbers[2][2], numbers[2][3]}, {numbers[3][0] * c + numbers[3][1] * (-s), numbers[3][0] * s + numbers[3][1] * c, numbers[3][2], numbers[3][3]}}}; }
+	inline void SetRotation (float radians)																{ float s = std::sin(radians); float c = std::cos(radians); *this = (GMatrix32_4x4){{{numbers[0][0] * c + numbers[0][1] * (-s), numbers[0][0] * s + numbers[0][1] * c, numbers[0][2], numbers[0][3]}, {numbers[1][0] * c + numbers[1][1] * (-s), numbers[1][0] * s + numbers[1][1] * c, numbers[1][2], numbers[1][3]}, {numbers[2][0] * c + numbers[2][1] * (-s), numbers[2][0] * s + numbers[2][1] * c, numbers[2][2], numbers[2][3]}, {numbers[3][0] * c + numbers[3][1] * (-s), numbers[3][0] * s + numbers[3][1] * c, numbers[3][2], numbers[3][3]}}}; }
 	inline const GMatrix32_4x4 operator* (GMatrix32_4x4 t) const										{ GMatrix32_4x4 r; for(int i = 0; i < 4; i++) { r.numbers[i][0] = 0; r.numbers[i][1] = 0; r.numbers[i][2] = 0; r.numbers[i][3] = 0; for(int j = 0; j < 4; j++) { r.numbers[i][0] = numbers[j][0] * t.numbers[i][j] + r.numbers[i][0]; r.numbers[i][1] = numbers[j][1] * t.numbers[i][j] + r.numbers[i][1]; r.numbers[i][2] = numbers[j][2] * t.numbers[i][j] + r.numbers[i][2]; r.numbers[i][3] = numbers[j][3] * t.numbers[i][j] + r.numbers[i][3]; } } return r; }
 };
 
