@@ -190,7 +190,7 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	[self setColorPixelFormat:MTLPixelFormatBGRA8Unorm];
 	[self setClearColor:MTLClearColorMake(0.0, 0.0, 0.0, 0.0)];
 	[self setPreferredFramesPerSecond:(NSInteger)FPS];
-	//[self mtkView:self drawableSizeWillChange:frameRect.size];
+	[self mtkView:self drawableSizeWillChange:frameRect.size]; // This is needed to set the initial resolutions (at least needed on Mac)
 	
 	// Added this as a string for simplicity for multiple platforms.  This can be added to a .metal file instead
 	// and the id<MTLLibrary> defaultLibrary code below can be changed to newDefaultLibrary.
