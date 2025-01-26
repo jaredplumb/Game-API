@@ -165,6 +165,10 @@ static GMatrix32_4x4			PROJECTION_MATRIX;
 	return YES;
 }
 
+- (BOOL) applicationSupportsSecureRestorableState: (NSApplication *)app {
+    return YES;
+}
+
 #endif // TARGET_OS_IPHONE // TARGET_OS_MAC
 
 @end // _MyAppDelegate
